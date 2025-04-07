@@ -2,9 +2,9 @@
 
 namespace App\Enums;
 
-enum LocationType
+enum LocationType: int
 {
-	case STADIUM;
-	case INDOOR;
-	case ROAD;
+	case STADIUM = 1;
+	case INDOOR = 2;
+	case ROAD = 3;
 }
