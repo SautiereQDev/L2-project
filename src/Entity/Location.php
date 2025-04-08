@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Enums\LocationType;
 use App\Repository\LocationRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
 
 #[ORM\Entity(repositoryClass: LocationRepository::class)]
 class Location
@@ -15,6 +17,7 @@ class Location
 	private ?int $id = null;
 
 	#[ORM\Column(length: 255)]
+	#[Assert\NotBlank(message: 'Name cannot be blank')]
 	private ?string $name = null;
 
 	#[ORM\Column(length: 255)]
@@ -28,14 +31,33 @@ class Location
 
 	// For the coordinates
 	#[ORM\Column]
+	#[Assert\NotBlank(message: 'Longitude cannot be blank')]
+	#[Assert\Range(
+		notInRangeMessage: 'Longitude must be between {{ min }} and {{ max }}',
+		min: -180,
+		max: 180,
+	)]
 	private ?float $longitude = null;
 
 	#[ORM\Column]
+	#[Assert\NotBlank(message: 'Latitude cannot be blank')]
+	#[Assert\Range(
+		notInRangeMessage: 'Latitude must be between {{ min }} and {{ max }}',
+		min: -90,
+		max: 90,
+	)]
 	private ?float $latitude = null;
 
 
 	#[ORM\Column]
+	#[Assert\Choice(choices: LocationType::CHOICES, message: 'Choose a valid type.')]
 	private LocationType $type = LocationType::STADIUM;
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $updatedAt = null;
 
 	public function getId(): ?int
 	{
@@ -114,15 +136,38 @@ class Location
 		return $this;
 	}
 
-	public function getType(): ?string
+	public function getType(): LocationType
 	{
 		return $this->type;
 	}
 
-	public function setType(string $type): static
+	public function setType(LocationType $type): static
 	{
 		$this->type = $type;
-
 		return $this;
 	}
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
 }

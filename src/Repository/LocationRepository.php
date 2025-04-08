@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Location;
+use App\Enums\LocationType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -11,33 +12,43 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class LocationRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Location::class);
-    }
+	public function __construct(ManagerRegistry $registry)
+	{
+		parent::__construct($registry, Location::class);
+	}
 
-//    /**
-//     * @return Location[] Returns an array of Location objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('l.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+	/**
+	 * @param string $value
+	 * @param int $nbMaxValues
+	 * @return Location[] Returns an array of Location objects
+	 * @descriptions: This method finds locations by city.
+	 */
+	public function finByCountry(string $value, int $nbMaxValues): array
+	{
+		return $this->createQueryBuilder('l')
+			->andWhere('l.country = :val')
+			->setParameter('val', $value)
+			->orderBy('l.id', 'ASC')
+			->setMaxResults($nbMaxValues)
+			->getQuery()
+			->getResult();
+	}
 
-//    public function findOneBySomeField($value): ?Location
-//    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+	/**
+	 * @param LocationType $type
+	 * @param int $nbMaxValues
+	 * @return Location[] Returns an array of Location objects
+	 * @descriptions: This method finds locations by type.
+	 */
+	public function findByType(LocationType $type, int $nbMaxValues): array
+	{
+		return $this->createQueryBuilder('l')
+			->andWhere('l.type = :val')
+			->setParameter('val', $type)
+			->orderBy('l.id', 'ASC')
+			->setMaxResults($nbMaxValues)
+			->getQuery()
+			->getResult();
+	}
+
 }
