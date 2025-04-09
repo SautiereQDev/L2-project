@@ -15,7 +15,7 @@ class Athlete
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
 	#[ORM\Column]
-	private ?int $id = null;
+	private ?int $id = null;doctrine:migrations:migrate
 
 	#[ORM\Column(length: 255)]
 	private ?string $firstname = null;
@@ -41,11 +41,11 @@ class Athlete
 	#[ORM\OneToMany(targetEntity: Record::class, mappedBy: 'athlete')]
 	private Collection $records;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+	#[ORM\Column]
+	private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $updatedAt = null;
+	#[ORM\Column]
+	private ?\DateTimeImmutable $updatedAt = null;
 
 	public function __construct()
 	{
@@ -179,27 +179,27 @@ class Athlete
 		return $this;
 	}
 
-    public function getCreatedAt(): ?\DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
+	public function getCreatedAt(): ?\DateTimeImmutable
+	{
+		return $this->createdAt;
+	}
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
-    {
-        $this->createdAt = $createdAt;
+	public function setCreatedAt(\DateTimeImmutable $createdAt): static
+	{
+		$this->createdAt = $createdAt;
 
-        return $this;
-    }
+		return $this;
+	}
 
-    public function getUpdatedAt(): ?\DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
+	public function getUpdatedAt(): ?\DateTimeImmutable
+	{
+		return $this->updatedAt;
+	}
 
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
-    {
-        $this->updatedAt = $updatedAt;
+	public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
+	{
+		$this->updatedAt = $updatedAt;
 
-        return $this;
-    }
+		return $this;
+	}
 }

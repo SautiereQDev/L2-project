@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Enums\GenderType;
 use App\Repository\RecordRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -16,10 +18,11 @@ class Record
 	#[ORM\Column]
 	private ?int $id = null;
 
+	#[ORM\ManyToOne(inversedBy: 'records')]
 	#[Assert\NotBlank(message: 'Discipline cannot be blank')]
 	private ?Discipline $discipline = null;
 
-	#[ORM\ManyToOne(targetEntity: Athlete::class, inversedBy: 'records')]
+	#[ORM\ManyToOne(inversedBy: 'records')]
 	#[Assert\NotBlank(message: 'Athlete cannot be blank')]
 	private ?Athlete $athlete = null;
 
@@ -28,9 +31,21 @@ class Record
 	#[Assert\Date(message: 'The date "{{ value }}" is not a valid date.')]
 	private ?\DateTimeInterface $lastRecord = null;
 
+	#[ORM\Column(type: 'string', nullable: true)]
+	private ?string $performance = null;
+
 	#[ORM\Column(type: 'string', length: 1, enumType: GenderType::class)]
 	#[Assert\Choice(choices: GenderType::CHOICES, message: 'Choisissez un genre valide.')]
-	private GenderType $genre = GenderType::HOMME;
+	private GenderType $genre = GenderType::MEN;
+
+	#[ORM\Column]
+	private bool $isCurrentRecord = false;
+
+	#[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'nextRecords')]
+	private ?self $previousRecord = null;
+
+	#[ORM\OneToMany(mappedBy: 'previousRecord', targetEntity: self::class)]
+	private Collection $nextRecords;
 
 	#[ORM\Column]
 	private bool $isActive = true;
@@ -41,43 +56,70 @@ class Record
 	#[ORM\Column]
 	private ?\DateTimeImmutable $updatedAt = null;
 
-	public function getId(): ?int
+	public function __construct()
 	{
-		return $this->id;
+		$this->nextRecords = new ArrayCollection();
 	}
 
-	public function getDiscipline(): Discipline
+	public function isCurrentRecord(): bool
 	{
-		return $this->discipline;
+		return $this->isCurrentRecord;
 	}
 
-	public function setDiscipline(Discipline $discipline): static
+	public function setIsCurrentRecord(bool $isCurrentRecord): static
 	{
-		$this->discipline = $discipline;
+		$this->isCurrentRecord = $isCurrentRecord;
 
 		return $this;
 	}
 
-	public function getAthlete(): ?Athlete
+	public function getPreviousRecord(): ?self
 	{
-		return $this->athlete;
+		return $this->previousRecord;
 	}
 
-	public function setAthlete(Athlete $athlete): static
+	public function setPreviousRecord(?self $previousRecord): static
 	{
-		$this->athlete = $athlete;
+		$this->previousRecord = $previousRecord;
 
 		return $this;
 	}
 
-	public function getLastRecord(): ?\DateTimeInterface
+	/**
+	 * @return Collection<int, Record>
+	 */
+	public function getNextRecords(): Collection
 	{
-		return $this->lastRecord;
+		return $this->nextRecords;
 	}
 
-	public function setLastRecord(\DateTimeInterface $lastRecord): static
+	public function addNextRecord(self $nextRecord): static
 	{
-		$this->lastRecord = $lastRecord;
+		if (!$this->nextRecords->contains($nextRecord)) {
+			$this->nextRecords->add($nextRecord);
+			$nextRecord->setPreviousRecord($this);
+		}
+
+		return $this;
+	}
+
+	public function removeNextRecord(self $nextRecord): static
+	{
+		if ($this->nextRecords->removeElement($nextRecord) && $nextRecord->getPreviousRecord() === $this) {
+			$nextRecord->setPreviousRecord(null);
+		}
+
+		return $this;
+	}
+
+	public function getPerformance(): ?string
+	{
+		return $this->performance;
+	}
+
+	public function setPerformance(?string $performance): static
+	{
+		$this->performance = $performance;
 
 		return $this;
 	}
@@ -127,6 +169,50 @@ class Record
 	{
 		$this->updatedAt = $updatedAt;
 
+		return $this;
+	}
+
+	public function getId(): ?int
+	{
+		return $this->id;
+	}
+
+	public function setId(?int $id): static
+	{
+		$this->id = $id;
+		return $this;
+	}
+
+	public function getDiscipline(): ?Discipline
+	{
+		return $this->discipline;
+	}
+
+	public function setDiscipline(?Discipline $discipline): static
+	{
+		$this->discipline = $discipline;
+		return $this;
+	}
+
+	public function getAthlete(): ?Athlete
+	{
+		return $this->athlete;
+	}
+
+	public function setAthlete(?Athlete $athlete): static
+	{
+		$this->athlete = $athlete;
+		return $this;
+	}
+
+	public function getLastRecord(): ?\DateTimeInterface
+	{
+		return $this->lastRecord;
+	}
+
+	public function setLastRecord(?\DateTimeInterface $lastRecord): static
+	{
+		$this->lastRecord = $lastRecord;
 		return $this;
 	}
 }
