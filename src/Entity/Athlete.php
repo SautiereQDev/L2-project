@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enums\GenderType;
 use App\Repository\AthleteRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -15,7 +16,7 @@ class Athlete
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
 	#[ORM\Column]
-	private ?int $id = null;doctrine:migrations:migrate
+	private ?int $id = null;
 
 	#[ORM\Column(length: 255)]
 	private ?string $firstname = null;
@@ -46,6 +47,10 @@ class Athlete
 
 	#[ORM\Column]
 	private ?\DateTimeImmutable $updatedAt = null;
+
+	#[ORM\Column]
+	#[Assert\Choice("Vous devez choisir parmis les options de GenderType", GenderType::CHOICES)]
+	private GenderType $gender = GenderType::MEN;
 
 	public function __construct()
 	{
@@ -200,6 +205,17 @@ class Athlete
 	{
 		$this->updatedAt = $updatedAt;
 
+		return $this;
+	}
+
+	public function getGender(): GenderType
+	{
+		return $this->gender;
+	}
+
+	public function setGender(GenderType $type): static
+	{
+		$this->gender = $type;
 		return $this;
 	}
 }

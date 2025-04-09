@@ -31,30 +31,37 @@ class Record
 	#[Assert\Date(message: 'The date "{{ value }}" is not a valid date.')]
 	private ?\DateTimeInterface $lastRecord = null;
 
-	#[ORM\Column(type: 'string', nullable: true)]
-	private ?string $performance = null;
+	#[ORM\Column]
+	private \DateTime|float|null $performance = null;
 
 	#[ORM\Column(type: 'string', length: 1, enumType: GenderType::class)]
 	#[Assert\Choice(choices: GenderType::CHOICES, message: 'Choisissez un genre valide.')]
-	private GenderType $genre = GenderType::MEN;
+	private ?GenderType $genre = GenderType::MEN;
 
 	#[ORM\Column]
-	private bool $isCurrentRecord = false;
+	private ?bool $isCurrentRecord = false;
 
 	#[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'nextRecords')]
 	private ?self $previousRecord = null;
 
-	#[ORM\OneToMany(mappedBy: 'previousRecord', targetEntity: self::class)]
-	private Collection $nextRecords;
+	#[ORM\OneToMany(targetEntity: self::class, mappedBy: 'previousRecord')]
+	private ?Collection $nextRecords;
 
 	#[ORM\Column]
-	private bool $isActive = true;
+	private ?bool $isActive = true;
 
 	#[ORM\Column]
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column]
 	private ?\DateTimeImmutable $updatedAt = null;
+
+	#[ORM\Column]
+	#[Assert\NotBlank(message: 'The record performance cannot be blank')]
+	private \DateTime $time;
+
+	#[ORM\ManyToOne(targetEntity: Location::class, inversedBy: 'disciplines')]
+	private ?Location $location = null;
 
 	public function __construct()
 	{
@@ -112,12 +119,12 @@ class Record
 		return $this;
 	}
 
-	public function getPerformance(): ?string
+	public function getPerformance(): \DateTime|float|null
 	{
 		return $this->performance;
 	}
 
-	public function setPerformance(?string $performance): static
+	public function setPerformance(\DateTime|float|null $performance): static
 	{
 		$this->performance = $performance;
 
@@ -213,6 +220,30 @@ class Record
 	public function setLastRecord(?\DateTimeInterface $lastRecord): static
 	{
 		$this->lastRecord = $lastRecord;
+		return $this;
+	}
+
+	public function getTime(): \DateTime
+	{
+		return $this->time;
+	}
+
+	public function setTime(\DateTime $time): static
+	{
+		$this->time = $time;
+
+		return $this;
+	}
+
+	public function getLocation(): ?Location
+	{
+		return $this->location;
+	}
+
+	public function setLocation(?Location $location): static
+	{
+		$this->location = $location;
+
 		return $this;
 	}
 }

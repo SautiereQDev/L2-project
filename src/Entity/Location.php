@@ -26,7 +26,7 @@ class Location
 	#[ORM\Column(length: 255)]
 	private ?string $country = null;
 
-	#[ORM\Column]
+	#[ORM\Column(nullable: true)]
 	private ?int $capacity = null;
 
 	// For the coordinates

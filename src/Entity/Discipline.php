@@ -3,10 +3,12 @@
 namespace App\Entity;
 
 use App\Enums\DisciplineType;
+use App\Enums\RunningType;
 use App\Repository\DisciplineRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: DisciplineRepository::class)]
 class Discipline
@@ -25,7 +27,6 @@ class Discipline
 	#[ORM\Column(length: 255, nullable: true)]
 	private ?string $categories = null;
 
-
 	// les deux records (H, F)
 	#[ORM\OneToMany(targetEntity: Record::class, mappedBy: 'discipline', cascade: ['persist', 'remove'])]
 	private ?Collection $records = null;
@@ -35,6 +36,10 @@ class Discipline
 
 	#[ORM\Column]
 	private ?\DateTimeImmutable $updatedAt = null;
+
+	#[ORM\Column(nullable: true)]
+	#[Assert\Choice("Vous devez choisir parmis les options de RunningType", RunningType::CHOICES)]
+	private ?RunningType $runningType = null;
 
 	public function __construct()
 	{
@@ -131,6 +136,18 @@ class Discipline
 	public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
 	{
 		$this->updatedAt = $updatedAt;
+
+		return $this;
+	}
+
+	public function getRunningType(): ?RunningType
+	{
+		return $this->runningType;
+	}
+
+	public function setRunningType(RunningType $runningType): static
+	{
+		$this->runningType = $runningType;
 
 		return $this;
 	}
