@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class AthleteController extends AbstractController
 {
-	#[Route('/athletes', name: 'app_app')]
+	#[Route('/athlete', name: 'api_athletes')]
 	public function index(AthleteRepository $athleteRepository): JsonResponse
 	{
 		$athletesList = $athleteRepository->findAll();
@@ -23,5 +23,17 @@ final class AthleteController extends AbstractController
 		}, $athletesList);
 
 		return $this->json($data);
+	}
+
+	#[Route('/athlete/{id}', name: 'api_athlete')]
+	public function showAthleteById(AthleteRepository $athleteRepository, int $id): JsonResponse
+	{
+		$athlete = $athleteRepository->find($id);
+
+		if (empty($athlete)) {
+			return $this->json(['message' => 'Athlète non trouvé.']);
+		}
+
+		return $this->json($athlete->jsonSerialize());
 	}
 }
