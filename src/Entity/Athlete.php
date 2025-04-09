@@ -8,10 +8,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use PHPUnit\Util\Json;
+use SebastianBergmann\Type\MixedType;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: AthleteRepository::class)]
-class Athlete
+class Athlete implements \JsonSerializable
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -217,5 +219,22 @@ class Athlete
 	{
 		$this->gender = $type;
 		return $this;
+	}
+
+	public function jsonSerialize(): array
+	{
+		return [
+			'id' => $this->getId(),
+			'firstname' => $this->getFirstname(),
+			'lastname' => $this->getLastname(),
+			'country' => $this->getCountry(),
+			'birthdate' => $this->getBirthdate()?->format('Y-m-d'),
+			'heigth' => $this->getHeigth(),
+			'weigth' => $this->getWeigth(),
+			'coach' => $this->getCoach(),
+			'createdAt' => $this->getCreatedAt()?->format('Y-m-d H:i:s'),
+			'updatedAt' => $this->getUpdatedAt()?->format('Y-m-d H:i:s'),
+			'gender' => $this->getGender()->value,
+		];
 	}
 }

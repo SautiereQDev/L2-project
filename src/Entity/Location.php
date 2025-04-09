@@ -9,7 +9,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 
 #[ORM\Entity(repositoryClass: LocationRepository::class)]
-class Location
+class Location implements \JsonSerializable
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -169,5 +169,21 @@ class Location
 		$this->updatedAt = $updatedAt;
 
 		return $this;
+	}
+
+	public function jsonSerialize(): array
+	{
+		return [
+			'id' => $this->id,
+			'name' => $this->name,
+			'city' => $this->city,
+			'country' => $this->country,
+			'capacity' => $this->capacity,
+			'longitude' => $this->longitude,
+			'latitude' => $this->latitude,
+			'type' => $this->type,
+			'createdAt' => $this->createdAt,
+			'updatedAt' => $this->updatedAt,
+		];
 	}
 }

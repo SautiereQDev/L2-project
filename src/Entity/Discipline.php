@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: DisciplineRepository::class)]
-class Discipline
+class Discipline implements \JsonSerializable
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -150,5 +150,18 @@ class Discipline
 		$this->runningType = $runningType;
 
 		return $this;
+	}
+
+	public function jsonSerialize(): array
+	{
+		return [
+			'id' => $this->id,
+			'name' => $this->name,
+			'type' => $this->type,
+			'categories' => $this->categories,
+			'createdAt' => $this->createdAt,
+			'updatedAt' => $this->updatedAt,
+			'runningType' => $this->runningType,
+		];
 	}
 }

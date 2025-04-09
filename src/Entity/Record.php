@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: RecordRepository::class)]
-class Record
+class Record implements \JsonSerializable
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -245,5 +245,25 @@ class Record
 		$this->location = $location;
 
 		return $this;
+	}
+
+	public function jsonSerialize(): array
+	{
+		return [
+			'id' => $this->id,
+			'discipline' => $this->discipline,
+			'athlete' => $this->athlete,
+			'lastRecord' => $this->lastRecord,
+			'performance' => $this->performance,
+			'genre' => $this->genre,
+			'isCurrentRecord' => $this->isCurrentRecord,
+			'previousRecord' => $this->previousRecord,
+			'nextRecords' => $this->nextRecords,
+			'isActive' => $this->isActive,
+			'createdAt' => $this->createdAt,
+			'updatedAt' => $this->updatedAt,
+			'time' => $this->time,
+			'location' => $this->location
+		];
 	}
 }
