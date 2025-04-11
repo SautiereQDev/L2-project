@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Enums\GenderType;
 use App\Repository\RecordRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -10,8 +11,12 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
+#[ApiResource(
+	normalizationContext: ['groups' => ['record:read']],
+	denormalizationContext: ['groups' => ['record:write']],
+)]
 #[ORM\Entity(repositoryClass: RecordRepository::class)]
-class Record
+class Record implements \JsonSerializable
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -39,28 +44,32 @@ class Record
 	private ?GenderType $genre = GenderType::MEN;
 
 	#[ORM\Column]
+	#[Assert\NotBlank(message: 'The record performance cannot be blank')]
 	private ?bool $isCurrentRecord = false;
 
 	#[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'nextRecords')]
+	#[ORM\JoinColumn(nullable: true)]
 	private ?self $previousRecord = null;
 
 	#[ORM\OneToMany(targetEntity: self::class, mappedBy: 'previousRecord')]
+	#[ORM\JoinColumn(nullable: true)]
 	private ?Collection $nextRecords;
 
 	#[ORM\Column]
 	private ?bool $isActive = true;
 
 	#[ORM\Column]
+	#[Assert\NotBlank(message: 'The record creation date cannot be blank')]
+	#[Assert\DateTime(message: 'The date "{{ value }}" is not a valid date.')]
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column]
+	#[Assert\NotBlank(message: 'The record update date cannot be blank')]
+	#[Assert\DateTime(message: 'The date "{{ value }}" is not a valid date.')]
 	private ?\DateTimeImmutable $updatedAt = null;
 
-	#[ORM\Column]
-	#[Assert\NotBlank(message: 'The record performance cannot be blank')]
-	private \DateTime $time;
-
 	#[ORM\ManyToOne(targetEntity: Location::class, inversedBy: 'disciplines')]
+	#[Assert\NotBlank(message: 'Location cannot be blank')]
 	private ?Location $location = null;
 
 	public function __construct()
@@ -245,5 +254,24 @@ class Record
 		$this->location = $location;
 
 		return $this;
+	}
+
+	public function jsonSerialize(): array
+	{
+		return [
+			'id' => $this->id,
+			'discipline' => $this->discipline,
+			'athlete' => $this->athlete,
+			'lastRecord' => $this->lastRecord,
+			'performance' => $this->performance,
+			'genre' => $this->genre,
+			'isCurrentRecord' => $this->isCurrentRecord,
+			'previousRecord' => $this->previousRecord,
+			'nextRecords' => $this->nextRecords,
+			'isActive' => $this->isActive,
+			'createdAt' => $this->createdAt,
+			'updatedAt' => $this->updatedAt,
+			'location' => $this->location
+		];
 	}
 }

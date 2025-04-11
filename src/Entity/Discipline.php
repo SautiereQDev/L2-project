@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Enums\DisciplineType;
 use App\Enums\RunningType;
 use App\Repository\DisciplineRepository;
@@ -10,8 +11,12 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
+#[ApiResource(
+	normalizationContext: ['groups' => ['discipline:read']],
+	denormalizationContext: ['groups' => ['discipline:write']]
+)]
 #[ORM\Entity(repositoryClass: DisciplineRepository::class)]
-class Discipline
+class Discipline implements \JsonSerializable
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -19,26 +24,41 @@ class Discipline
 	private ?int $id = null;
 
 	#[ORM\Column(length: 255)]
+	#[Assert\NotBlank(message: "Le nom de la discipline est requis.")]
+	#[Assert\Length(max: 255, maxMessage: "Le nom de la discipline ne doit pas dépasser {{ limit }} caractères.")]
+	#[Assert\Regex(pattern: '/^[a-zA-ZÀ-ÿ\s\-]+$/', message: "Le nom de la discipline ne doit contenir que des lettres, des espaces et des tirets.")]
 	private ?string $name = null;
 
 	#[ORM\Column]
+	#[Assert\Choice(choices: DisciplineType::VALID_VALUES, message: 'Choisissez un type valide.')]
+	#[Assert\NotBlank(message: "Le type de la discipline est requis.")]
 	private DisciplineType $type = DisciplineType::RUN;
 
 	#[ORM\Column(length: 255, nullable: true)]
+	#[Assert\NotBlank(message: "Les catégories de la discipline sont requises.")]
+	#[Assert\Length(max: 255, maxMessage: "Les catégories de la discipline ne doivent pas dépasser {{ limit }} caractères.")]
 	private ?string $categories = null;
 
-	// les deux records (H, F)
 	#[ORM\OneToMany(targetEntity: Record::class, mappedBy: 'discipline', cascade: ['persist', 'remove'])]
+	#[Assert\Valid]
+	#[Assert\Count(min: 2, minMessage: 'Il doit y avoir au moins deux records associés à cette discipline (H \& F).')]
 	private ?Collection $records = null;
 
 	#[ORM\Column]
+	#[Assert\NotBlank(message: "La date de création est requise.")]
+	#[Assert\DateTime(message: "La date de création doit être au format valide.")]
+	#[Assert\LessThan('today', message: "La date de création doit être dans le passé.")]
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column]
+	#[Assert\NotBlank(message: "La date de mise à jour est requise.")]
+	#[Assert\DateTime(message: "La date de mise à jour doit être au format valide.")]
+	#[Assert\LessThan('today', message: "La date de mise à jour doit être dans le passé.")]
 	private ?\DateTimeImmutable $updatedAt = null;
 
 	#[ORM\Column(nullable: true)]
-	#[Assert\Choice("Vous devez choisir parmis les options de RunningType", RunningType::CHOICES)]
+	#[Assert\NotBlank(message: "Le type de course est requis.")]
+	#[Assert\Choice(choices: RunningType::CHOICES, message: 'Choisissez un type valide pour la course.')]
 	private ?RunningType $runningType = null;
 
 	public function __construct()
@@ -59,7 +79,6 @@ class Discipline
 	public function setName(string $name): static
 	{
 		$this->name = $name;
-
 		return $this;
 	}
 
@@ -71,7 +90,6 @@ class Discipline
 	public function setType(DisciplineType $type): static
 	{
 		$this->type = $type;
-
 		return $this;
 	}
 
@@ -83,7 +101,6 @@ class Discipline
 	public function setCategories(string $categories): static
 	{
 		$this->categories = $categories;
-
 		return $this;
 	}
 
@@ -104,7 +121,6 @@ class Discipline
 			$this->records[] = $record;
 			$record->setDiscipline($this);
 		}
-
 		return $this;
 	}
 
@@ -124,7 +140,6 @@ class Discipline
 	public function setCreatedAt(\DateTimeImmutable $createdAt): static
 	{
 		$this->createdAt = $createdAt;
-
 		return $this;
 	}
 
@@ -136,7 +151,6 @@ class Discipline
 	public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
 	{
 		$this->updatedAt = $updatedAt;
-
 		return $this;
 	}
 
@@ -148,7 +162,19 @@ class Discipline
 	public function setRunningType(RunningType $runningType): static
 	{
 		$this->runningType = $runningType;
-
 		return $this;
+	}
+
+	public function jsonSerialize(): array
+	{
+		return [
+			'id' => $this->id,
+			'name' => $this->name,
+			'type' => $this->type,
+			'categories' => $this->categories,
+			'createdAt' => $this->createdAt,
+			'updatedAt' => $this->updatedAt,
+			'runningType' => $this->runningType,
+		];
 	}
 }

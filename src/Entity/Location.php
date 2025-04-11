@@ -2,14 +2,19 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Enums\LocationType;
 use App\Repository\LocationRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 
+#[ApiResource(
+	normalizationContext: ['groups' => ['location:read']],
+	denormalizationContext: ['groups' => ['location:write']],
+)]
 #[ORM\Entity(repositoryClass: LocationRepository::class)]
-class Location
+class Location implements \JsonSerializable
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -18,12 +23,18 @@ class Location
 
 	#[ORM\Column(length: 255)]
 	#[Assert\NotBlank(message: 'Name cannot be blank')]
+	#[Assert\Length(max: 255, maxMessage: 'Name cannot exceed {{ limit }} characters')]
+	#[Assert\Regex(pattern: '/^[a-zA-ZÀ-ÿ\s-]+$/', message: 'Name can only contain letters, spaces, and hyphens')]
 	private ?string $name = null;
 
 	#[ORM\Column(length: 255)]
+	#[Assert\NotBlank(message: 'City cannot be blank')]
+	#[Assert\Length(max: 255, maxMessage: 'City cannot exceed {{ limit }} characters')]
 	private ?string $city = null;
 
 	#[ORM\Column(length: 255)]
+	#[Assert\NotBlank(message: 'Country cannot be blank')]
+	#[Assert\Length(min: 2, max: 2, exactMessage: 'Le pays doit contenir exactement 2 caractères')]
 	private ?string $country = null;
 
 	#[ORM\Column(nullable: true)]
@@ -169,5 +180,21 @@ class Location
 		$this->updatedAt = $updatedAt;
 
 		return $this;
+	}
+
+	public function jsonSerialize(): array
+	{
+		return [
+			'id' => $this->id,
+			'name' => $this->name,
+			'city' => $this->city,
+			'country' => $this->country,
+			'capacity' => $this->capacity,
+			'longitude' => $this->longitude,
+			'latitude' => $this->latitude,
+			'type' => $this->type,
+			'createdAt' => $this->createdAt,
+			'updatedAt' => $this->updatedAt,
+		];
 	}
 }

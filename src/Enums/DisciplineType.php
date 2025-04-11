@@ -13,4 +13,6 @@ enum DisciplineType: int
 		self::THROW->value => 'Lancer',
 		self::JUMP->value => 'Saut',
 	];
+
+	public const VALID_VALUES = [1, 2, 3]; // Les valeurs possibles de l'enum
 }
