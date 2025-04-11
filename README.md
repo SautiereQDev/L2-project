@@ -11,7 +11,9 @@
 ## Description
 
 This is an Symfony + Vue website that display the athletisme records and give you the possibility to modify, delete or
-add a record.
+add a record. The backend api is made with API Platform.
+
+
 
 ----- 
 
@@ -32,16 +34,27 @@ composer install
 
 L'url vers la bdd doit etre bind en 3307 au lieu du port 3306 par defaut
 
+## Documentation
 
------
+After initializing the project, you can access the API documentation at: https://project.localhost:8443/api
+
+
+---------------
+
+## External libraries
+
+- [API Platform](https://api-platform.com/)
+- Symfony Validator
+- Symfony Profiler
+- [Faker](https://fakerphp.org/)
 
 ## License
 
 This project is under GPL-v3.0 License - see the [LICENSE](LICENSE) file for details.
 
-## Structure à implémenter
+---------
 
-/api/v1/[ressource]
+## Routes implemented at the end of the project
 
 ### Athletes
 
