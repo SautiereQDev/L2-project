@@ -2,14 +2,17 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Enums\GenderType;
 use App\Repository\RecordRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
+#[ApiResource(
+	normalizationContext: ['groups' => ['record:read']],
+	denormalizationContext: ['groups' => ['record:write']],
+)]
 #[ORM\Entity(repositoryClass: RecordRepository::class)]
 class Record implements \JsonSerializable
 {
@@ -39,34 +42,39 @@ class Record implements \JsonSerializable
 	private ?GenderType $genre = GenderType::MEN;
 
 	#[ORM\Column]
+	#[Assert\NotBlank(message: 'The record performance cannot be blank')]
 	private ?bool $isCurrentRecord = false;
 
 	#[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'nextRecords')]
+	#[ORM\JoinColumn(nullable: true)]
 	private ?self $previousRecord = null;
-
-	#[ORM\OneToMany(targetEntity: self::class, mappedBy: 'previousRecord')]
-	private ?Collection $nextRecords;
 
 	#[ORM\Column]
 	private ?bool $isActive = true;
 
 	#[ORM\Column]
+	#[Assert\NotBlank(message: 'The record performance cannot be blank')]
+	#[Assert\DateTime(message: 'The date "{{ value }}" is not a valid date.')]
+	#[Assert\LessThan('today', message: 'The date must be in the past')]
+	#[Assert\GreaterThan('1900-01-01', message: 'The date must be after 1900-01-01')]
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column]
+	#[Assert\NotBlank(message: 'The record performance cannot be blank')]
+	#[Assert\DateTime(message: 'The date "{{ value }}" is not a valid date.')]
+	#[Assert\LessThan('today', message: 'The date must be in the past')]
+	#[Assert\GreaterThan('1900-01-01', message: 'The date must be after 1900-01-01')]
 	private ?\DateTimeImmutable $updatedAt = null;
 
 	#[ORM\Column]
 	#[Assert\NotBlank(message: 'The record performance cannot be blank')]
+	#[Assert\DateTime(message: 'The date "{{ value }}" is not a valid date.')]
+	#[Assert\LessThan('today', message: 'The date must be in the past')]
+	#[Assert\GreaterThan('1900-01-01', message: 'The date must be after 1900-01-01')]
 	private \DateTime $time;
 
 	#[ORM\ManyToOne(targetEntity: Location::class, inversedBy: 'disciplines')]
 	private ?Location $location = null;
-
-	public function __construct()
-	{
-		$this->nextRecords = new ArrayCollection();
-	}
 
 	public function isCurrentRecord(): bool
 	{
@@ -88,33 +96,6 @@ class Record implements \JsonSerializable
 	public function setPreviousRecord(?self $previousRecord): static
 	{
 		$this->previousRecord = $previousRecord;
-
-		return $this;
-	}
-
-	/**
-	 * @return Collection<int, Record>
-	 */
-	public function getNextRecords(): Collection
-	{
-		return $this->nextRecords;
-	}
-
-	public function addNextRecord(self $nextRecord): static
-	{
-		if (!$this->nextRecords->contains($nextRecord)) {
-			$this->nextRecords->add($nextRecord);
-			$nextRecord->setPreviousRecord($this);
-		}
-
-		return $this;
-	}
-
-	public function removeNextRecord(self $nextRecord): static
-	{
-		if ($this->nextRecords->removeElement($nextRecord) && $nextRecord->getPreviousRecord() === $this) {
-			$nextRecord->setPreviousRecord(null);
-		}
 
 		return $this;
 	}
@@ -258,7 +239,6 @@ class Record implements \JsonSerializable
 			'genre' => $this->genre,
 			'isCurrentRecord' => $this->isCurrentRecord,
 			'previousRecord' => $this->previousRecord,
-			'nextRecords' => $this->nextRecords,
 			'isActive' => $this->isActive,
 			'createdAt' => $this->createdAt,
 			'updatedAt' => $this->updatedAt,
