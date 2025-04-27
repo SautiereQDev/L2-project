@@ -4,3 +4,7 @@ controllers:
         namespace: App\Controller
     type: attribute
     prefix: /api/v1
+auth:
+    path: /api/v1/auth
+    controller: App\Controller\AuthController::login
+    methods: [POST]
