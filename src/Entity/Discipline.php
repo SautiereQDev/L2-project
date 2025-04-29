@@ -3,20 +3,31 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Dto\DisciplineInput;
+use App\Dto\DisciplineOutput;
 use App\Enums\DisciplineType;
 use App\Enums\RunningType;
 use App\Repository\DisciplineRepository;
+use App\State\DisciplineOutputProvider;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Enums\CategorieType;
 
 #[ApiResource(
-	normalizationContext: ['groups' => ['discipline:read']],
-	denormalizationContext: ['groups' => ['discipline:write']]
+	normalizationContext: [
+		'groups' => ['discipline:read', 'record:read'],
+		'enable_max_depth' => true,
+	],
+	denormalizationContext: ['groups' => ['discipline:write']],
+	input: DisciplineInput::class,
+	output: DisciplineOutput::class,
+	provider: DisciplineOutputProvider::class
 )]
 #[ORM\Entity(repositoryClass: DisciplineRepository::class)]
-class Discipline implements \JsonSerializable
+class Discipline
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -36,8 +47,8 @@ class Discipline implements \JsonSerializable
 
 	#[ORM\Column(length: 255, nullable: true)]
 	#[Assert\NotBlank(message: "Les catégories de la discipline sont requises.")]
-	#[Assert\Length(max: 255, maxMessage: "Les catégories de la discipline ne doivent pas dépasser {{ limit }} caractères.")]
-	private ?string $categories = null;
+	#[Assert\Choice(choices: CategorieType::CHOICES, message: 'Choisissez une catégorie valide.')]
+	private ?string $categorie = null;
 
 	#[ORM\OneToMany(targetEntity: Record::class, mappedBy: 'discipline', cascade: ['persist', 'remove'])]
 	#[Assert\Valid]
@@ -95,12 +106,12 @@ class Discipline implements \JsonSerializable
 
 	public function getCategories(): ?string
 	{
-		return $this->categories;
+		return $this->categorie;
 	}
 
 	public function setCategories(string $categories): static
 	{
-		$this->categories = $categories;
+		$this->categorie = $categories;
 		return $this;
 	}
 
@@ -163,18 +174,5 @@ class Discipline implements \JsonSerializable
 	{
 		$this->runningType = $runningType;
 		return $this;
-	}
-
-	public function jsonSerialize(): array
-	{
-		return [
-			'id' => $this->id,
-			'name' => $this->name,
-			'type' => $this->type,
-			'categories' => $this->categories,
-			'createdAt' => $this->createdAt,
-			'updatedAt' => $this->updatedAt,
-			'runningType' => $this->runningType,
-		];
 	}
 }
