@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use App\Enums\GenderType;
 use App\Repository\AthleteRepository;
@@ -9,36 +10,42 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Dto\AthleteInput;
+use App\Dto\AthleteOutput;
+use App\State\AthleteOutputProvider;
 
 #[
 	ApiResource(
 		normalizationContext: ['groups' => ['athlete:read']],
 		denormalizationContext: ['groups' => ['athlete:write']],
+		input: AthleteInput::class,
+		output: AthleteOutput::class,
+        // Use the custom provider for GET operations
+        provider: AthleteOutputProvider::class
 	),
 	ORM\Entity(repositoryClass: AthleteRepository::class)
 ]
-class Athlete implements \JsonSerializable
+class Athlete
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
 	#[ORM\Column]
-	#[Groups(['athlete:read'])]
+    // No #[Groups] needed here anymore for direct output, DTO handles it.
+    // Keep if needed for relations in *other* DTOs.
 	private ?int $id = null;
 
 	#[ORM\Column(length: 255)]
 	#[Assert\NotBlank(message: "Le prénom de l'athlète est requis.")]
 	#[Assert\Length(max: 255, maxMessage: "Le prénom de l'athlète ne doit pas dépasser {{ limit }} caractères.")]
 	#[Assert\Regex(pattern: '/^[a-zA-ZÀ-ÿ\s-]+$/', message: "Le prénom de l'athlète ne doit contenir que des lettres, des espaces et des tirets.")]
-	#[Groups(['athlete:read', 'athlete:write'])]
+    // No #[Groups] needed here anymore for direct output
 	private ?string $firstname = null;
 
 	#[ORM\Column(length: 255)]
 	#[Assert\NotBlank(message: "Le nom de l'athlète est requis.")]
 	#[Assert\Length(max: 255, maxMessage: "Le nom de l'athlète ne doit pas dépasser {{ limit }} caractères.")]
 	#[Assert\Regex(pattern: '/^[a-zA-ZÀ-ÿ\s-]+$/', message: "Le nom de l'athlète ne doit contenir que des lettres, des espaces et des tirets.")]
-	#[Groups(['athlete:read', 'athlete:write'])]
 	private ?string $lastname = null;
 
 	#[ORM\Column(length: 2)]
@@ -52,7 +59,6 @@ class Athlete implements \JsonSerializable
 	#[Assert\Date(message: "La date de naissance de l'athlète doit être au format valide.")]
 	#[Assert\LessThan('today', message: "La date de naissance de l'athlète doit être dans le passé.")]
 	#[Assert\GreaterThan('1900-01-01', message: "La date de naissance de l'athlète doit être après le 1er janvier 1900.")]
-	#[Groups(['athlete:read', 'athlete:write'])]
 	private ?\DateTimeInterface $birthdate = null;
 
 	#[ORM\Column(type: 'integer', nullable: true)]
@@ -71,24 +77,20 @@ class Athlete implements \JsonSerializable
 	private ?string $coach = null;
 
 	#[ORM\OneToMany(targetEntity: Record::class, mappedBy: 'athlete')]
-	#[Groups(['athlete:read', 'athlete:write'])]
 	private Collection $records;
 
 	#[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])]
 	#[Assert\NotBlank(message: "La date de création est requise.")]
 	#[Assert\DateTime(message: "La date de création doit être au format valide.")]
-	#[Groups(['athlete:read'])]
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])]
 	#[Assert\NotBlank(message: "La date de mise à jour est requise.")]
 	#[Assert\DateTime(message: "La date de mise à jour doit être au format valide.")]
-	#[Groups(['athlete:read'])]
 	private ?\DateTimeImmutable $updatedAt = null;
 
 	#[ORM\Column(length: 255)]
 	#[Assert\Choice(choices: GenderType::CHOICES, message: "Vous devez choisir parmis les options de GenderType")] #[Assert\NotBlank(message: "Le genre de l'athlète est requis.")]
-	#[Groups(['athlete:read', 'athlete:write'])]
 	private GenderType $gender = GenderType::MEN;
 
 	public function __construct()
@@ -247,21 +249,5 @@ class Athlete implements \JsonSerializable
 		$this->gender = $type;
 		return $this;
 	}
-
-	public function jsonSerialize(): array
-	{
-		return [
-			'id' => $this->getId(),
-			'firstname' => $this->getFirstname(),
-			'lastname' => $this->getLastname(),
-			'country' => $this->getCountry(),
-			'birthdate' => $this->getBirthdate()?->format('Y-m-d'),
-			'heigth' => $this->getHeigth(),
-			'weigth' => $this->getWeigth(),
-			'coach' => $this->getCoach(),
-			'createdAt' => $this->getCreatedAt()?->format('Y-m-d H:i:s'),
-			'updatedAt' => $this->getUpdatedAt()?->format('Y-m-d H:i:s'),
-			'gender' => $this->getGender()->value,
-		];
-	}
 }
+

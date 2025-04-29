@@ -3,18 +3,25 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Dto\LocationInput;
+use App\Dto\LocationOutput;
 use App\Enums\LocationType;
 use App\Repository\LocationRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 
 #[ApiResource(
 	normalizationContext: ['groups' => ['location:read']],
 	denormalizationContext: ['groups' => ['location:write']],
+	input: LocationInput::class,
+	output: LocationOutput::class,
 )]
 #[ORM\Entity(repositoryClass: LocationRepository::class)]
-class Location implements \JsonSerializable
+class Location
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -68,7 +75,18 @@ class Location implements \JsonSerializable
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column]
+	#[Groups(['discipline:read'])]
 	private ?\DateTimeImmutable $updatedAt = null;
+
+	#[ORM\OneToMany(targetEntity: Record::class, mappedBy: 'location', cascade: ['persist', 'remove'])]
+	private Collection $records;
+
+	public function __construct()
+	{
+		$this->records = new ArrayCollection();
+		$this->createdAt = new \DateTimeImmutable();
+		$this->updatedAt = new \DateTimeImmutable();
+	}
 
 	public function getId(): ?int
 	{
@@ -182,19 +200,25 @@ class Location implements \JsonSerializable
 		return $this;
 	}
 
-	public function jsonSerialize(): array
+	public function getRecords(): Collection
 	{
-		return [
-			'id' => $this->id,
-			'name' => $this->name,
-			'city' => $this->city,
-			'country' => $this->country,
-			'capacity' => $this->capacity,
-			'longitude' => $this->longitude,
-			'latitude' => $this->latitude,
-			'type' => $this->type,
-			'createdAt' => $this->createdAt,
-			'updatedAt' => $this->updatedAt,
-		];
+		return $this->records;
+	}
+
+	public function addRecord(Record $record): static
+	{
+		if (!$this->records->contains($record)) {
+			$this->records->add($record);
+			$record->setLocation($this);
+		}
+		return $this;
+	}
+
+	public function removeRecord(Record $record): static
+	{
+		if ($this->records->removeElement($record)) {
+			$record->setLocation(null);
+		}
+		return $this;
 	}
 }

@@ -10,6 +10,11 @@ services:
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            # Bind the specific Doctrine providers to the named arguments of all OutputProviders
+            # These arguments match the constructor param names in AthleteOutputProvider and DisciplineOutputProvider
+            $itemProvider: '@api_platform.doctrine.orm.state.item_provider'
+            $collectionProvider: '@api_platform.doctrine.orm.state.collection_provider'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -20,5 +25,6 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    # The `bind` configuration above is sufficient for injecting the correct providers.
+    # Use the `provider` attribute on each ApiResource to specify the provider for a resource type.
+    # Avoid direct service decoration to prevent conflicts or unintended behavior.
