@@ -51,11 +51,9 @@ class RecordFixtures extends Fixture implements DependentFixtureInterface
 						// Conversion du DateTime en float (secondes avec microsecondes)
 						$performanceFloat = (float)$performanceTime->format('U.u');
 						$record->setPerformance($performanceFloat);
-						$record->setTime($performanceTime);
 					} else {
 						$distance = $this->generateDistance($disciplineType);
 						$record->setPerformance($distance);
-						$record->setTime(new DateTime('2000-01-01 00:00:00', new DateTimeZone('UTC')));
 					}
 
 					// Définir le genre du record en fonction de l'athlète
