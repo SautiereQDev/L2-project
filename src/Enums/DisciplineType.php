@@ -2,17 +2,17 @@
 
 namespace App\Enums;
 
-enum DisciplineType: int
+enum DisciplineType: string
 {
-	case RUN = 1;
-	case THROW = 2;
-	case JUMP = 3;
+	case RUN = "run";
+	case THROW = "throw";
+	case JUMP = "jump";
 
 	public const CHOICES = [
-		self::RUN->value => 'Course',
-		self::THROW->value => 'Lancer',
-		self::JUMP->value => 'Saut',
+		self::RUN->value => 'run',
+		self::THROW->value => 'throw',
+		self::JUMP->value => 'jump',
 	];
 
-	public const VALID_VALUES = [1, 2, 3]; // Les valeurs possibles de l'enum
+	public const VALID_VALUES = ["run", "throw", "jump"]; // Les valeurs possibles de l'enum
 }
