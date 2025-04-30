@@ -99,7 +99,7 @@
       
       <!-- Tableau des records -->
       <div v-else class="table-responsive">
-        <table v-if="records && records.length > 0" class="records-table">
+        <table v-if="records && hasMembers(records)" class="records-table">
           <thead>
             <tr>
               <th scope="col" @click="sortBy('discipline.name')">
@@ -236,11 +236,12 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useQuery } from '@tanstack/vue-query';
 import { useRoute, useRouter } from 'vue-router';
-import type { RecordFilters, RecordEntity } from '../types';
+import type { RecordFilters, RecordEntity, GenderType, CategorieType } from '../types';
 import { DisciplineType } from '../types';
 import { debounce } from '../utils/debounce';
 import authService from '../services/auth.service';
 import recordsService from '../services/records.service';
+import { hasMembers } from '@/utils/collection.s';
 
 // Récupérer la route pour extraire les paramètres d'URL
 const route = useRoute();
@@ -261,9 +262,9 @@ const sortOrder = ref<'asc' | 'desc'>('desc');
 
 // État de filtre - initialiser avec des valeurs vides
 const filters = reactive<RecordFilters>({
-  disciplineType: '',
-  gender: '',
-  category: '',
+  disciplineType: undefined,
+  gender: undefined,
+  category: undefined,
   athleteName: '',
   yearFrom: undefined,
   yearTo: undefined,
@@ -353,13 +354,11 @@ const sortedRecords = computed(() => {
     
     if (typeof aVal === 'string') {
       comparison = aVal.localeCompare(bVal);
-    } else {
+    } else if (aVal < bVal) {
       // Comparaison numérique
-      if (aVal < bVal) {
-        comparison = -1;
-      } else if (aVal > bVal) {
-        comparison = 1;
-      }
+      comparison = -1;
+    } else if (aVal > bVal) {
+      comparison = 1;
     }
     
     // Appliquer l'ordre de tri
@@ -410,9 +409,9 @@ function applyFilters() {
 // Fonction pour réinitialiser les filtres
 function resetFilters() {
   // Réinitialiser tous les filtres
-  filters.disciplineType = '';
-  filters.gender = ''; 
-  filters.category = '';
+  filters.disciplineType = undefined;
+  filters.gender = undefined; 
+  filters.category = undefined;
   filters.athleteName = '';
   filters.yearFrom = undefined;
   filters.yearTo = undefined;
@@ -495,9 +494,9 @@ onMounted(async () => {
     }
 
     // Mettre à jour les filtres depuis les paramètres d'URL
-    if (route.query.disciplineType) filters.disciplineType = String(route.query.disciplineType);
-    if (route.query.gender) filters.gender = String(route.query.gender);
-    if (route.query.category) filters.category = String(route.query.category);
+    if (route.query.disciplineType) filters.disciplineType = route.query.disciplineType as DisciplineType;
+    if (route.query.gender) filters.gender = route.query.gender as GenderType;
+    if (route.query.category) filters.category = route.query.category as CategorieType;
     if (route.query.athleteName) filters.athleteName = String(route.query.athleteName);
     if (route.query.yearFrom) filters.yearFrom = Number(route.query.yearFrom);
     if (route.query.yearTo) filters.yearTo = Number(route.query.yearTo);

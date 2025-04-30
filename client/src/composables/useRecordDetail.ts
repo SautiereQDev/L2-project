@@ -24,14 +24,14 @@ export function useRecordDetail(id: number) {
       
       // Récupérer les records de la même discipline et du même genre
       const filters = {
-        disciplineType: record.discipline.type.toString(),
-        gender: record.genre.toString(),
+        disciplineType: record.discipline.type,
+        gender: record.genre,
       };
       
-      const records = await recordsService.getRecords(filters);
+      const recordsCollection = await recordsService.getRecords(filters);
       
       // Exclure le record actuel des résultats
-      return records.filter(r => r.id !== id);
+      return (recordsCollection.items ?? []).filter(r => r.id !== id);
     },
     enabled: computed(() => !!recordQuery.data.value), // Activer uniquement si on a les données du record
   });

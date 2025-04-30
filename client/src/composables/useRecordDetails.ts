@@ -27,9 +27,9 @@ export function useRecordDetails(recordId: number) {
       const record = recordQuery.data.value;
       return recordsService.getRecords({
         disciplineType: record.discipline.type,
-      }).then(records => 
+      }).then(recordsCollection => 
         // Filtrer pour exclure le record actuel et limiter à 5 records similaires
-        records
+        (recordsCollection.items || [])
           .filter(r => r.id !== id.value)
           .slice(0, 5)
       );

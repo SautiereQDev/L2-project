@@ -1,5 +1,4 @@
-// Clés de requête pour TanStack Query
-import { type RecordFilters } from "../services/records.service";
+import type { RecordFilters } from "@/types";
 
 // Structure des clés de requêtes pour éviter les duplications
 export const queryKeys = {

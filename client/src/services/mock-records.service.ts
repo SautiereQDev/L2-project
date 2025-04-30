@@ -17,86 +17,115 @@ function getRunningType(disciplineType: string, disciplineName: string): Running
 }
 
 // Générer des records factices pour les tests
+const disciplineTypes = ['run', 'jump', 'throw'];
+const genders = ['MEN', 'WOMEN'];
+const categories = ['U18', 'U20', 'U23', 'SENIOR', 'MASTER'];
+const countries = ['France', 'USA', 'Jamaica', 'Kenya', 'Ethiopia', 'Germany', 'Japan', 'UK'];
+
+const runningDisciplines = ['100m', '200m', '400m', '800m', '1500m', '5000m', '10000m', 'Marathon', '110m Hurdles', '400m Hurdles'];
+const jumpingDisciplines = ['Long Jump', 'Triple Jump', 'High Jump', 'Pole Vault'];
+const throwingDisciplines = ['Shot Put', 'Discus', 'Javelin', 'Hammer'];
+
+function getRunPerformance(name: string): number {
+  if (name.includes('Marathon')) {
+    return 7200 + Math.random() * 3600;
+  }
+  if (name.includes('10000m')) {
+    return 1500 + Math.random() * 600;
+  }
+  if (name.includes('5000m')) {
+    return 720 + Math.random() * 300;
+  }
+  if (name.includes('1500m')) {
+    return 200 + Math.random() * 60;
+  }
+  if (name.includes('800m')) {
+    return 100 + Math.random() * 20;
+  }
+  if (name.includes('100m')) {
+    return 10 + Math.random() * 2;
+  }
+  if (name.includes('200m')) {
+    return 10 + Math.random() * 10;
+  }
+  if (name.includes('400m')) {
+    return 10 + Math.random() * 20;
+  }
+  return 10 + Math.random() * 20;
+}
+
+function getJumpPerformance(name: string): number {
+  if (name.includes('Pole')) {
+    return 4 + Math.random() * 2.5;
+  }
+  if (name.includes('High')) {
+    return 1.8 + Math.random() * 0.6;
+  }
+  return 7 + Math.random() * 3;
+}
+
+function getThrowPerformance(name: string): number {
+  if (name.includes('Shot')) {
+    return 15 + Math.random() * 8;
+  }
+  if (name.includes('Discus')) {
+    return 50 + Math.random() * 20;
+  }
+  if (name.includes('Javelin')) {
+    return 70 + Math.random() * 30;
+  }
+  return 65 + Math.random() * 25;
+}
+
+function getDisciplineNameAndPerformance(disciplineType: string): { name: string, performance: number } {
+  let name = '';
+  let performance = 0;
+  if (disciplineType === 'run') {
+    name = runningDisciplines[Math.floor(Math.random() * runningDisciplines.length)];
+    performance = getRunPerformance(name);
+  } else if (disciplineType === 'jump') {
+    name = jumpingDisciplines[Math.floor(Math.random() * jumpingDisciplines.length)];
+    performance = getJumpPerformance(name);
+  } else if (disciplineType === 'throw') {
+    name = throwingDisciplines[Math.floor(Math.random() * throwingDisciplines.length)];
+    performance = getThrowPerformance(name);
+  } else {
+    name = 'Unknown';
+    performance = 0;
+  }
+  return { name, performance };
+}
+
+function getRandomFirstname(gender: string): string {
+  return gender === 'MEN'
+    ? ['John', 'Michael', 'David', 'James', 'Robert', 'Usain', 'Eliud', 'Mohamed', 'Kenenisa'][Math.floor(Math.random() * 9)]
+    : ['Mary', 'Sarah', 'Jennifer', 'Elizabeth', 'Allyson', 'Shelly-Ann', 'Elaine', 'Brigid', 'Genzebe'][Math.floor(Math.random() * 9)];
+}
+
+function getRandomLastname(): string {
+  return ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Bolt', 'Kipchoge', 'Farah', 'Bekele', 'Felix', 'Fraser-Pryce', 'Thompson', 'Kosgei', 'Dibaba'][Math.floor(Math.random() * 14)];
+}
+
+function getRandomRecordDate(): Date {
+  const recordDate = new Date();
+  recordDate.setFullYear(recordDate.getFullYear() - Math.floor(Math.random() * 20));
+  recordDate.setDate(Math.floor(Math.random() * 28) + 1);
+  recordDate.setMonth(Math.floor(Math.random() * 12));
+  return recordDate;
+}
+
 function generateMockRecords(count: number): RecordEntity[] {
   const records: RecordEntity[] = [];
-  
-  const disciplineTypes = ['run', 'jump', 'throw'];
-  const genders = ['MEN', 'WOMEN'];
-  const categories = ['U18', 'U20', 'U23', 'SENIOR', 'MASTER'];
-  const countries = ['France', 'USA', 'Jamaica', 'Kenya', 'Ethiopia', 'Germany', 'Japan', 'UK'];
-  
-  const runningDisciplines = ['100m', '200m', '400m', '800m', '1500m', '5000m', '10000m', 'Marathon', '110m Hurdles', '400m Hurdles'];
-  const jumpingDisciplines = ['Long Jump', 'Triple Jump', 'High Jump', 'Pole Vault'];
-  const throwingDisciplines = ['Shot Put', 'Discus', 'Javelin', 'Hammer'];
-  
   for (let i = 1; i <= count; i++) {
     const disciplineType = disciplineTypes[Math.floor(Math.random() * disciplineTypes.length)];
-    let disciplineName;
-    let performance;
-    
-    switch (disciplineType) {
-      case 'run':
-        disciplineName = runningDisciplines[Math.floor(Math.random() * runningDisciplines.length)];
-        // Temps en secondes pour les courses
-        if (disciplineName.includes('Marathon')) {
-          performance = 7200 + Math.random() * 3600; // 2h-3h pour un marathon
-        } else if (disciplineName.includes('10000m')) {
-          performance = 1500 + Math.random() * 600; // 25-35 min
-        } else if (disciplineName.includes('5000m')) {
-          performance = 720 + Math.random() * 300; // 12-17 min
-        } else if (disciplineName.includes('1500m')) {
-          performance = 200 + Math.random() * 60; // 3m20s-4m20s
-        } else if (disciplineName.includes('800m')) {
-          performance = 100 + Math.random() * 20; // 1m40s-2m
-        } else {
-          performance = 10 + Math.random() * (disciplineName.includes('100m') ? 2 : disciplineName.includes('200m') ? 10 : 20);
-        }
-        break;
-      case 'jump':
-        disciplineName = jumpingDisciplines[Math.floor(Math.random() * jumpingDisciplines.length)];
-        // Distance en mètres pour les sauts
-        if (disciplineName.includes('Pole')) {
-          performance = 4 + Math.random() * 2.5; // 4-6.5m
-        } else if (disciplineName.includes('High')) {
-          performance = 1.8 + Math.random() * 0.6; // 1.8-2.4m
-        } else {
-          performance = 7 + Math.random() * 3; // 7-10m
-        }
-        break;
-      case 'throw':
-        disciplineName = throwingDisciplines[Math.floor(Math.random() * throwingDisciplines.length)];
-        // Distance en mètres pour les lancers
-        if (disciplineName.includes('Shot')) {
-          performance = 15 + Math.random() * 8; // 15-23m
-        } else if (disciplineName.includes('Discus')) {
-          performance = 50 + Math.random() * 20; // 50-70m
-        } else if (disciplineName.includes('Javelin')) {
-          performance = 70 + Math.random() * 30; // 70-100m
-        } else {
-          performance = 65 + Math.random() * 25; // 65-90m
-        }
-        break;
-      default:
-        disciplineName = 'Unknown';
-        performance = 0;
-    }
-    
+    const { name: disciplineName, performance } = getDisciplineNameAndPerformance(disciplineType);
     const gender = genders[Math.floor(Math.random() * genders.length)];
     const category = categories[Math.floor(Math.random() * categories.length)];
     const country = countries[Math.floor(Math.random() * countries.length)];
-    
-    const firstname = gender === 'MEN' 
-      ? ['John', 'Michael', 'David', 'James', 'Robert', 'Usain', 'Eliud', 'Mohamed', 'Kenenisa'][Math.floor(Math.random() * 9)]
-      : ['Mary', 'Sarah', 'Jennifer', 'Elizabeth', 'Allyson', 'Shelly-Ann', 'Elaine', 'Brigid', 'Genzebe'][Math.floor(Math.random() * 9)];
-    
-    const lastname = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Bolt', 'Kipchoge', 'Farah', 'Bekele', 'Felix', 'Fraser-Pryce', 'Thompson', 'Kosgei', 'Dibaba'][Math.floor(Math.random() * 14)];
-    
-    // Date de record dans les 20 dernières années
-    const recordDate = new Date();
-    recordDate.setFullYear(recordDate.getFullYear() - Math.floor(Math.random() * 20));
-    recordDate.setDate(Math.floor(Math.random() * 28) + 1); // Jour entre 1-28
-    recordDate.setMonth(Math.floor(Math.random() * 12)); // Mois entre 0-11
-    
+    const firstname = getRandomFirstname(gender);
+    const lastname = getRandomLastname();
+    const recordDate = getRandomRecordDate();
+
     const record: RecordEntity = {
       id: i,
       discipline: {
@@ -138,10 +167,8 @@ function generateMockRecords(count: number): RecordEntity[] {
         updatedAt: new Date().toISOString()
       }
     };
-    
     records.push(record);
   }
-  
   return records;
 }
 
@@ -221,7 +248,7 @@ export class MockRecordsService {
   }
 
   // Récupérer les records par catégorie
-  async getRecordsByCategory(category: string): Promise<RecordEntity[]> {
+  async getRecordsByCategory(category: CategorieType): Promise<RecordEntity[]> {
     // Simuler un délai réseau
     await new Promise(resolve => setTimeout(resolve, 500));
     
@@ -229,7 +256,7 @@ export class MockRecordsService {
   }
 
   // Récupérer les records par discipline
-  async getRecordsByDiscipline(disciplineType: string): Promise<RecordEntity[]> {
+  async getRecordsByDiscipline(disciplineType: DisciplineType): Promise<RecordEntity[]> {
     // Simuler un délai réseau
     await new Promise(resolve => setTimeout(resolve, 500));
     
@@ -237,7 +264,7 @@ export class MockRecordsService {
   }
 
   // Récupérer les records par genre
-  async getRecordsByGenre(gender: string): Promise<RecordEntity[]> {
+  async getRecordsByGenre(gender: GenderType): Promise<RecordEntity[]> {
     // Simuler un délai réseau
     await new Promise(resolve => setTimeout(resolve, 500));
     

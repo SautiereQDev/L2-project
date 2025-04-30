@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue';
-import {type RecordFilters } from '../services/records.service';
+import type { RecordFilters } from '@/types';
 import { useQuery } from '@tanstack/vue-query';
 import recordsService from '../services/records.service';
 
@@ -13,7 +13,7 @@ export function usePaginatedRecords(
   paginationOptions: PaginationOptions = { pageSize: 10, initialPage: 1 }
 ) {
   // État de pagination
-  const currentPage = ref(paginationOptions.initialPage || 1);
+  const currentPage = ref(paginationOptions.initialPage ?? 1);
   const pageSize = ref(paginationOptions.pageSize);
   
   // Requête pour obtenir tous les records filtrés
@@ -23,7 +23,7 @@ export function usePaginatedRecords(
   });
   
   // Total des records
-  const totalRecords = computed(() => query.data.value?.length || 0);
+  const totalRecords = computed(() => query.data.value?.items?.length ?? 0);
   
   // Nombre total de pages
   const totalPages = computed(() => 
@@ -37,7 +37,7 @@ export function usePaginatedRecords(
     const startIndex = (currentPage.value - 1) * pageSize.value;
     const endIndex = startIndex + pageSize.value;
     
-    return query.data.value.slice(startIndex, endIndex);
+    return query.data.value.items?.slice(startIndex, endIndex) ?? [];
   });
   
   // Fonction pour changer de page

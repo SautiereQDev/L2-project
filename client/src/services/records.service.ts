@@ -5,8 +5,6 @@ import apiService from './api.service';
 import type { 
   RecordEntity, 
   RecordFilters, 
-  CreateRecordDto,
-  UpdateRecordDto,
   ApiCollection
 } from '../types';
 import { generateMockRecords } from './mock.service';
@@ -27,8 +25,8 @@ export class RecordsService {
       
       console.log('Appel API avec filtres:', filters);
       
-      // Utiliser la méthode getCollection pour un typage correct
-      const response = await apiService.getCollection<RecordEntity>('/records', params);
+      // Utiliser la méthode get pour récupérer les données
+      const response = await apiService.get<ApiCollection<RecordEntity>>('/records', params);
       
       console.log(`API a renvoyé ${response.items.length} records sur ${response.totalItems} au total`);
       return response;

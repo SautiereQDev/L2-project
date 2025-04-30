@@ -117,8 +117,8 @@
       <button class="secondary-button" @click="() => refetch()">Réessayer</button>
     </div>
     
-    <div v-else-if="data && data.length > 0" class="search-results">
-      <h2>Résultats ({{ data.length }} records trouvés)</h2>
+    <div v-else-if="data && data.items && data.items.length > 0" class="search-results">
+      <h2>Résultats ({{ data.items.length }} records trouvés)</h2>
       
       <table class="records-table">
         <thead>
@@ -133,7 +133,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="record in data" :key="record.id">
+          <tr v-for="record in data.items" :key="record.id">
             <td>{{ record.discipline.name }}</td>
             <td>{{ formatPerformance(record.performance, record.discipline.type) }}</td>
             <td>{{ record.athlete.firstname }} {{ record.athlete.lastname }}</td>
@@ -146,7 +146,7 @@
       </table>
     </div>
     
-    <div v-else-if="isSuccess && (!data || data.length === 0)" class="no-results">
+    <div v-else-if="isSuccess && (!data || !data.items || data.items.length === 0)" class="no-results">
       <p>Aucun record ne correspond à votre recherche.</p>
     </div>
   </div>
@@ -162,9 +162,9 @@ const currentYear = new Date().getFullYear();
 
 // État local pour les filtres de recherche
 const searchFilters = ref<RecordFilters>({
-  disciplineType: '',
-  gender: '',
-  category: '',
+  disciplineType: undefined,
+  gender: undefined,
+  category: undefined,
   athleteName: '',
   country: '',
   yearFrom: undefined,
@@ -188,9 +188,9 @@ const {
 // Fonction pour effacer tous les filtres
 function clearAllFilters() {
   searchFilters.value = {
-    disciplineType: '',
-    gender: '',
-    category: '',
+    disciplineType: undefined,
+    gender: undefined,
+    category: undefined,
     athleteName: '',
     country: '',
     yearFrom: undefined,

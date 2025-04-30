@@ -99,7 +99,7 @@
       
       <!-- Tableau des records -->
       <div v-else class="table-responsive">
-        <table v-if="records && records.length > 0" class="records-table">
+        <table v-if="records && hasMembers(records)" class="records-table">
           <thead>
             <tr>
               <th scope="col" @click="sortBy('discipline.name')">
@@ -237,10 +237,11 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useQuery } from '@tanstack/vue-query';
 import { useRoute, useRouter } from 'vue-router';
 import recordsService from '../services/records.service';
-import type { RecordFilters, RecordEntity } from '../types';
+import type { RecordFilters, RecordEntity, GenderType, CategorieType } from '../types';
 import { DisciplineType } from '../types';
 import { debounce } from '../utils/debounce';
 import authService from '../services/auth.service';
+import { hasMembers } from '@/utils/collection.s';
 
 // Récupérer la route pour extraire les paramètres d'URL
 const route = useRoute();
@@ -261,9 +262,9 @@ const sortOrder = ref<'asc' | 'desc'>('desc');  // État de filtre - initialiser
 const filters = reactive<RecordFilters>({
   // Utiliser des chaînes vides au lieu de valeurs par défaut pour les filtres textuels
   // Important : ne pas définir de valeur par défaut pour disciplineType pour éviter le problème discipline.type=run
-  disciplineType: '',  // Toujours initialiser à vide, sera mis à jour avec les params d'URL si nécessaire
-  gender: '',
-  category: '',
+  disciplineType: undefined,  // Toujours initialiser à vide, sera mis à jour avec les params d'URL si nécessaire
+  gender: undefined,
+  category: undefined,
   athleteName: '',
   yearFrom: undefined,
   yearTo: undefined,
@@ -274,9 +275,9 @@ const filters = reactive<RecordFilters>({
 
 // Mettre à jour les filtres depuis les paramètres d'URL seulement après l'initialisation
 onMounted(() => {
-  if (route.query.disciplineType) filters.disciplineType = String(route.query.disciplineType);
-  if (route.query.gender) filters.gender = String(route.query.gender);
-  if (route.query.category) filters.category = String(route.query.category);
+  if (route.query.disciplineType) filters.disciplineType = route.query.disciplineType as DisciplineType;
+  if (route.query.gender) filters.gender = route.query.gender as GenderType;
+  if (route.query.category) filters.category = route.query.category as CategorieType;
   if (route.query.athleteName) filters.athleteName = String(route.query.athleteName);
   if (route.query.yearFrom) filters.yearFrom = Number(route.query.yearFrom);
   if (route.query.yearTo) filters.yearTo = Number(route.query.yearTo);
@@ -317,11 +318,14 @@ const {
       const data = await recordsService.getRecords(filters);
       
       // Si l'API renvoie des informations de pagination dans l'entête Hydra
-      if (data && Array.isArray(data) && 'hydra:totalItems' in (data as any)) {
+      if (data && 'hydra:totalItems' in (data as any)) {
         totalRecords.value = (data as any)['hydra:totalItems'] as number;
+      } else if (data && 'members' in data && Array.isArray((data as any).members)) {
+        // Fallback: use the length of the members array if present
+        totalRecords.value = (data as any).members.length;
       } else {
-        // Estimation du total en fonction des données reçues
-        totalRecords.value = data.length;
+        // Default fallback
+        totalRecords.value = 0;
       }
       
       return data;
@@ -353,9 +357,10 @@ function updateQueryParams() {
 
 // Calculer les records triés
 const sortedRecords = computed(() => {
-  if (!records.value || !Array.isArray(records.value)) return [];
 
-  return [...records.value].sort((a, b) => {
+  if (!records.value || !hasMembers(records.value)) return [];
+
+  return [...records.value.members].sort((a, b) => {
     // Fonction pour obtenir la valeur à comparer selon le champ
     const getValue = (obj: any, path: string) => {
       return path.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : null), obj);
@@ -370,9 +375,13 @@ const sortedRecords = computed(() => {
     let comparison;
     if (typeof aVal === 'string') {
       comparison = aVal.localeCompare(bVal);
-    } else {
+    } else if (aVal < bVal) {
       // Comparaison numérique
-      comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+      comparison = -1;
+    } else if (aVal > bVal) {
+      comparison = 1;
+    } else {
+      comparison = 0;
     }
     
     // Appliquer l'ordre de tri
@@ -426,9 +435,9 @@ function applyFilters() {
 // Fonction pour réinitialiser les filtres
 function resetFilters() {
   // Réinitialiser tous les filtres
-  filters.disciplineType = '';
-  filters.gender = ''; 
-  filters.category = '';
+  filters.disciplineType = undefined;
+  filters.gender = undefined; 
+  filters.category = undefined;
   filters.athleteName = '';
   filters.yearFrom = undefined;
   filters.yearTo = undefined;

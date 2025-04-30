@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import {  reactive } from 'vue';
 import { useRecordsPagination } from '../composables/useRecordsPagination';
 import type { RecordFilters } from '@/types';
 import { DisciplineType } from '@/types';

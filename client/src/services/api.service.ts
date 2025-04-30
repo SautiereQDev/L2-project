@@ -3,7 +3,7 @@
  * Fournit une interface type-safe pour communiquer avec le backend
  */
 import authService from './auth.service';
-import { ApiCollection, ApiError, HydraCollection, normalizeHydraCollection } from '../types/api.types';
+import { type ApiError } from '../types/api.types';
 
 export class ApiService {
   /**

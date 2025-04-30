@@ -11,8 +11,8 @@ interface PaginationOptions {
 
 export function useRecordsPagination(options: PaginationOptions = {}) {
   // État local
-  const currentPage = ref(options.initialPage || 1);
-  const pageSize = ref(options.pageSize || 10);
+  const currentPage = ref(options.initialPage ?? 1);
+  const pageSize = ref(options.pageSize ?? 10);
   
   // Nombre total d'éléments (sera mis à jour si l'API le fournit)
   const totalItems = ref(0);
