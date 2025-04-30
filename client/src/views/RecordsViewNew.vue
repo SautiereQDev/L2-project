@@ -99,7 +99,7 @@
       
       <!-- Tableau des records -->
       <div v-else class="table-responsive">
-        <table v-if="records && hasMembers(records)" class="records-table">
+        <table v-if="records && records.length > 0" class="records-table">
           <thead>
             <tr>
               <th scope="col" @click="sortBy('discipline.name')">
@@ -241,7 +241,6 @@ import { DisciplineType } from '../types';
 import { debounce } from '../utils/debounce';
 import authService from '../services/auth.service';
 import recordsService from '../services/records.service';
-import { hasMembers } from '@/utils/collection.s';
 
 // Récupérer la route pour extraire les paramètres d'URL
 const route = useRoute();
@@ -304,10 +303,28 @@ const {
       console.log("Récupération des données depuis l'API");
       const data = await recordsService.getRecords(filters);
       
-      // Mettre à jour le nombre total de records pour la pagination
-      totalRecords.value = Array.isArray(data) ? data.length : 0;
+      console.log("Données reçues de l'API:", data);
       
-      return data;
+      // Vérifier la structure des données et extraire les items si nécessaire
+      let recordItems: RecordEntity[] = [];
+      
+      if (data && typeof data === 'object' && 'items' in data && Array.isArray(data.items)) {
+        // Format ApiCollection
+        recordItems = data.items as RecordEntity[];
+        totalRecords.value = data.totalItems || recordItems.length;
+        console.log(`Reçu ${recordItems.length} records sur ${totalRecords.value} au total`);
+      } else if (Array.isArray(data)) {
+        // Format tableau simple
+        recordItems = data as RecordEntity[];
+        totalRecords.value = data.length;
+        console.log(`Reçu ${recordItems.length} records au format tableau`);
+      } else {
+        console.warn("Format de données inattendu:", data);
+        recordItems = [];
+        totalRecords.value = 0;
+      }
+      
+      return recordItems;
     } catch (error) {
       console.error('Erreur lors de la récupération des records:', error);
       throw error;

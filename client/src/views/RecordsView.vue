@@ -360,7 +360,7 @@ const sortedRecords = computed(() => {
 
   if (!records.value || !hasMembers(records.value)) return [];
 
-  return [...records.value.members].sort((a, b) => {
+  return [...((records.value as any)['hydra:member'] || [])].sort((a, b) => {
     // Fonction pour obtenir la valeur à comparer selon le champ
     const getValue = (obj: any, path: string) => {
       return path.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : null), obj);

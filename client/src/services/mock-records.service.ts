@@ -91,7 +91,6 @@ function getDisciplineNameAndPerformance(disciplineType: string): { name: string
     performance = getThrowPerformance(name);
   } else {
     name = 'Unknown';
-    performance = 0;
   }
   return { name, performance };
 }
