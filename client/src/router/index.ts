@@ -10,42 +10,14 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: "/records/disciplines",
-      name: "records-disciplines",
-      component: () => import("../views/RecordsByDisciplineView.vue"),
+      path: "/records",
+      name: "records",
+      component: () => import("../views/RecordsViewNew.vue"),
     },
     {
-      path: "/records/categories",
-      name: "records-categories",
-      component: () => import("../views/RecordsByCategoryView.vue"),
-    },
-    {
-      path: "/records/genres",
-      name: "records-genres",
-      component: () => import("../views/RecordsByGenreView.vue"),
-    },
-    {
-      path: "/records/search",
-      name: "records-search",
-      component: () => import("../views/RecordsSearchView.vue"),
-    },
-    {
-      path: "/disciplines/run",
-      name: "disciplines-run",
-      component: () => import("../views/RecordsByDisciplineView.vue"),
-      props: { preselectedType: 'run' }
-    },
-    {
-      path: "/disciplines/jump",
-      name: "disciplines-jump",
-      component: () => import("../views/RecordsByDisciplineView.vue"),
-      props: { preselectedType: 'jump' }
-    },
-    {
-      path: "/disciplines/throw",
-      name: "disciplines-throw",
-      component: () => import("../views/RecordsByDisciplineView.vue"),
-      props: { preselectedType: 'throw' }
+      path: "/records/:id",
+      name: "record-details",
+      component: () => import("../views/RecordDetailsView.vue"),
     },
     {
       path: "/athletes",
