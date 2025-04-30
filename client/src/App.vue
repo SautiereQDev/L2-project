@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import {RouterView } from 'vue-router'
+import Layout from "./layout.vue";
 </script>
 
 <template>
-  <RouterView />
+  <Layout />
 </template>
+
+<style>
+@import "tailwindcss";
+</style>
