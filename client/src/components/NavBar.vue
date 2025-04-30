@@ -1,206 +1,111 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+const isOpen = ref(false);
+
+const navigateTo = (route: string) => {
+  router.push(route);
+  isOpen.value = false;
+};
+
+const toggleMenu = () => {
+  isOpen.value = !isOpen.value;
+};
+</script>
+
 <template>
-  <nav class="navbar">
-    <div class="logo">
-      <router-link to="/">AthlètePerformance</router-link>
+  <nav class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex">
+          <div class="flex-shrink-0 flex items-center">
+            <span @click="navigateTo('/')" class="text-xl font-bold text-blue-700 cursor-pointer">Records Viewer</span>
+          </div>
+          <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <a @click="navigateTo('/')" 
+              class="border-transparent text-gray-500 hover:border-blue-500 hover:text-blue-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium cursor-pointer"
+              :class="{ 'border-blue-500 text-blue-700': $route.path === '/' }">
+              Accueil
+            </a>
+            <a @click="navigateTo('/records')"
+              class="border-transparent text-gray-500 hover:border-blue-500 hover:text-blue-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium cursor-pointer"
+              :class="{ 'border-blue-500 text-blue-700': $route.path === '/records' }">
+              Records
+            </a>
+            <a @click="navigateTo('/athletes')"
+              class="border-transparent text-gray-500 hover:border-blue-500 hover:text-blue-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium cursor-pointer"
+              :class="{ 'border-blue-500 text-blue-700': $route.path === '/athletes' }">
+              Athlètes
+            </a>
+            <a @click="navigateTo('/about')"
+              class="border-transparent text-gray-500 hover:border-blue-500 hover:text-blue-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium cursor-pointer"
+              :class="{ 'border-blue-500 text-blue-700': $route.path === '/about' }">
+              À propos
+            </a>
+          </div>
+        </div>
+        <div class="hidden sm:ml-6 sm:flex sm:items-center">
+          <a @click="navigateTo('/login')"
+            class="text-gray-500 hover:text-blue-700 px-3 py-2 text-sm font-medium cursor-pointer">
+            Se connecter
+          </a>
+          <a @click="navigateTo('/register')"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer">
+            S'inscrire
+          </a>
+        </div>
+        <div class="-mr-2 flex items-center sm:hidden">
+          <button @click="toggleMenu" type="button" class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-controls="mobile-menu" :aria-expanded="isOpen">
+            <span class="sr-only">Ouvrir le menu</span>
+            <svg :class="{'hidden': isOpen, 'block': !isOpen}" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg :class="{'block': isOpen, 'hidden': !isOpen}" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="menu-container">
-      <!-- Menu principal -->
-      <ul class="main-menu">
-        <li><router-link to="/">Accueil</router-link></li>
-        
-        <!-- Menu déroulant des records -->
-        <li class="dropdown">
-          <a href="#" @click.prevent="toggleDropdown('records')">Records</a>
-          <ul v-show="activeDropdown === 'records'" class="dropdown-menu">
-            <li><router-link to="/records/disciplines">Par discipline</router-link></li>
-            <li><router-link to="/records/categories">Par catégorie d'âge</router-link></li>
-            <li><router-link to="/records/genres">Par sexe</router-link></li>
-            <li><router-link to="/records/search">Recherche avancée</router-link></li>
-          </ul>
-        </li>
-        
-        <!-- Menu déroulant des disciplines -->
-        <li class="dropdown">
-          <a href="#" @click.prevent="toggleDropdown('disciplines')">Disciplines</a>
-          <ul v-show="activeDropdown === 'disciplines'" class="dropdown-menu">
-            <li><router-link to="/disciplines/run">Courses</router-link></li>
-            <li><router-link to="/disciplines/jump">Sauts</router-link></li>
-            <li><router-link to="/disciplines/throw">Lancers</router-link></li>
-          </ul>
-        </li>
-        
-        <li><router-link to="/athletes">Athlètes</router-link></li>
-        <li><router-link to="/about">À propos</router-link></li>
-        <li><router-link to="/contact">Contact</router-link></li>
-      </ul>
-      
-      <!-- Menu utilisateur -->
-      <ul class="user-menu">
-        <li><router-link to="/login">Connexion</router-link></li>
-        <li><router-link to="/register">Inscription</router-link></li>
-      </ul>
+    
+    <!-- Menu mobile -->
+    <div :class="{'block': isOpen, 'hidden': !isOpen}" class="sm:hidden" id="mobile-menu">
+      <div class="pt-2 pb-3 space-y-1">
+        <a @click="navigateTo('/')" 
+          class="text-gray-600 hover:bg-blue-50 hover:text-blue-700 block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium cursor-pointer"
+          :class="{ 'bg-blue-50 border-blue-500 text-blue-700': $route.path === '/' }">
+          Accueil
+        </a>
+        <a @click="navigateTo('/records')"
+          class="text-gray-600 hover:bg-blue-50 hover:text-blue-700 block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium cursor-pointer"
+          :class="{ 'bg-blue-50 border-blue-500 text-blue-700': $route.path === '/records' }">
+          Records
+        </a>
+        <a @click="navigateTo('/athletes')"
+          class="text-gray-600 hover:bg-blue-50 hover:text-blue-700 block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium cursor-pointer"
+          :class="{ 'bg-blue-50 border-blue-500 text-blue-700': $route.path === '/athletes' }">
+          Athlètes
+        </a>
+        <a @click="navigateTo('/about')"
+          class="text-gray-600 hover:bg-blue-50 hover:text-blue-700 block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium cursor-pointer"
+          :class="{ 'bg-blue-50 border-blue-500 text-blue-700': $route.path === '/about' }">
+          À propos
+        </a>
+      </div>
+      <div class="pt-4 pb-3 border-t border-gray-200">
+        <div class="flex items-center px-4">
+          <div class="flex-grow flex flex-col">
+            <a @click="navigateTo('/login')" class="text-gray-500 hover:text-blue-700 block px-3 py-2 text-base font-medium cursor-pointer">Se connecter</a>
+            <a @click="navigateTo('/register')" class="bg-blue-600 hover:bg-blue-700 text-white block px-3 py-2 rounded-md text-base font-medium mt-1 text-center cursor-pointer">S'inscrire</a>
+          </div>
+        </div>
+      </div>
     </div>
   </nav>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-
-const activeDropdown = ref<string | null>(null);
-
-// Gestion des menus déroulants
-function toggleDropdown(menu: string) {
-  activeDropdown.value = activeDropdown.value === menu ? null : menu;
-}
-
-// Fermer le menu déroulant au clic en dehors
-function handleClickOutside(event: MouseEvent) {
-  if (activeDropdown.value && !(event.target as Element).closest('.dropdown')) {
-    activeDropdown.value = null;
-  }
-}
-
-// Event listeners pour fermer le menu quand on clique ailleurs
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
-});
-</script>
-
 <style scoped>
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #1e40af; /* Bleu foncé */
-  padding: 0 2rem;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.logo a {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: white;
-  text-decoration: none;
-  padding: 1rem 0;
-  display: block;
-}
-
-.menu-container {
-  display: flex;
-  align-items: center;
-}
-
-.main-menu, .user-menu {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.user-menu {
-  margin-left: 2rem;
-}
-
-.main-menu li, .user-menu li {
-  position: relative;
-}
-
-.main-menu a, .user-menu a {
-  display: block;
-  color: white;
-  text-decoration: none;
-  padding: 1rem 1.5rem;
-  transition: background-color 0.3s;
-}
-
-.main-menu a:hover, .user-menu a:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.dropdown {
-  position: relative;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: #2563eb; /* Bleu légèrement plus clair */
-  min-width: 200px;
-  border-radius: 0 0 4px 4px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  z-index: 10;
-}
-
-.dropdown-menu a {
-  padding: 0.75rem 1.5rem;
-  color: white;
-}
-
-.dropdown-menu a:hover {
-  background-color: #1d4ed8;
-}
-
-.user-menu li {
-  margin-left: 0.5rem;
-}
-
-.user-menu a {
-  border-radius: 4px;
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.user-menu a:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Styles responsives */
-@media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    padding: 0;
-  }
-  
-  .menu-container {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .main-menu, .user-menu {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .user-menu {
-    margin-left: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .dropdown-menu {
-    position: static;
-    background-color: #3b82f6;
-    box-shadow: none;
-    width: 100%;
-  }
-  
-  .main-menu a, .user-menu a {
-    padding: 1rem;
-  }
-  
-  .dropdown-menu a {
-    padding-left: 2rem;
-  }
-}
+/* Ajoutez vos styles supplémentaires ici si nécessaire */
 </style>
