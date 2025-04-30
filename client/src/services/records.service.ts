@@ -1,46 +1,73 @@
-// Service pour gérer les requêtes de records
+/**
+ * Service pour gérer les requêtes de records
+ */
 import apiService from './api.service';
-import type { RecordEntity, RecordFilters } from '../types';
+import type { 
+  RecordEntity, 
+  RecordFilters, 
+  CreateRecordDto,
+  UpdateRecordDto,
+  ApiCollection
+} from '../types';
 import { generateMockRecords } from './mock.service';
 
 // Permet de basculer sur des données simulées en cas d'échec de l'API
 const USE_API_FALLBACK = true;
 
 export class RecordsService {
-  // Récupérer tous les records sans paramètres
-  async getRecords(filters: RecordFilters = {}): Promise<RecordEntity[]> {
+  /**
+   * Récupère une liste de records avec filtres optionnels
+   * @param filters - Critères de filtrage optionnels
+   * @returns Promise<ApiCollection<RecordEntity>> - Collection de records
+   */
+  async getRecords(filters: RecordFilters = {}): Promise<ApiCollection<RecordEntity>> {
     try {
-      // Ne pas envoyer de paramètres à l'API, comme demandé
-      const params: Record<string, any> = {};
+      // Convertir les filtres en paramètres d'API
+      const params: Record<string, any> = this.prepareQueryParams(filters);
       
-      console.log('Appel API sans paramètres, format JSON demandé');
+      console.log('Appel API avec filtres:', filters);
       
-      // Appel API sans paramètres (envoi d'un objet vide)
-      const response = await apiService.get<any>('/records', {});
+      // Utiliser la méthode getCollection pour un typage correct
+      const response = await apiService.getCollection<RecordEntity>('/records', params);
       
-      // Si l'API renvoie une réponse structurée avec items
-      if (response.items) {
-        console.log(`API a renvoyé ${response.items.length} records sur ${response.totalItems} au total`);
-        return response.items;
-      }
-      
-      // Si l'API renvoie directement un tableau
-      if (Array.isArray(response)) {
-        return response;
-      }
-      
-      throw new Error('Format de réponse API inattendu');
+      console.log(`API a renvoyé ${response.items.length} records sur ${response.totalItems} au total`);
+      return response;
     } catch (error) {
       console.error('Erreur lors de la récupération des records:', error);
       
       // Utiliser des données simulées en cas d'erreur si activé
       if (USE_API_FALLBACK) {
         console.log('Utilisation des données simulées en fallback');
-        return generateMockRecords(15);
+        const mockRecords = generateMockRecords(15);
+        return {
+          items: mockRecords,
+          totalItems: mockRecords.length,
+          itemsPerPage: mockRecords.length,
+          currentPage: 1,
+          totalPages: 1
+        };
       }
       
       throw error;
     }
+  }
+  
+  /**
+   * Prépare les paramètres de requête à partir des filtres
+   * @param filters - Filtres pour la requête
+   * @returns Record<string, any> - Paramètres formatés pour l'API
+   */
+  private prepareQueryParams(filters: RecordFilters): Record<string, any> {
+    const params: Record<string, any> = {};
+    
+    // Ne traiter que les filtres non-vides
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params[key] = value;
+      }
+    });
+    
+    return params;
   }
 
   // Récupérer un record spécifique par ID - sans paramètres supplémentaires

@@ -1,13 +1,18 @@
 // Types et enums pour les records
 // Ce fichier évite les dépendances circulaires entre services
 
-// Enums
+/**
+ * Énumération des types de disciplines d'athlétisme
+ */
 export enum DisciplineType {
   RUN = "run",
   JUMP = "jump", 
   THROW = "throw"
 }
 
+/**
+ * Énumération des types de courses
+ */
 export enum RunningType {
   SHORT = "short",
   MIDDLE = "middle",
@@ -15,11 +20,17 @@ export enum RunningType {
   HURDLES = "hurdles"
 }
 
+/**
+ * Énumération des genres
+ */
 export enum GenderType {
   MEN = "MEN",
   WOMEN = "WOMEN"
 }
 
+/**
+ * Énumération des catégories d'âge
+ */
 export enum CategorieType {
   U18 = "U18",
   U20 = "U20", 
@@ -28,19 +39,35 @@ export enum CategorieType {
   MASTER = "MASTER"
 }
 
-// Types
-export interface Discipline {
+/**
+ * Identifiable est un type générique pour toutes les entités ayant un ID
+ */
+export interface Identifiable {
   id: number;
-  name: string;
-  type: DisciplineType;
-  categories?: string;
-  runningType?: RunningType;
+}
+
+/**
+ * TimestampedEntity est un type qui fournit les champs de dates de création et mise à jour
+ */
+export interface TimestampedEntity {
   createdAt: string;
   updatedAt: string;
 }
 
-export interface Athlete {
-  id: number;
+/**
+ * Interface représentant une discipline d'athlétisme
+ */
+export interface Discipline extends Identifiable, TimestampedEntity {
+  name: string;
+  type: DisciplineType;
+  categories?: string;
+  runningType?: RunningType;
+}
+
+/**
+ * Interface représentant un athlète
+ */
+export interface Athlete extends Identifiable, TimestampedEntity {
   firstname: string;
   lastname: string;
   country: string;
@@ -49,22 +76,27 @@ export interface Athlete {
   weigth?: number;
   coach?: string;
   gender: GenderType;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface Location {
-  id: number;
+/**
+ * Interface représentant un lieu (stade, etc.)
+ */
+export interface Location extends Identifiable, TimestampedEntity {
   name: string;
   city: string;
   country: string;
   type: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface RecordEntity {
-  id: number;
+/**
+ * Types d'ordre pour le tri
+ */
+export type SortOrder = 'asc' | 'desc';
+
+/**
+ * Interface représentant un record d'athlétisme
+ */
+export interface RecordEntity extends Identifiable, TimestampedEntity {
   discipline: Discipline;
   athlete: Athlete;
   lastRecord: string;
@@ -74,22 +106,41 @@ export interface RecordEntity {
   isCurrentRecord: boolean;
   previousRecord?: RecordEntity | null;
   nextRecords?: RecordEntity[];
-  createdAt: string;
-  updatedAt: string;
   location: Location;
 }
 
+/**
+ * Interface pour la création d'un nouveau record (sans ID ni timestamps)
+ */
+export type CreateRecordDto = Omit<RecordEntity, 'id' | 'createdAt' | 'updatedAt'>;
+
+/**
+ * Interface pour la mise à jour partielle d'un record
+ */
+export type UpdateRecordDto = Partial<Omit<RecordEntity, 'id' | 'createdAt' | 'updatedAt'>>;
+
+/**
+ * Interface pour les filtres de recherche de records
+ */
 export interface RecordFilters {
   discipline?: string;
-  disciplineType?: string;
-  runningType?: string;
+  disciplineType?: DisciplineType;
+  runningType?: RunningType;
   athleteName?: string;
   country?: string;
-  gender?: string;
-  category?: string;
+  gender?: GenderType;
+  category?: CategorieType;
   yearFrom?: number;
   yearTo?: number;
   page?: number;
   itemsPerPage?: number;
-  order?: Record<string, 'asc' | 'desc'>;
+  order?: Partial<Record<keyof RecordEntity, SortOrder>>;
+}
+
+/**
+ * Interface pour les paramètres de pagination
+ */
+export interface PaginationParams {
+  page: number;
+  itemsPerPage: number;
 }

@@ -17,42 +17,87 @@ export const queryKeys = {
   },
 };
 
-// Hook pour récupérer tous les records
+/**
+ * Hook pour récupérer tous les records avec pagination et filtres
+ * @param filters - Filtres optionnels à appliquer
+ * @returns Object - Query et données paginées
+ */
 export function useRecords(filters: RecordFilters = {}) {
-  return useQuery({
+  const query = useQuery({
     queryKey: Object.keys(filters).length > 0 
       ? queryKeys.records.filtered(filters) 
       : queryKeys.records.all,
     queryFn: () => recordsService.getRecords(filters),
   });
+  
+  // Extraire les données de la collection pour faciliter l'accès
+  const records = computed(() => query.data.value?.items || []);
+  const pagination = computed(() => {
+    if (!query.data.value) {
+      return {
+        totalItems: 0,
+        currentPage: 1,
+        totalPages: 1,
+        itemsPerPage: 10
+      };
+    }
+    
+    return {
+      totalItems: query.data.value.totalItems,
+      currentPage: query.data.value.currentPage,
+      totalPages: query.data.value.totalPages,
+      itemsPerPage: query.data.value.itemsPerPage
+    };
+  });
+  
+  return {
+    ...query,
+    records,
+    pagination
+  };
 }
 
-// Hook pour récupérer un record par ID
+/**
+ * Hook pour récupérer un record par ID
+ * @param id - ID du record à récupérer
+ * @returns Object - Query et données du record
+ */
 export function useRecord(id: number) {
   return useQuery({
     queryKey: queryKeys.records.byId(id),
     queryFn: () => recordsService.getRecord(id),
+    enabled: id > 0, // N'exécuter que si l'ID est valide
   });
 }
 
-// Hook pour récupérer les records par catégorie avec filtres supplémentaires
+/**
+ * Hook pour récupérer les records par catégorie avec filtres supplémentaires
+ * @param category - Catégorie à filtrer
+ * @param additionalFilters - Filtres additionnels à appliquer
+ * @returns Object - Query et données filtrées
+ */
 export function useRecordsByCategory(category: string, additionalFilters: Omit<RecordFilters, 'category'> = {}) {
-  const filters = ref({
+  // Combiner tous les filtres avec conversion de type pour la compatibilité
+  const filters = ref<RecordFilters>({
     ...additionalFilters,
-    category,
+    category: category as any // Conversion temporaire pour compatibilité
   });
 
+  // Récupérer les records avec tous les filtres appliqués
   const query = useQuery({
     queryKey: queryKeys.records.byCategory(category),
-    queryFn: () => recordsService.getRecordsByCategory(category),
+    queryFn: () => recordsService.getRecords(filters.value),
     enabled: !!category, // N'exécuter que si une catégorie est sélectionnée
   });
 
-  // Filtrer les résultats en fonction des filtres additionnels
+  // Extraire les records de la collection de réponse API
+  const records = computed(() => query.data.value?.items || []);
+  
+  // Appliquer des filtres côté client si nécessaire
   const filteredRecords = computed(() => {
-    if (!query.data.value) return [];
+    if (!records.value.length) return [];
     
-    return query.data.value.filter((record) => { // Removed <Record> type annotation
+    return records.value.filter((record: RecordEntity) => {
       // Appliquer les filtres additionnels s'ils existent
       if (filters.value.disciplineType && record.discipline.type !== filters.value.disciplineType) {
         return false;
@@ -66,30 +111,124 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
     });
   });
 
+  // Informations de pagination
+  const pagination = computed(() => {
+    if (!query.data.value) {
+      return {
+        totalItems: 0,
+        currentPage: 1,
+        totalPages: 1,
+        itemsPerPage: 10
+      };
+    }
+    
+    return {
+      totalItems: query.data.value.totalItems,
+      currentPage: query.data.value.currentPage,
+      totalPages: query.data.value.totalPages,
+      itemsPerPage: query.data.value.itemsPerPage
+    };
+  });
+
   return {
     ...query,
+    records,
     filteredRecords,
     filters,
+    pagination
   };
 }
 
-// Hook pour récupérer les records par discipline
+/**
+ * Hook pour récupérer les records par discipline
+ * @param disciplineType - Type de discipline
+ * @returns Object - Query et données paginées
+ */
 export function useRecordsByDiscipline(disciplineType: string) {
-  return useQuery({
+  const filters: RecordFilters = { 
+    disciplineType: disciplineType as any // Conversion temporaire pour compatibilité
+  };
+  
+  const query = useQuery({
     queryKey: queryKeys.records.byDiscipline(disciplineType),
-    queryFn: () => recordsService.getRecordsByDiscipline(disciplineType),
+    queryFn: () => recordsService.getRecords(filters),
+    enabled: !!disciplineType
   });
+  
+  // Extraire les données de la collection pour faciliter l'accès
+  const records = computed(() => query.data.value?.items || []);
+  const pagination = computed(() => {
+    if (!query.data.value) {
+      return {
+        totalItems: 0,
+        currentPage: 1,
+        totalPages: 1,
+        itemsPerPage: 10
+      };
+    }
+    
+    return {
+      totalItems: query.data.value.totalItems,
+      currentPage: query.data.value.currentPage,
+      totalPages: query.data.value.totalPages,
+      itemsPerPage: query.data.value.itemsPerPage
+    };
+  });
+  
+  return {
+    ...query,
+    records,
+    pagination
+  };
 }
 
-// Hook pour récupérer les records par genre
+/**
+ * Hook pour récupérer les records par genre
+ * @param gender - Genre (homme/femme)
+ * @returns Object - Query et données paginées
+ */
 export function useRecordsByGenre(gender: string) {
-  return useQuery({
+  const filters: RecordFilters = { 
+    gender: gender as any // Conversion temporaire pour compatibilité
+  };
+  
+  const query = useQuery({
     queryKey: queryKeys.records.byGenre(gender),
-    queryFn: () => recordsService.getRecordsByGenre(gender),
+    queryFn: () => recordsService.getRecords(filters),
+    enabled: !!gender
   });
+  
+  // Extraire les données de la collection pour faciliter l'accès
+  const records = computed(() => query.data.value?.items || []);
+  const pagination = computed(() => {
+    if (!query.data.value) {
+      return {
+        totalItems: 0,
+        currentPage: 1,
+        totalPages: 1,
+        itemsPerPage: 10
+      };
+    }
+    
+    return {
+      totalItems: query.data.value.totalItems,
+      currentPage: query.data.value.currentPage,
+      totalPages: query.data.value.totalPages,
+      itemsPerPage: query.data.value.itemsPerPage
+    };
+  });
+  
+  return {
+    ...query,
+    records,
+    pagination
+  };
 }
 
-// Exemple d'un hook pour mettre à jour un record (mutation)
+/**
+ * Hook pour mettre à jour un record (mutation)
+ * @returns Mutation pour la mise à jour d'un record
+ */
 export function useUpdateRecord() {
   const queryClient = useQueryClient();
   
@@ -108,6 +247,18 @@ export function useUpdateRecord() {
         queryKeys.records.byId(updatedRecord.id), 
         updatedRecord
       );
+      
+      // Invalider également les requêtes filtrées qui pourraient contenir ce record
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return Array.isArray(queryKey) && 
+                queryKey[0] === 'records' && 
+                (queryKey[1] === 'category' || 
+                 queryKey[1] === 'discipline' || 
+                 queryKey[1] === 'genre');
+        }
+      });
     },
   });
 }
