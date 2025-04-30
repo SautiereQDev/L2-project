@@ -1,77 +1,45 @@
 <template>
-  <div class="advanced-search">
-    <h1>Recherche avancée de records</h1>
+  <div class="records-search">
+    <h1>Recherche Avancée de Records</h1>
     
     <div class="search-form">
-      <div class="filter-section">
+      <div class="search-filter-section">
         <div class="filter-row">
           <div class="filter-group">
-            <label for="discipline-search">Discipline:</label>
-            <input 
-              type="text" 
-              id="discipline-search" 
-              v-model="searchQuery.disciplineName" 
-              placeholder="Nom de la discipline..."
-            />
-          </div>
-          
-          <div class="filter-group">
-            <label for="discipline-type">Type de discipline:</label>
-            <select v-model="searchQuery.disciplineType" id="discipline-type">
-              <option value="">Tous</option>
+            <label for="discipline-type">Type de discipline</label>
+            <select 
+              id="discipline-type" 
+              v-model="searchFilters.disciplineType"
+              @change="updateFilter('disciplineType', searchFilters.disciplineType)"
+            >
+              <option value="">Toutes les disciplines</option>
               <option value="run">Courses</option>
               <option value="jump">Sauts</option>
               <option value="throw">Lancers</option>
             </select>
           </div>
           
-          <div class="filter-group" v-if="searchQuery.disciplineType === 'run'">
-            <label for="running-type">Type de course:</label>
-            <select v-model="searchQuery.runningType" id="running-type">
-              <option value="">Tous</option>
-              <option value="SHORT">Sprint</option>
-              <option value="MIDDLE">Demi-fond</option>
-              <option value="LONG">Fond</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="filter-row">
           <div class="filter-group">
-            <label for="athlete-search">Athlète:</label>
-            <input 
-              type="text" 
-              id="athlete-search" 
-              v-model="searchQuery.athleteName" 
-              placeholder="Nom de l'athlète..."
-            />
-          </div>
-          
-          <div class="filter-group">
-            <label for="country-search">Pays:</label>
-            <input 
-              type="text" 
-              id="country-search" 
-              v-model="searchQuery.country" 
-              placeholder="Pays de l'athlète..."
-            />
-          </div>
-        </div>
-        
-        <div class="filter-row">
-          <div class="filter-group">
-            <label for="gender-filter">Genre:</label>
-            <select v-model="searchQuery.gender" id="gender-filter">
-              <option value="">Tous</option>
+            <label for="gender">Genre</label>
+            <select 
+              id="gender" 
+              v-model="searchFilters.gender"
+              @change="updateFilter('gender', searchFilters.gender)"
+            >
+              <option value="">Tous les genres</option>
               <option value="MEN">Hommes</option>
               <option value="WOMEN">Femmes</option>
             </select>
           </div>
           
           <div class="filter-group">
-            <label for="category-filter">Catégorie:</label>
-            <select v-model="searchQuery.category" id="category-filter">
-              <option value="">Toutes</option>
+            <label for="category">Catégorie d'âge</label>
+            <select 
+              id="category" 
+              v-model="searchFilters.category"
+              @change="updateFilter('category', searchFilters.category)"
+            >
+              <option value="">Toutes les catégories</option>
               <option value="U18">U18</option>
               <option value="U20">U20</option>
               <option value="U23">U23</option>
@@ -79,247 +47,169 @@
               <option value="MASTER">Master</option>
             </select>
           </div>
+        </div>
+        
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="athlete-name">Nom de l'athlète</label>
+            <input 
+              type="text" 
+              id="athlete-name" 
+              v-model="searchFilters.athleteName" 
+              placeholder="Ex: Usain Bolt"
+              @input="updateFilter('athleteName', searchFilters.athleteName)"
+            />
+          </div>
           
           <div class="filter-group">
-            <label>Année du record:</label>
-            <div class="year-range">
-              <input 
-                type="number" 
-                v-model="searchQuery.yearFrom" 
-                placeholder="De" 
-                min="1900" 
-                :max="currentYear"
-              />
-              <span>-</span>
-              <input 
-                type="number" 
-                v-model="searchQuery.yearTo" 
-                placeholder="À" 
-                min="1900" 
-                :max="currentYear"
-              />
-            </div>
+            <label for="country">Pays</label>
+            <input 
+              type="text" 
+              id="country" 
+              v-model="searchFilters.country"
+              placeholder="Ex: France" 
+              @input="updateFilter('country', searchFilters.country)"
+            />
           </div>
         </div>
         
-        <div class="button-row">
-          <button class="search-button" @click="searchRecords">Rechercher</button>
-          <button class="reset-button" @click="resetSearch">Réinitialiser</button>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="year-from">Année (de)</label>
+            <input 
+              type="number" 
+              id="year-from" 
+              v-model.number="searchFilters.yearFrom" 
+              min="1900" 
+              :max="currentYear"
+              @input="updateFilter('yearFrom', searchFilters.yearFrom)"
+            />
+          </div>
+          
+          <div class="filter-group">
+            <label for="year-to">Année (à)</label>
+            <input 
+              type="number" 
+              id="year-to" 
+              v-model.number="searchFilters.yearTo" 
+              min="1900" 
+              :max="currentYear"
+              @input="updateFilter('yearTo', searchFilters.yearTo)"
+            />
+          </div>
+        </div>
+        
+        <div class="search-buttons">
+          <button class="primary-button" @click="executeSearch">Rechercher</button>
+          <button class="secondary-button" @click="clearAllFilters">Effacer les filtres</button>
         </div>
       </div>
     </div>
     
-    <div class="search-results" v-if="hasSearched">
-      <h2>Résultats de la recherche</h2>
+    <!-- Résultats de recherche -->
+    <div v-if="isPending" class="loading-state">
+      <div class="spinner"></div>
+      <p>Recherche des records en cours...</p>
+    </div>
+    
+    <div v-else-if="isError" class="error-state">
+      <p>Une erreur est survenue: {{ error }}</p>
+      <button class="secondary-button" @click="() => refetch()">Réessayer</button>
+    </div>
+    
+    <div v-else-if="data && data.length > 0" class="search-results">
+      <h2>Résultats ({{ data.length }} records trouvés)</h2>
       
-      <div v-if="loading" class="loading">
-        <p>Chargement des résultats...</p>
-      </div>
-      
-      <div v-else-if="filteredRecords.length === 0" class="no-results">
-        <p>Aucun record ne correspond à votre recherche.</p>
-      </div>
-      
-      <table v-else class="records-table">
+      <table class="records-table">
         <thead>
           <tr>
             <th>Discipline</th>
             <th>Performance</th>
             <th>Athlète</th>
             <th>Date</th>
-            <th>Catégorie</th>
             <th>Genre</th>
+            <th>Catégorie</th>
             <th>Lieu</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="record in filteredRecords" :key="record.id">
+          <tr v-for="record in data" :key="record.id">
             <td>{{ record.discipline.name }}</td>
             <td>{{ formatPerformance(record.performance, record.discipline.type) }}</td>
             <td>{{ record.athlete.firstname }} {{ record.athlete.lastname }}</td>
             <td>{{ formatDate(record.lastRecord) }}</td>
-            <td>{{ record.categorie }}</td>
             <td>{{ record.genre === 'MEN' ? 'Homme' : 'Femme' }}</td>
+            <td>{{ getCategoryLabel(record.categorie) }}</td>
             <td>{{ record.location.name }}, {{ record.location.city }}</td>
           </tr>
         </tbody>
       </table>
     </div>
+    
+    <div v-else-if="isSuccess && (!data || data.length === 0)" class="no-results">
+      <p>Aucun record ne correspond à votre recherche.</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref } from 'vue';
+import { useRecordsSearch } from '@/composables/useRecordsSearch';
+import type { RecordFilters } from '@/types/record.types';
 
-// Types (identiques à ceux des autres vues)
-interface Discipline {
-  id: number;
-  name: string;
-  type: string;
-  categories: string;
-  runningType: string | null;
-}
-
-interface Athlete {
-  id: number;
-  firstname: string;
-  lastname: string;
-  country: string;
-}
-
-interface Location {
-  id: number;
-  name: string;
-  city: string;
-  country: string;
-}
-
-interface Record {
-  id: number;
-  discipline: Discipline;
-  athlete: Athlete;
-  lastRecord: string;
-  performance: number;
-  genre: string;
-  categorie: string;
-  location: Location;
-}
-
-interface SearchQuery {
-  disciplineName: string;
-  disciplineType: string;
-  runningType: string;
-  athleteName: string;
-  country: string;
-  gender: string;
-  category: string;
-  yearFrom: number | null;
-  yearTo: number | null;
-}
-
-// État
-const records = ref<Record[]>([]);
-const filteredRecords = ref<Record[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
-const hasSearched = ref(false);
+// Année courante pour les filtres
 const currentYear = new Date().getFullYear();
 
-// État de recherche
-const searchQuery = ref<SearchQuery>({
-  disciplineName: '',
+// État local pour les filtres de recherche
+const searchFilters = ref<RecordFilters>({
   disciplineType: '',
-  runningType: '',
-  athleteName: '',
-  country: '',
   gender: '',
   category: '',
-  yearFrom: null,
-  yearTo: null
+  athleteName: '',
+  country: '',
+  yearFrom: undefined,
+  yearTo: undefined
 });
 
-// Récupérer les records depuis l'API
-onMounted(async () => {
-  try {
-    loading.value = true;
-    const response = await fetch('/api/records');
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des records');
-    }
-    records.value = await response.json();
-    loading.value = false;
-  } catch (err: any) {
-    error.value = err.message;
-    console.error('Erreur:', err);
-    loading.value = false;
-  }
-});
+// Utiliser notre hook de recherche de records
+const {
+  filters,
+  updateFilter,
+  clearFilters,
+  executeSearch,
+  data,
+  isPending,
+  isError,
+  error,
+  isSuccess,
+  refetch
+} = useRecordsSearch();
 
-// Rechercher des records
-function searchRecords() {
-  loading.value = true;
-  hasSearched.value = true;
-  
-  setTimeout(() => {
-    filteredRecords.value = records.value.filter(record => {
-      // Filtre par nom de discipline
-      if (searchQuery.value.disciplineName && 
-          !record.discipline.name.toLowerCase().includes(searchQuery.value.disciplineName.toLowerCase())) {
-        return false;
-      }
-      
-      // Filtre par type de discipline
-      if (searchQuery.value.disciplineType && 
-          record.discipline.type !== searchQuery.value.disciplineType) {
-        return false;
-      }
-      
-      // Filtre par type de course (si applicable)
-      if (searchQuery.value.disciplineType === 'run' && 
-          searchQuery.value.runningType && 
-          record.discipline.runningType !== searchQuery.value.runningType) {
-        return false;
-      }
-      
-      // Filtre par nom d'athlète
-      if (searchQuery.value.athleteName) {
-        const fullName = `${record.athlete.firstname} ${record.athlete.lastname}`.toLowerCase();
-        if (!fullName.includes(searchQuery.value.athleteName.toLowerCase())) {
-          return false;
-        }
-      }
-      
-      // Filtre par pays
-      if (searchQuery.value.country && 
-          !record.athlete.country.toLowerCase().includes(searchQuery.value.country.toLowerCase())) {
-        return false;
-      }
-      
-      // Filtre par genre
-      if (searchQuery.value.gender && record.genre !== searchQuery.value.gender) {
-        return false;
-      }
-      
-      // Filtre par catégorie
-      if (searchQuery.value.category && record.categorie !== searchQuery.value.category) {
-        return false;
-      }
-      
-      // Filtre par année
-      if (searchQuery.value.yearFrom || searchQuery.value.yearTo) {
-        const recordYear = new Date(record.lastRecord).getFullYear();
-        
-        if (searchQuery.value.yearFrom && recordYear < searchQuery.value.yearFrom) {
-          return false;
-        }
-        
-        if (searchQuery.value.yearTo && recordYear > searchQuery.value.yearTo) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
-    
-    loading.value = false;
-  }, 500); // Ajout d'un petit délai pour simuler une recherche
-}
-
-// Réinitialiser la recherche
-function resetSearch() {
-  searchQuery.value = {
-    disciplineName: '',
+// Fonction pour effacer tous les filtres
+function clearAllFilters() {
+  searchFilters.value = {
     disciplineType: '',
-    runningType: '',
-    athleteName: '',
-    country: '',
     gender: '',
     category: '',
-    yearFrom: null,
-    yearTo: null
+    athleteName: '',
+    country: '',
+    yearFrom: undefined,
+    yearTo: undefined
   };
-  filteredRecords.value = [];
-  hasSearched.value = false;
+  clearFilters();
+}
+
+// Obtenir le label d'une catégorie
+function getCategoryLabel(category: string): string {
+  const categoryLabels: Record<string, string> = {
+    'U18': 'Moins de 18 ans',
+    'U20': 'Moins de 20 ans',
+    'U23': 'Moins de 23 ans',
+    'SENIOR': 'Senior',
+    'MASTER': 'Master'
+  };
+  
+  return categoryLabels[category] || category;
 }
 
 // Formatage des performances selon le type de discipline
@@ -349,7 +239,7 @@ function formatDate(dateString: string): string {
 </script>
 
 <style scoped>
-.advanced-search {
+.records-search {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
@@ -367,94 +257,109 @@ h2 {
 }
 
 .search-form {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
 }
 
-.filter-section {
-  background-color: #f8fafc;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.search-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .filter-row {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
 
 .filter-group {
   flex: 1;
   min-width: 200px;
+  display: flex;
+  flex-direction: column;
 }
 
 .filter-group label {
-  display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
   color: #4b5563;
 }
 
-.filter-group input, .filter-group select {
-  width: 100%;
+.filter-group select, .filter-group input {
   padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 4px;
-  background-color: white;
   font-size: 1rem;
+  background-color: white;
 }
 
-.year-range {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.year-range input {
-  flex: 1;
-}
-
-.button-row {
+.search-buttons {
   display: flex;
   gap: 1rem;
-  justify-content: flex-end;
   margin-top: 1rem;
 }
 
-.search-button, .reset-button {
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-}
-
-.search-button {
+.primary-button {
   background-color: #1e40af;
   color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.search-button:hover {
+.primary-button:hover {
   background-color: #1d4ed8;
 }
 
-.reset-button {
-  background-color: #e5e7eb;
-  color: #4b5563;
+.secondary-button {
+  background-color: white;
+  color: #1e40af;
+  border: 1px solid #1e40af;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.reset-button:hover {
-  background-color: #d1d5db;
+.secondary-button:hover {
+  background-color: #f0f9ff;
 }
 
-.loading, .no-results {
+.loading-state, .error-state, .no-results {
+  padding: 3rem 0;
   text-align: center;
-  padding: 2rem;
-  background-color: #f8fafc;
-  border-radius: 8px;
-  color: #6b7280;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(30, 64, 175, 0.2);
+  border-radius: 50%;
+  border-top-color: #1e40af;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-state {
+  color: #ef4444;
 }
 
 .records-table {
@@ -487,10 +392,6 @@ h2 {
 @media (max-width: 768px) {
   .filter-row {
     flex-direction: column;
-  }
-  
-  .button-row {
-    justify-content: center;
   }
   
   .records-table {
