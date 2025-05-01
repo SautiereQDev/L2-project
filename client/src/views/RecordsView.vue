@@ -289,11 +289,17 @@ const isAuthenticated = ref(false);
 
 // S'authentifier au montage du composant
 onMounted(async () => {
-  // Tenter l'authentification avec les identifiants de test
-  isAuthenticated.value = await authService.login({
-    email: 'sautiereq@gmail.com',
-    password: 'abcd1234'
-  });
+  try {
+    // Tenter l'authentification avec les identifiants de test
+    await authService.login({
+      email: 'sautiereq@gmail.com',
+      password: 'abcd1234'
+    });
+    isAuthenticated.value = true;
+  } catch (error) {
+    console.error("Authentication failed:", error);
+    isAuthenticated.value = false;
+  }
 });
 
 // Utiliser TanStack Query pour récupérer les données
@@ -360,7 +366,8 @@ const sortedRecords = computed(() => {
 
   if (!records.value || !hasMembers(records.value)) return [];
 
-  return [...((records.value as any)['hydra:member'] || [])].sort((a, b) => {
+  // After checking with hasMembers, we can safely access and type assert members
+  return [...((records.value as any).members || [])].sort((a, b) => {
     // Fonction pour obtenir la valeur à comparer selon le champ
     const getValue = (obj: any, path: string) => {
       return path.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : null), obj);

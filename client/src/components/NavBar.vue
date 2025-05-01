@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth.store';
+import AuthMenu from './AuthMenu.vue';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const isOpen = ref(false);
 
 const navigateTo = (route: string) => {
@@ -47,14 +50,8 @@ const toggleMenu = () => {
           </div>
         </div>
         <div class="hidden sm:ml-6 sm:flex sm:items-center">
-          <a @click="navigateTo('/login')"
-            class="text-gray-500 hover:text-blue-700 px-3 py-2 text-sm font-medium cursor-pointer">
-            Se connecter
-          </a>
-          <a @click="navigateTo('/register')"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer">
-            S'inscrire
-          </a>
+          <!-- Remplacer les boutons de connexion par le composant AuthMenu -->
+          <AuthMenu />
         </div>
         <div class="-mr-2 flex items-center sm:hidden">
           <button @click="toggleMenu" type="button" class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-controls="mobile-menu" :aria-expanded="isOpen">
@@ -96,9 +93,16 @@ const toggleMenu = () => {
       </div>
       <div class="pt-4 pb-3 border-t border-gray-200">
         <div class="flex items-center px-4">
-          <div class="flex-grow flex flex-col">
-            <a @click="navigateTo('/login')" class="text-gray-500 hover:text-blue-700 block px-3 py-2 text-base font-medium cursor-pointer">Se connecter</a>
-            <a @click="navigateTo('/register')" class="bg-blue-600 hover:bg-blue-700 text-white block px-3 py-2 rounded-md text-base font-medium mt-1 text-center cursor-pointer">S'inscrire</a>
+          <div class="flex-grow">
+            <!-- Version mobile du menu d'authentification -->
+            <div v-if="authStore.isAuthenticated" class="flex flex-col">
+              <a @click="navigateTo('/profile')" class="text-gray-500 hover:text-blue-700 block px-3 py-2 text-base font-medium cursor-pointer">Mon profil</a>
+              <button @click="authStore.logout(); router.push('/login')" class="text-left text-red-500 hover:text-red-700 block px-3 py-2 text-base font-medium cursor-pointer border-none bg-transparent">Se déconnecter</button>
+            </div>
+            <div v-else class="flex flex-col">
+              <a @click="navigateTo('/login')" class="text-gray-500 hover:text-blue-700 block px-3 py-2 text-base font-medium cursor-pointer">Se connecter</a>
+              <a @click="navigateTo('/register')" class="bg-blue-600 hover:bg-blue-700 text-white block px-3 py-2 rounded-md text-base font-medium mt-1 text-center cursor-pointer">S'inscrire</a>
+            </div>
           </div>
         </div>
       </div>

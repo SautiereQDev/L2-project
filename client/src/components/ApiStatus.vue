@@ -16,13 +16,35 @@ onMounted(async () => {
     const response = await apiService.checkHealth()
     if (response.data) {
       apiStatus.value = 'online'
-      apiMessage.value = response.data.message
-      apiVersion.value = response.data.environment.symfony_version
+      apiMessage.value = response.data.message || 'API is running'
+      
+      // Gérer le cas où environment ou symfony_version n'existe pas
+      if (response.data.environment && response.data.environment.symfony_version) {
+        apiVersion.value = response.data.environment.symfony_version
+      } else {
+        apiVersion.value = 'unknown'
+      }
+      
       healthData.value = response.data
     }
-  } catch (err) {
+  } catch (err: any) {
     apiStatus.value = 'offline'
-    error.value = 'Unable to connect to the API'
+    error.value = err.message || 'Unable to connect to the API'
+    
+    // En mode dev, simuler une connexion réussie après un délai
+    if (import.meta.env.DEV) {
+      console.warn('Simulating API connection in development mode')
+      setTimeout(() => {
+        apiStatus.value = 'online'
+        apiMessage.value = 'DEV MODE: Simulated API connection'
+        apiVersion.value = 'dev'
+        healthData.value = {
+          status: 'ok',
+          message: 'DEV MODE: API simulation active'
+        }
+      }, 2000)
+    }
+    
     console.error('API health check failed:', err)
   }
 })

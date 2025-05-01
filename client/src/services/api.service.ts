@@ -18,7 +18,8 @@ export class ApiService {
    * @returns Promise<boolean> - true si authentification réussie, false sinon
    */
   async authenticate(email: string, password: string): Promise<boolean> {
-    return await authService.login({ email, password });
+    const response = await authService.login({ email, password });
+    return !!response && !('error' in response);
   }
   
   /**

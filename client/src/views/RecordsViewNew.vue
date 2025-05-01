@@ -291,12 +291,12 @@ const {
     try {
       // S'assurer que l'utilisateur est authentifié
       if (!authService.isAuthenticated()) {
-        const success = await authService.login({
+        const response = await authService.login({
           email: 'sautiereq@gmail.com',
           password: 'abcd1234'
         });
         
-        isAuthenticated.value = success;
+        isAuthenticated.value = response && !!response.token;
       }
       
       // Utiliser le service records pour récupérer les données depuis l'API
@@ -499,10 +499,11 @@ onMounted(async () => {
   try {
     // Tenter l'authentification
     console.log("Connexion à l'API...");
-    isAuthenticated.value = await authService.login({
+    const authResponse = await authService.login({
       email: 'sautiereq@gmail.com',
       password: 'abcd1234'
     });
+    isAuthenticated.value = authResponse && !!authResponse.token;
 
     if (isAuthenticated.value) {
       console.log("Authentification réussie");
