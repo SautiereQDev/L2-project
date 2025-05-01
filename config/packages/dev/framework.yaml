@@ -1,0 +1,37 @@
+# En environnement de développement, activer des options supplémentaires
+# Pour permettre les connexions sans problèmes de certificats
+
+when@dev:
+    framework:
+        # Options pour le développement
+        http_method_override: false
+        trusted_proxies: '%env(TRUSTED_PROXIES)%'
+        trusted_hosts: '%env(TRUSTED_HOSTS)%'
+        
+    api_platform:
+        # Configuration plus permissive pour le développement
+        formats:
+            jsonld:   ['application/ld+json']
+            json:     ['application/json']
+            html:     ['text/html']
+        docs_formats:
+            jsonld:   ['application/ld+json']
+            jsonopenapi: ['application/vnd.openapi+json']
+            json:     ['application/json']
+            html:     ['text/html']
+        
+    # Ajouter les domaines des applications frontales
+    nelmio_cors:
+        defaults:
+            allow_credentials: true
+            allow_origin: ['*']
+            allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
+            allow_headers: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
+        paths:
+            '^/api/v1/':
+                origin_regex: false
+                allow_origin: ['*']
+                allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
+                allow_headers: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
+                expose_headers: ['Link', 'Content-Disposition']
+                max_age: 3600

@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use App\Enums\GenderType;
 use App\Repository\RecordRepository;
@@ -9,14 +10,29 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Dto\RecordInput;
+use App\Dto\RecordOutput;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
+use App\Enums\CategorieType;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use App\State\RecordOutputProvider;
 
 #[ApiResource(
-	normalizationContext: ['groups' => ['record:read']],
+	normalizationContext: ['groups' => ['record:read'], 'enable_max_depth' => true],
 	denormalizationContext: ['groups' => ['record:write']],
+	input: RecordInput::class,
+	output: RecordOutput::class,
+	provider: RecordOutputProvider::class
 )]
 #[ORM\Entity(repositoryClass: RecordRepository::class)]
-class Record implements \JsonSerializable
+#[UniqueEntity(
+    fields: ['discipline', 'genre', 'categorie'],
+    message: 'Ce record existe déjà pour cette discipline, ce genre et cette catégorie d\'âge.',
+    errorPath: 'categorie'
+)]
+class Record
 {
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
@@ -25,15 +41,17 @@ class Record implements \JsonSerializable
 
 	#[ORM\ManyToOne(inversedBy: 'records')]
 	#[Assert\NotBlank(message: 'Discipline cannot be blank')]
+	#[ApiProperty(readableLink: true)]
+	#[MaxDepth(1)]
 	private ?Discipline $discipline = null;
 
 	#[ORM\ManyToOne(inversedBy: 'records')]
 	#[Assert\NotBlank(message: 'Athlete cannot be blank')]
+	#[ApiProperty(readableLink: true)]
+	#[MaxDepth(1)]
 	private ?Athlete $athlete = null;
 
 	#[ORM\Column(type: Types::DATE_MUTABLE)]
-	#[Assert\NotBlank(message: 'Date cannot be blank')]
-	#[Assert\Date(message: 'The date "{{ value }}" is not a valid date.')]
 	private ?\DateTimeInterface $lastRecord = null;
 
 	#[ORM\Column]
@@ -49,28 +67,31 @@ class Record implements \JsonSerializable
 
 	#[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'nextRecords')]
 	#[ORM\JoinColumn(nullable: true)]
+	#[ApiProperty(readableLink: true)]
+	#[MaxDepth(1)]
 	private ?self $previousRecord = null;
 
 	#[ORM\OneToMany(targetEntity: self::class, mappedBy: 'previousRecord')]
 	#[ORM\JoinColumn(nullable: true)]
+	#[ApiProperty(readableLink: true)]
+	#[MaxDepth(1)]
 	private ?Collection $nextRecords;
 
 	#[ORM\Column]
-	private ?bool $isActive = true;
-
-	#[ORM\Column]
-	#[Assert\NotBlank(message: 'The record creation date cannot be blank')]
-	#[Assert\DateTime(message: 'The date "{{ value }}" is not a valid date.')]
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column]
-	#[Assert\NotBlank(message: 'The record update date cannot be blank')]
-	#[Assert\DateTime(message: 'The date "{{ value }}" is not a valid date.')]
 	private ?\DateTimeImmutable $updatedAt = null;
 
-	#[ORM\ManyToOne(targetEntity: Location::class, inversedBy: 'disciplines')]
-	#[Assert\NotBlank(message: 'Location cannot be blank')]
+	#[ORM\ManyToOne(targetEntity: Location::class, inversedBy: 'records')]
+	#[ORM\JoinColumn(nullable: false)]
+	#[ApiProperty(readableLink: true)]
+	#[MaxDepth(1)]
 	private ?Location $location = null;
+
+	#[ORM\Column(type: 'string', length: 10, enumType: CategorieType::class, nullable: true)]
+	#[Assert\Choice(choices: CategorieType::CHOICES, message: 'Choisissez une catégorie d\'âge valide.')]
+	private ?CategorieType $categorie = null;
 
 	public function __construct()
 	{
@@ -152,18 +173,6 @@ class Record implements \JsonSerializable
 		return $this;
 	}
 
-	public function isActive(): ?bool
-	{
-		return $this->isActive;
-	}
-
-	public function setIsActive(bool $isActive): static
-	{
-		$this->isActive = $isActive;
-
-		return $this;
-	}
-
 	public function getCreatedAt(): ?\DateTimeImmutable
 	{
 		return $this->createdAt;
@@ -232,18 +241,6 @@ class Record implements \JsonSerializable
 		return $this;
 	}
 
-	public function getTime(): \DateTime
-	{
-		return $this->time;
-	}
-
-	public function setTime(\DateTime $time): static
-	{
-		$this->time = $time;
-
-		return $this;
-	}
-
 	public function getLocation(): ?Location
 	{
 		return $this->location;
@@ -255,23 +252,17 @@ class Record implements \JsonSerializable
 
 		return $this;
 	}
-
-	public function jsonSerialize(): array
+	
+	public function getCategorie(): ?CategorieType
 	{
-		return [
-			'id' => $this->id,
-			'discipline' => $this->discipline,
-			'athlete' => $this->athlete,
-			'lastRecord' => $this->lastRecord,
-			'performance' => $this->performance,
-			'genre' => $this->genre,
-			'isCurrentRecord' => $this->isCurrentRecord,
-			'previousRecord' => $this->previousRecord,
-			'nextRecords' => $this->nextRecords,
-			'isActive' => $this->isActive,
-			'createdAt' => $this->createdAt,
-			'updatedAt' => $this->updatedAt,
-			'location' => $this->location
-		];
+		return $this->categorie;
 	}
+
+	public function setCategorie(?CategorieType $categorie): static
+	{
+		$this->categorie = $categorie;
+
+		return $this;
+	}
+
 }

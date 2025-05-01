@@ -5,6 +5,7 @@ namespace App\DataFixtures;
 use App\Entity\Discipline;
 use App\Enums\DisciplineType;
 use App\Enums\RunningType;
+use App\Enums\CategorieType;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use DateTimeImmutable;
@@ -72,7 +73,8 @@ class DisciplineFixtures extends Fixture
 
 	private function getRandomCategory(): string
 	{
-		$categories = ['Senior', 'Junior', 'Elite', 'Open'];
-		return $categories[array_rand($categories)];
+		$cases = CategorieType::cases();
+		$random = $cases[array_rand($cases)];
+		return (string) $random->value;
 	}
 }
