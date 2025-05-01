@@ -2,7 +2,7 @@
  * Composable pour gérer l'authentification et les sessions utilisateurs
  * Fournit des méthodes utilitaires pour vérifier et maintenir l'état d'authentification
  */
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import { getTokenRemainingTime } from '@/utils/jwt.utils'
@@ -85,7 +85,7 @@ export function useAuth() {
     
     // Si un paramètre redirect existe et semble être un chemin interne valide, l'utiliser
     // sinon utiliser le chemin par défaut
-    const targetPath = (redirectParam && redirectParam.startsWith('/')) 
+    const targetPath = redirectParam?.startsWith('/') 
       ? redirectParam 
       : defaultPath
     

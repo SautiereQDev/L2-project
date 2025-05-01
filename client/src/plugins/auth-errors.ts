@@ -50,7 +50,7 @@ export function handleAuthError(error: any, router?: ReturnType<typeof useRouter
   // Mettre à jour l'état de la notification
   authErrorState.title.value = 'Session expirée';
   authErrorState.message.value = 
-    error?.message || 'Votre session a expiré. Veuillez vous reconnecter.';
+    error?.message ?? 'Votre session a expiré. Veuillez vous reconnecter.';
   authErrorState.visible.value = true;
   authErrorState.lastShownTime = now;
   

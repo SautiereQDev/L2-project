@@ -33,9 +33,7 @@ interface Props {
   visible: boolean;
 }
 
-interface Emits {
-  (e: 'dismiss'): void;
-}
+type Emits = (e: 'dismiss') => void;
 
 const props = withDefaults(defineProps<Props>(), {
   title: 'Erreur d\'authentification',

@@ -25,7 +25,7 @@
             v-model="credentials.password" 
             :type="showPassword ? 'text' : 'password'" 
             required 
-            autocomplete="current-password"
+            autocomplete="password"
             :disabled="isLoading"
           />
           <button 
