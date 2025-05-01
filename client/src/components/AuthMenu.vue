@@ -1,29 +1,83 @@
 <template>
-  <div class="auth-menu">
+  <div class="relative">
     <template v-if="authStore.isAuthenticated">
-      <div class="auth-dropdown" @click.stop="toggleDropdown" ref="dropdownRef">
-        <div class="user-avatar">
+      <!-- Avatar de l'utilisateur connecté -->
+      <button 
+        @click.stop="toggleDropdown" 
+        ref="dropdownRef"
+        class="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-full"
+      >
+        <span class="h-10 w-10 rounded-full bg-primary-600 dark:bg-primary-500 text-white flex items-center justify-center text-sm font-medium">
           {{ userInitial }}
-        </div>
-        
-        <div v-show="dropdownOpen" class="dropdown-menu">
-          <router-link to="/profile" class="dropdown-item">
-            <i class="icon-user"></i>
-            Mon profil
-          </router-link>
+        </span>
+        <span class="hidden md:flex items-center text-sm font-medium text-gray-700 dark:text-gray-200">
+          <span>{{ userName }}</span>
+          <ChevronDownIcon class="ml-1 h-5 w-5 text-gray-400" :class="{ 'rotate-180 transform': dropdownOpen }" />
+        </span>
+      </button>
+      
+      <!-- Menu déroulant utilisateur -->
+      <Transition
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="transform opacity-0 scale-95"
+        enter-to-class="transform opacity-100 scale-100"
+        leave-active-class="transition ease-in duration-100"
+        leave-from-class="transform opacity-100 scale-100"
+        leave-to-class="transform opacity-0 scale-95"
+      >
+        <div 
+          v-show="dropdownOpen" 
+          class="absolute right-0 z-30 mt-2 w-56 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none divide-y divide-gray-100 dark:divide-gray-700"
+        >
+          <!-- Informations utilisateur -->
+          <div class="px-4 py-3">
+            <p class="text-sm text-gray-700 dark:text-gray-200">Connecté en tant que</p>
+            <p class="truncate text-sm font-medium text-gray-900 dark:text-white">{{ authStore.userProfile?.email }}</p>
+          </div>
           
-          <button @click="handleLogout" class="dropdown-item logout">
-            <i class="icon-logout"></i>
-            Se déconnecter
-          </button>
+          <!-- Actions utilisateur -->
+          <div class="py-1">
+            <router-link to="/profile" class="group flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <UserIcon class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300" />
+              Mon profil
+            </router-link>
+            <router-link to="/settings" class="group flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Cog6ToothIcon class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300" />
+              Paramètres
+            </router-link>
+          </div>
+          
+          <!-- Déconnexion -->
+          <div class="py-1">
+            <button 
+              @click="handleLogout" 
+              class="group flex w-full items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+            >
+              <ArrowRightOnRectangleIcon class="mr-3 h-5 w-5 text-red-500 group-hover:text-red-600" />
+              Se déconnecter
+            </button>
+          </div>
         </div>
-      </div>
+      </Transition>
     </template>
     
+    <!-- Boutons pour les utilisateurs non connectés -->
     <template v-else>
-      <router-link to="/login" class="login-button">
-        Connexion
-      </router-link>
+      <div class="flex items-center gap-3">
+        <router-link 
+          to="/login" 
+          class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm px-2 py-1 transition-colors"
+        >
+          Connexion
+        </router-link>
+        <router-link 
+          to="/register" 
+          class="inline-flex items-center bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+        >
+          <UserPlusIcon class="h-4 w-4 mr-1" />
+          S'inscrire
+        </router-link>
+      </div>
     </template>
   </div>
 </template>
@@ -32,6 +86,13 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.store';
+import { 
+  ChevronDownIcon, 
+  UserIcon, 
+  Cog6ToothIcon, 
+  ArrowRightOnRectangleIcon,
+  UserPlusIcon
+} from '@heroicons/vue/24/outline';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -46,6 +107,18 @@ const userInitial = computed(() => {
     return authStore.userProfile.email[0].toUpperCase();
   }
   return 'U'; // User par défaut
+});
+
+// Nom à afficher
+const userName = computed(() => {
+  if (authStore.userProfile?.firstName && authStore.userProfile?.lastName) {
+    return `${authStore.userProfile.firstName} ${authStore.userProfile.lastName}`;
+  } else if (authStore.userProfile?.firstName) {
+    return authStore.userProfile.firstName;
+  } else if (authStore.userProfile?.email) {
+    return authStore.userProfile.email.split('@')[0];
+  }
+  return 'Utilisateur';
 });
 
 // Fermer le dropdown quand on clique en dehors
@@ -76,99 +149,3 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 </script>
-
-<style scoped>
-.auth-menu {
-  position: relative;
-}
-
-.login-button {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  color: #4f46e5;
-  background-color: transparent;
-  border: 1px solid #4f46e5;
-  border-radius: 4px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-
-.login-button:hover {
-  background-color: #4f46e5;
-  color: white;
-}
-
-.auth-dropdown {
-  position: relative;
-  cursor: pointer;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #4f46e5;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 200px;
-  margin-top: 0.5rem;
-  background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-  z-index: 10;
-  overflow: hidden;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  color: #374151;
-  text-decoration: none;
-  transition: background-color 0.2s;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  font-size: 0.9rem;
-}
-
-.dropdown-item i {
-  margin-right: 0.5rem;
-  font-size: 1rem;
-}
-
-.dropdown-item:hover {
-  background-color: #f3f4f6;
-  color: #4f46e5;
-}
-
-.dropdown-item.logout {
-  color: #ef4444;
-  cursor: pointer;
-}
-
-.dropdown-item.logout:hover {
-  background-color: #fee2e2;
-}
-
-/* Icons (placeholders) */
-.icon-user::before {
-  content: "👤";
-}
-
-.icon-logout::before {
-  content: "🚪";
-}
-</style>
