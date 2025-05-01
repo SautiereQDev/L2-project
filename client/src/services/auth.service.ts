@@ -4,6 +4,7 @@
  */
 import { ref } from 'vue';
 import type { AuthCredentials, AuthResponse, RefreshResponse, UserProfile } from '../types';
+import { isTokenExpired, shouldRefreshToken, getTokenRemainingTime } from '../utils/jwt.utils';
 
 // Utiliser le proxy Vite pour éviter les problèmes de certificat
 const API_URL = '/api';
@@ -95,25 +96,11 @@ export const authService = {
 
   /**
    * Vérifier si le token est expiré
+   * @param bufferSeconds Marge de sécurité en secondes (défaut: 30)
    * @returns true si le token est expiré ou invalide
    */
-  isTokenExpired(): boolean {
-    if (!authToken.value) return true;
-    
-    // Vérifier si le token est un JWT valide
-    try {
-      // Extraire la partie payload du token JWT
-      const payload = JSON.parse(atob(authToken.value.split('.')[1]));
-      
-      // Vérifier si l'expiration est définie
-      if (!payload.exp) return false;
-      
-      // Comparer avec le timestamp actuel (avec marge de sécurité de 10 secondes)
-      return (payload.exp * 1000) < (Date.now() + 10000);
-    } catch (error) {
-      console.error('Erreur lors de la vérification de l\'expiration du token:', error);
-      return true;
-    }
+  isTokenExpired(bufferSeconds: number = 30): boolean {
+    return isTokenExpired(authToken.value, bufferSeconds);
   },
   
   /**
@@ -224,27 +211,78 @@ export const authService = {
   },
   
   /**
-   * Obtenir un nouveau token si le token actuel est expiré
+   * Obtenir un nouveau token si le token actuel est expiré ou va bientôt expirer
+   * @param thresholdMinutes Minutes avant expiration pour déclencher un rafraîchissement (défaut: 5)
    * @returns true si le token est valide ou a été rafraîchi avec succès
    */
-  async refreshTokenIfNeeded(): Promise<boolean> {
-    // Si le token est expiré, essayer de le rafraîchir
-    if (this.isTokenExpired()) {
+  async refreshTokenIfNeeded(thresholdMinutes: number = 5): Promise<boolean> {
+    // Si pas de token, rien à faire
+    if (!authToken.value) return false;
+    
+    // Vérifier si le token est complètement expiré
+    if (isTokenExpired(authToken.value, 0)) {
+      console.warn("Token expiré, tentative de rafraîchissement...");
+      
+      // Nettoyer le token expiré pour éviter de l'envoyer dans les requêtes
+      this.clearExpiredToken();
+      
       const refreshResult = await this.refreshToken();
       if (refreshResult.success) {
+        console.log("Token rafraîchi avec succès");
         return true;
       }
       
-      // Si le rafraîchissement échoue, essayer de se reconnecter
-      const loginResult = await this.login({
-        email: 'sautiereq@gmail.com',
-        password: 'abcd1234'
-      });
-      
-      return loginResult.success;
+      console.warn("Rafraîchissement échoué, tentative de reconnexion...");
+      // Si le rafraîchissement échoue, essayer la reconnexion silencieuse
+      try {
+        const loginResult = await this.login({
+          email: 'sautiereq@gmail.com',
+          password: 'abcd1234'
+        });
+        
+        if (loginResult.success) {
+          console.log("Reconnexion réussie avec de nouvelles informations d'identification");
+        } else {
+          console.error("Échec de la reconnexion");
+        }
+        
+        return loginResult.success;
+      } catch (error) {
+        console.error("Exception lors de la tentative de reconnexion:", error);
+        return false;
+      }
     }
     
+    // Vérifier si le token va bientôt expirer (dans les X minutes)
+    if (shouldRefreshToken(authToken.value, thresholdMinutes)) {
+      console.log(`Token valide mais expire bientôt (< ${thresholdMinutes} min), rafraîchissement préventif...`);
+      try {
+        const refreshResult = await this.refreshToken();
+        if (refreshResult.success) {
+          console.log("Token rafraîchi préventivement avec succès");
+        } else {
+          console.warn("Échec du rafraîchissement préventif");
+        }
+        return refreshResult.success;
+      } catch (error) {
+        console.error("Exception lors du rafraîchissement préventif:", error);
+        return false;
+      }
+    }
+    
+    // Le token est encore valide et n'est pas près d'expirer
+    const remainingMinutes = Math.floor(getTokenRemainingTime(authToken.value) / 60);
+    console.log(`Token valide pour encore ~${remainingMinutes} minutes, pas besoin de rafraîchir`);
     return true;
+  },
+  
+  /**
+   * Efface un token expiré du stockage local et de la référence
+   */
+  clearExpiredToken(): void {
+    console.log("Suppression du token expiré");
+    authToken.value = null;
+    localStorage.removeItem(AUTH_TOKEN_KEY);
   }
 };
 

@@ -5,6 +5,7 @@ import App from "./App.vue";
 import router from "./router";
 import vueQueryPlugin from "./plugins/vue-query";
 import authInitPlugin from "./plugins/auth-init";
+import authErrorsPlugin from "./plugins/auth-errors";
 import { setupAuthInterceptor } from "./utils/auth-interceptor";
 
 const app = createApp(App);
@@ -14,6 +15,7 @@ app.use(createPinia());
 app.use(router);
 app.use(vueQueryPlugin);
 app.use(authInitPlugin);
+app.use(authErrorsPlugin);
 
 // Installer l'intercepteur d'authentification pour les requêtes fetch
 setupAuthInterceptor();

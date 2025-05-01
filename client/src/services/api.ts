@@ -16,13 +16,36 @@ const apiClient = axios.create({
   ...(import.meta.env.DEV ? { httpsAgent: { rejectUnauthorized: false } } : {})
 })
 
-// Interceptor pour ajouter le token d'authentification
+// Interceptor pour ajouter le token d'authentification et vérifier sa validité
 apiClient.interceptors.request.use(
-  config => {
+  async config => {
+    // Vérifier d'abord si nous avons un token
     const token = authService.getToken();
+    
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Vérifier si le token est expiré avant d'envoyer la requête
+      if (authService.isTokenExpired()) {
+        console.warn('Token expiré détecté avant envoi de requête, tentative de rafraîchissement');
+        
+        // Si le token est expiré, le supprimer pour éviter de l'envoyer
+        authService.clearExpiredToken();
+        
+        // Tenter de le rafraîchir
+        const refreshed = await authService.refreshTokenIfNeeded();
+        
+        // Si le rafraîchissement a réussi, utiliser le nouveau token
+        if (refreshed) {
+          const newToken = authService.getToken();
+          if (newToken) {
+            config.headers.Authorization = `Bearer ${newToken}`;
+          }
+        }
+      } else {
+        // Le token est valide, l'utiliser
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
+    
     return config;
   },
   error => {
@@ -53,23 +76,50 @@ apiClient.interceptors.response.use(
       });
     }
     
-    // Si erreur 401, tenter de rafraîchir le token
+    // Si erreur 401 (Non autorisé - Token expiré ou invalide)
     if (error.response && error.response.status === 401) {
+      console.warn('Erreur 401 reçue:', error.response.data?.message ?? 'Token invalide ou expiré');
+      
+      // Supprimer immédiatement le token invalide
+      authService.clearExpiredToken();
+      
       try {
+        // Tenter de récupérer un nouveau token
+        console.log('Tentative de récupération d\'un nouveau token après erreur 401');
         const refreshed = await authService.refreshTokenIfNeeded();
+        
         if (refreshed) {
-          // Répéter la requête avec le nouveau token
+          console.log('Token rafraîchi avec succès après erreur 401, répétition de la requête');
+          
+          // Répéter la requête originale avec le nouveau token
           const originalRequest = error.config;
-          originalRequest.headers.Authorization = `Bearer ${authService.getToken()}`;
-          return apiClient(originalRequest);
+          const newToken = authService.getToken();
+          
+          if (newToken) {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            // Répéter la requête originale avec le nouveau token
+            return apiClient(originalRequest);
+          } else {
+            console.error('Token manquant après rafraîchissement');
+          }
+        } else {
+          console.warn('Échec du rafraîchissement du token après erreur 401');
         }
       } catch (refreshError) {
-        console.error('Erreur lors du rafraîchissement du token:', refreshError);
-        // Convertir l'erreur en instance d'Error si ce n'en est pas une
-        return Promise.reject(refreshError instanceof Error ? refreshError : new Error(String(refreshError)));
+        console.error('Exception lors du rafraîchissement du token après erreur 401:', refreshError);
       }
+      
+      // Si nous arrivons ici, c'est que le rafraîchissement a échoué ou qu'il n'y a pas de nouveau token
+      // Enrichir l'erreur d'origine avec des informations utiles
+      const enhancedError = new Error('Session expirée - veuillez vous reconnecter');
+      enhancedError.name = 'AuthError';
+      // Stocker l'erreur d'origine sans utiliser la propriété cause (qui nécessite ES2022)
+      (enhancedError as any).originalError = error;
+      
+      return Promise.reject(enhancedError);
     }
     
+    // Pour les autres types d'erreurs (non liées à l'authentification)
     // Convertir l'erreur en instance d'Error si ce n'en est pas une
     return Promise.reject(error instanceof Error ? error : new Error(String(error)));
   }
@@ -94,9 +144,20 @@ interface HealthResponse {
 }
 
 // API service
-export default {
+const apiService = {
   // Health check endpoint
   checkHealth(): Promise<AxiosResponse<HealthResponse>> {
     return apiClient.get('/v1/health')
+  },
+  
+  // Récupérer un client API configuré pour être utilisé dans d'autres services
+  getClient() {
+    return apiClient;
   }
-}
+};
+
+// Exporter le client API pour une utilisation directe
+export { apiClient };
+
+// Exporter le service API par défaut
+export default apiService;
