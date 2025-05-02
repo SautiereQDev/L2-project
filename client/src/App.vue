@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, provide } from 'vue';
 import { useAuthStore } from './stores/auth.store';
-import Layout from "./Layout.vue";
+import Layout from './layout.vue';
 import NotificationToaster from './components/ui/NotificationToaster.vue';
-import Spinner from './components/ui/Spinner.vue';
+import Spinner from './components/ui/SpinnerComponent.vue';
 
 // Stores
 const authStore = useAuthStore();
@@ -86,6 +86,9 @@ onBeforeUnmount(() => {
 
 <style>
 @import "tailwindcss";
+
+
+.spinner {
   border-radius: 50%;
   width: 40px;
   height: 40px;

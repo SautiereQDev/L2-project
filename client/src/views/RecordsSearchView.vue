@@ -173,7 +173,6 @@ const searchFilters = ref<RecordFilters>({
 
 // Utiliser notre hook de recherche de records
 const {
-  filters,
   updateFilter,
   clearFilters,
   executeSearch,

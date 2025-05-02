@@ -50,6 +50,12 @@ export class ApiService {
     
     // Construire l'URL complète - utiliser le proxy Vite
     const url = new URL(`${this.baseUrl}${endpoint}`, window.location.origin);
+    // Append query parameters
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.set(key, String(value));
+      }
+    });
     console.log('Requête API via proxy Vite:', url.toString());
     
     try {
