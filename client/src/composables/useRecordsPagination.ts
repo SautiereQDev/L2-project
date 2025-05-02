@@ -1,94 +1,87 @@
-import { ref, computed } from 'vue';
-import { useQuery } from '@tanstack/vue-query';
-import type { RecordEntity } from '@/types';
-import recordsService from '../services/records.service';
-import queryKeys from './queryKeys';
+// client/src/composables/useRecordsPagination.ts
+import { ref, computed } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
+import type { RecordEntity, RecordFilters } from '@/types'
+import type { ApiCollection } from '@/types/api.types'
+import recordsService from '@/services/records.service'
 
-interface PaginationOptions {
-  initialPage?: number;
-  pageSize?: number;
+export interface PaginationOptions {
+  initialPage?: number
+  pageSize?: number
 }
 
-export function useRecordsPagination(options: PaginationOptions = {}) {
-  // État local
-  const currentPage = ref(options.initialPage ?? 1);
-  const pageSize = ref(options.pageSize ?? 10);
-  
-  // Nombre total d'éléments (sera mis à jour si l'API le fournit)
-  const totalItems = ref(0);
-  
-  // Requête paginée avec TanStack Query
-  const query = useQuery({
-    queryKey: queryKeys.records.paginated(currentPage.value, pageSize.value),
-    queryFn: async () => {
-      try {
-        // Transformer pour API Platform
-        const params: Record<string, any> = {
-          'page': currentPage.value,
-          'itemsPerPage': pageSize.value,
-          'isCurrentRecord': true, // Optionnel: filtre uniquement les records actuels
-        };
-        
-        const result = await recordsService.getRecords(params);
-        
-        // Si l'API renvoie hydra:totalItems, on peut récupérer le total
-        // Dans notre mock, on simule juste avec la longueur du tableau
-        totalItems.value = Array.isArray(result) ? result.length * 3 : 0; // Simulation
-        
-        return result;
-      } catch (error) {
-        console.error('Erreur lors de la récupération des records paginés:', error);
-        throw error;
-      }
-    },
-    staleTime: 500, // Garder les anciennes données pendant le chargement (alternative à keepPreviousData)
-  });
-  
-  // Informations sur la pagination
-  const paginationInfo = computed(() => ({
-    currentPage: currentPage.value,
-    pageSize: pageSize.value,
-    totalItems: totalItems.value,
-    totalPages: Math.ceil(totalItems.value / pageSize.value),
-    hasNextPage: currentPage.value < Math.ceil(totalItems.value / pageSize.value),
-    hasPrevPage: currentPage.value > 1,
-  }));
-  
-  // Fonctions pour changer de page
-  function nextPage() {
-    if (paginationInfo.value.hasNextPage) {
-      currentPage.value++;
+/**
+ * Composable de pagination côté serveur (API Platform).
+ */
+export function useRecordsPagination(
+  filters: RecordFilters = {},
+  options: PaginationOptions = {}
+) {
+  const initialPage = options.initialPage ?? 1
+  const initialSize = options.pageSize   ?? 10
+
+  const currentPage = ref<number>(initialPage)
+  const pageSize    = ref<number>(initialSize)
+
+  const query = useQuery<ApiCollection<RecordEntity>, Error>({
+    queryKey: computed(() => [
+      'records',
+      JSON.stringify(filters),
+      currentPage.value,
+      pageSize.value,
+    ]),
+    queryFn: () =>
+      recordsService.getRecords({
+        ...filters,
+        page: currentPage.value,
+        itemsPerPage: pageSize.value,
+        pagination: true,
+        partial: false,
+        format: 'json',
+      } as any),
+  })
+
+  const records = computed<RecordEntity[]>(() => query.data.value?.items ?? [])
+
+  const paginationInfo = computed(() => {
+    const d = query.data.value
+    const cp = d?.currentPage   ?? currentPage.value
+    const ipp= d?.itemsPerPage  ?? pageSize.value
+    const tp = d?.totalPages    ?? 1
+    return {
+      currentPage: cp,
+      itemsPerPage: ipp,
+      totalItems:   d?.totalItems    ?? 0,
+      totalPages:   tp,
+      hasNextPage:  cp < tp,
+      hasPrevPage:  cp > 1,
+    }
+  })
+
+  function nextPage() { if (paginationInfo.value.hasNextPage) currentPage.value++ }
+  function prevPage() { if (paginationInfo.value.hasPrevPage) currentPage.value-- }
+  function goToPage(n: number) {
+    if (n >= 1 && n <= paginationInfo.value.totalPages) {
+      currentPage.value = n
     }
   }
-  
-  function prevPage() {
-    if (paginationInfo.value.hasPrevPage) {
-      currentPage.value--;
-    }
+  function setPageSize(n: number) {
+    pageSize.value = n
+    currentPage.value = initialPage
   }
-  
-  function goToPage(page: number) {
-    if (page >= 1 && page <= paginationInfo.value.totalPages) {
-      currentPage.value = page;
-    }
-  }
-  
+
   return {
-    // État et données
-    records: computed(() => query.data as unknown as RecordEntity[] || []),
+    records,
     currentPage,
     pageSize,
     paginationInfo,
-    
-    // Fonctions
     nextPage,
     prevPage,
     goToPage,
-    
-    // Statut de la requête
-    isLoading: computed(() => query.isLoading.value),
-    isError: computed(() => query.isError.value),
-    error: computed(() => query.error.value),
-    refetch: query.refetch,
-  };
+    setPageSize,
+    isLoading: query.isLoading,
+    isError:   query.isError,
+    error:     query.error,
+    refetch:   query.refetch,
+  }
 }

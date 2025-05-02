@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import Spinner from './Spinner.vue';
+import Spinner from './SpinnerComponent.vue';
 
 interface Props {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link' | 'destructive';

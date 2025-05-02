@@ -48,11 +48,32 @@ export interface HydraCollection<T> {
  * Transforme une réponse Hydra en ApiCollection standard
  */
 export function normalizeHydraCollection<T>(hydraData: HydraCollection<T>): ApiCollection<T> {
+  // Valeur par défaut
+  let itemsPerPage = 30;
+  let currentPage = 1;
+  let totalPages = 1;
+
+  // Extraire itemsPerPage et currentPage depuis hydra:view si possible
+  if (hydraData['hydra:view']?.['@id']) {
+    const url = new URL(hydraData['hydra:view']['@id'], 'http://dummy');
+    const pageParam = url.searchParams.get('page');
+    const itemsPerPageParam = url.searchParams.get('itemsPerPage');
+    if (itemsPerPageParam && !isNaN(Number(itemsPerPageParam))) {
+      itemsPerPage = Number(itemsPerPageParam);
+    }
+    if (pageParam && !isNaN(Number(pageParam))) {
+      currentPage = Number(pageParam);
+    }
+  }
+  if (itemsPerPage > 0) {
+    totalPages = Math.ceil(hydraData['hydra:totalItems'] / itemsPerPage);
+  }
+
   return {
     items: hydraData['hydra:member'],
     totalItems: hydraData['hydra:totalItems'],
-    itemsPerPage: 30, // Valeur par défaut, à extraire de l'URL si disponible
-    currentPage: 1, // Valeur par défaut, à extraire de l'URL si disponible
-    totalPages: Math.ceil(hydraData['hydra:totalItems'] / 30)
+    itemsPerPage,
+    currentPage,
+    totalPages
   };
 }

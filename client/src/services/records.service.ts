@@ -9,45 +9,49 @@ import type {
 } from '../types';
 import { generateMockRecords } from './mock.service';
 
-// Permet de basculer sur des données simulées en cas d'échec de l'API
-const USE_API_FALLBACK = true;
+export const USE_API_FALLBACK = false;
 
 export class RecordsService {
+
+  /**
+   * Récupère tous les records paginés depuis l'API, en respectant la pagination du backend.
+   * @param filters - Critères de filtrage optionnels (sauf page/itemsPerPage)
+   * @param itemsPerPage - Nombre d'éléments par page (défaut: 30)
+   * @returns Promise<RecordEntity[]> - Tous les records concaténés
+   */
+  async  getAllRecords(
+    filters: RecordFilters = {},
+    itemsPerPage: number = 30
+  ): Promise<RecordEntity[]> { 
+    let allRecords: RecordEntity[] = [];
+    let page = 1;
+    let totalPages = 1;
+
+    do {
+      const response = await this.getRecords({ ...filters, page, itemsPerPage });
+      allRecords = allRecords.concat(response.items);
+      totalPages = response.totalPages;
+      page++;
+    } while (page <= totalPages);
+
+    return allRecords;
+  }
   /**
    * Récupère une liste de records avec filtres optionnels
    * @param filters - Critères de filtrage optionnels
    * @returns Promise<ApiCollection<RecordEntity>> - Collection de records
    */
   async getRecords(filters: RecordFilters = {}): Promise<ApiCollection<RecordEntity>> {
-    try {
-      // Convertir les filtres en paramètres d'API
-      const params: Record<string, any> = this.prepareQueryParams(filters);
-      
-      console.log('Appel API avec filtres:', filters);
-      
-      // Utiliser la méthode get pour récupérer les données
-      const response = await apiService.get<ApiCollection<RecordEntity>>('/records', params);
-      
-      console.log(`API a renvoyé ${response.items.length} records sur ${response.totalItems} au total`);
-      return response;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des records:', error);
-      
-      // Utiliser des données simulées en cas d'erreur si activé
-      if (USE_API_FALLBACK) {
-        console.log('Utilisation des données simulées en fallback');
-        const mockRecords = generateMockRecords(15);
-        return {
-          items: mockRecords,
-          totalItems: mockRecords.length,
-          itemsPerPage: mockRecords.length,
-          currentPage: 1,
-          totalPages: 1
-        };
-      }
-      
-      throw error;
-    }
+    // Convertir les filtres en paramètres d'API
+    const params: Record<string, any> = this.prepareQueryParams(filters);
+
+    console.log('Appel API avec filtres:', filters);
+
+    // Utiliser la méthode get pour récupérer les données
+    const response = await apiService.get<ApiCollection<RecordEntity>>('/records', params);
+
+    console.log(`API a renvoyé ${response.items.length} records sur ${response.totalItems} au total`);
+    return response;
   }
   
   /**

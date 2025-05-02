@@ -132,7 +132,7 @@ const {
   prevPage,
   goToPage,
   refetch
-} = useRecordsPagination({ initialPage: 1, pageSize: 10 });
+} = useRecordsPagination(filters, { initialPage: 1, pageSize: 10 });
 
 // Appliquer les filtres
 function applyFilters() {

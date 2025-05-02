@@ -1,7 +1,6 @@
 <template>
-  <div 
-    :class="['animate-spin', className]" 
-    role="status"
+  <output 
+    :class="['animate-spin', className]"
   >
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -24,9 +23,9 @@
       ></path>
     </svg>
     <span class="sr-only">Chargement...</span>
-  </div>
+    <span class="sr-only">Chargement...</span>
+  </output>
 </template>
-
 <script setup lang="ts">
 interface Props {
   className?: string;
