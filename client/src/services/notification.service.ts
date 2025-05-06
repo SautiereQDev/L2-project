@@ -16,7 +16,7 @@ class NotificationService {
    */
   success(message: string, options?: NotificationOptions) {
     return toast.success(message, {
-      duration: options?.duration ?? 4000,
+      duration: options?.duration || 4000,
       ...options,
     });
   }
@@ -26,7 +26,7 @@ class NotificationService {
    */
   error(message: string, options?: NotificationOptions) {
     return toast.error(message, {
-      duration: options?.duration ?? 5000,
+      duration: options?.duration || 5000,
       ...options,
     });
   }
@@ -36,7 +36,7 @@ class NotificationService {
    */
   warning(message: string, options?: NotificationOptions) {
     return toast.warning(message, {
-      duration: options?.duration ?? 5000,
+      duration: options?.duration || 5000,
       ...options,
     });
   }
@@ -46,7 +46,7 @@ class NotificationService {
    */
   info(message: string, options?: NotificationOptions) {
     return toast.info(message, {
-      duration: options?.duration ?? 4000,
+      duration: options?.duration || 4000,
       ...options,
     });
   }

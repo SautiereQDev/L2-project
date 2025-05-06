@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import ApiStatus from '@/components/ApiStatus.vue';
-import Card from '@/components/ui/CardComponent.vue';
-import Button from '@/components/ui/ButtonComponent.vue';
+import Card from '@/components/ui/Card.vue';
+import Button from '@/components/ui/Button.vue';
 import { 
   ChartBarIcon, 
   UserGroupIcon, 

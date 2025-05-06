@@ -6,7 +6,7 @@
     :gap="gap"
     :duration="baseDuration"
     :class="className"
-    :toastOptions="toastOptions"
+    :toast-options="toastOptions"
     :close-button="true"
   >
     <template #default="{ toast }">
@@ -42,7 +42,6 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon 
 } from '@heroicons/vue/24/solid';
-import { type Toaster as SonnerToast } from 'vue-sonner';
 
 interface Props {
   expand?: boolean;
@@ -52,8 +51,6 @@ interface Props {
   className?: string;
 }
 
-type SonnerToastType = typeof SonnerToast;
-
 const props = withDefaults(defineProps<Props>(), {
   expand: true,
   visibleToasts: 3,
@@ -62,36 +59,13 @@ const props = withDefaults(defineProps<Props>(), {
   className: '',
 });
 
-const toastOptions: any = {
-  success: {
-    className: 'bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 rounded-lg',
-    descriptionClassName: 'text-gray-600 dark:text-gray-300'
-  },
-  error: {
-    className: 'bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 rounded-lg',
-    descriptionClassName: 'text-gray-600 dark:text-gray-300'
-  },
-  warning: {
-    className: 'bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 rounded-lg',
-    descriptionClassName: 'text-gray-600 dark:text-gray-300'
-  },
-  info: {
-    className: 'bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 rounded-lg',
-    descriptionClassName: 'text-gray-600 dark:text-gray-300'
-  }
+const toastOptions = {
+  className: 'bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 rounded-lg',
+  descriptionClassName: 'text-gray-600 dark:text-gray-300',
 };
 
-
-/** Extend Sonner’s Toast with our stricter “type” union */
-export interface CustomToast extends SonnerToastType {
-  type: 'success' | 'error' | 'warning' | 'info'
-}
-
-/** Alias for the toast type field */
-type ToastType = CustomToast['type']
-
 // Fonction pour obtenir l'icône en fonction du type de toast
-const getIcon = (type: ToastType) => {
+const getIcon = (type) => {
   switch (type) {
     case 'success':
       return CheckCircleIcon;
@@ -106,7 +80,7 @@ const getIcon = (type: ToastType) => {
 };
 
 // Fonction pour obtenir la couleur de l'icône en fonction du type de toast
-const getIconColor = (type: ToastType) => {
+const getIconColor = (type) => {
   switch (type) {
     case 'success':
       return 'text-success-DEFAULT';
