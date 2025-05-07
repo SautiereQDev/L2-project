@@ -25,7 +25,7 @@ const handleThemeChange = () => {
     // Sinon, utilise les préférences système
     isDarkMode.value = prefersDark.matches;
   }
-  
+
   // Applique la classe au document
   if (isDarkMode.value) {
     document.documentElement.classList.add('dark');
@@ -48,10 +48,10 @@ provide('app', { toggleTheme });
 onMounted(async () => {
   // Initialisation du thème
   handleThemeChange();
-  
+
   // Ecoute les changements de préférence système
   prefersDark.addEventListener('change', handleThemeChange);
-  
+
   // Vérifier si le token a besoin d'être rafraîchi
   if (authStore.token) {
     await authStore.refreshTokenIfNeeded();
@@ -68,17 +68,17 @@ onBeforeUnmount(() => {
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-50 antialiased">
     <!-- Loader pendant la vérification de l'authentification -->
-    <div 
-      v-if="isLoading" 
+    <div
+      v-if="isLoading"
       class="fixed inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-50"
     >
       <Spinner class="text-primary-600 dark:text-primary-400" svgClass="h-10 w-10" />
       <p class="mt-4 text-gray-600 dark:text-gray-300">Chargement...</p>
     </div>
-    
+
     <!-- Afficher le layout une fois l'authentification vérifiée -->
     <Layout v-else />
-    
+
     <!-- Système de notifications -->
     <NotificationToaster />
   </div>
@@ -86,6 +86,9 @@ onBeforeUnmount(() => {
 
 <style>
 @import "tailwindcss";
+
+/* Loader */
+.spinner {
   border-radius: 50%;
   width: 40px;
   height: 40px;

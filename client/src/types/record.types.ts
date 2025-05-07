@@ -6,7 +6,7 @@
  */
 export enum DisciplineType {
   RUN = "run",
-  JUMP = "jump", 
+  JUMP = "jump",
   THROW = "throw"
 }
 
@@ -24,8 +24,8 @@ export enum RunningType {
  * Énumération des genres
  */
 export enum GenderType {
-  MEN = "MEN",
-  WOMEN = "WOMEN"
+  MEN = "M",
+  WOMEN = "W"
 }
 
 /**
@@ -33,7 +33,7 @@ export enum GenderType {
  */
 export enum CategorieType {
   U18 = "U18",
-  U20 = "U20", 
+  U20 = "U20",
   U23 = "U23",
   SENIOR = "SENIOR",
   MASTER = "MASTER"

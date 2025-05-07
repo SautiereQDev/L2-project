@@ -1,33 +1,33 @@
 <template>
   <div class="records-view">
     <h1>Records d'Athlétisme</h1>
-    
+
     <div class="filter-section">
       <!-- Types de disciplines -->
       <div class="filter-group">
         <label for="discipline-type">Type de discipline:</label>
-        <select v-model="filters.disciplineType" id="discipline-type" @change="applyFilters">
+        <select v-model="filters.disciplineType" id="discipline-type" @change="applyFiltersLocally">
           <option value="">Toutes les disciplines</option>
           <option value="run">Courses</option>
           <option value="jump">Sauts</option>
           <option value="throw">Lancers</option>
         </select>
       </div>
-      
+
       <!-- Genres -->
       <div class="filter-group">
         <label for="gender-filter">Genre:</label>
-        <select v-model="filters.gender" id="gender-filter" @change="applyFilters">
+        <select v-model="filters.gender" id="gender-filter" @change="applyFiltersLocally">
           <option value="">Tous</option>
-          <option value="MEN">Hommes</option>
-          <option value="WOMEN">Femmes</option>
+          <option value="M">Hommes</option>
+          <option value="W">Femmes</option>
         </select>
       </div>
-      
+
       <!-- Catégories -->
       <div class="filter-group">
         <label for="category-filter">Catégorie:</label>
-        <select v-model="filters.category" id="category-filter" @change="applyFilters">
+        <select v-model="filters.category" id="category-filter" @change="applyFiltersLocally">
           <option value="">Toutes</option>
           <option value="U18">U18</option>
           <option value="U20">U20</option>
@@ -36,53 +36,53 @@
           <option value="MASTER">Master</option>
         </select>
       </div>
-      
+
       <!-- Recherche par athlète -->
       <div class="filter-group">
         <label for="athlete-name">Nom d'athlète:</label>
-        <input 
-          type="text" 
-          id="athlete-name" 
-          v-model="filters.athleteName" 
+        <input
+          type="text"
+          id="athlete-name"
+          v-model="filters.athleteName"
           placeholder="Rechercher un athlète"
           @input="debouncedFilterChange"
         />
       </div>
-      
+
       <!-- Période (années) -->
       <div class="filter-group">
         <label for="year-from">Année (de):</label>
-        <input 
-          type="number" 
-          id="year-from" 
-          v-model.number="filters.yearFrom" 
+        <input
+          type="number"
+          id="year-from"
+          v-model.number="filters.yearFrom"
           placeholder="Ex: 2020"
           min="1900"
           :max="currentYear"
-          @change="applyFilters"
+          @change="applyFiltersLocally"
         />
       </div>
-      
+
       <div class="filter-group">
         <label for="year-to">Année (à):</label>
-        <input 
-          type="number" 
-          id="year-to" 
-          v-model.number="filters.yearTo" 
+        <input
+          type="number"
+          id="year-to"
+          v-model.number="filters.yearTo"
           placeholder="Ex: 2025"
           :min="filters.yearFrom || 1900"
           :max="currentYear"
-          @change="applyFilters"
+          @change="applyFiltersLocally"
         />
       </div>
-      
+
       <!-- Boutons d'action -->
       <div class="filter-actions">
-        <button @click="applyFilters" class="btn-primary">Appliquer</button>
+        <button @click="applyFiltersLocally" class="btn-primary">Appliquer</button>
         <button @click="resetFilters" class="btn-secondary">Réinitialiser</button>
       </div>
     </div>
-    
+
     <!-- Conteneur des records -->
     <div class="records-container">
       <!-- Affichage du chargement -->
@@ -90,16 +90,16 @@
         <div class="spinner"></div>
         <p>Chargement des records...</p>
       </div>
-      
+
       <!-- Affichage des erreurs -->
       <div v-else-if="isError" class="error">
         <p>Erreur lors du chargement des records: {{ error?.message || 'Erreur inconnue' }}</p>
         <button @click="() => refetch()" class="retry-button">Réessayer</button>
       </div>
-      
+
       <!-- Tableau des records -->
       <div v-else class="table-responsive">
-        <table v-if="records && hasMembers(records)" class="records-table">
+        <table v-if="paginatedRecords.length > 0" class="records-table">
           <thead>
             <tr>
               <th scope="col" @click="sortBy('discipline.name')">
@@ -131,13 +131,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="record in sortedRecords" :key="record.id">
+            <tr v-for="record in paginatedRecords" :key="record.id">
               <td data-label="Discipline">{{ record.discipline.name }}</td>
               <td data-label="Performance">{{ formatPerformance(record.performance, record.discipline.type) }}</td>
               <td data-label="Athlète">{{ record.athlete.firstname }} {{ record.athlete.lastname }}</td>
               <td data-label="Date">{{ formatDate(record.lastRecord) }}</td>
               <td data-label="Catégorie">{{ record.categorie }}</td>
-              <td data-label="Genre">{{ record.genre === 'MEN' ? 'Homme' : 'Femme' }}</td>
+              <td data-label="Genre">{{ record.genre === 'M' ? 'Homme' : 'Femme' }}</td>
               <td data-label="Lieu">{{ record.location.name }}, {{ record.location.city }}</td>
               <td data-label="Actions">
                 <button class="btn-action" @click="showRecordDetails(record)">Détails</button>
@@ -149,17 +149,17 @@
             <tr>
               <td colspan="8">
                 <div class="pagination">
-                  <button 
+                  <button
                     class="pagination-button"
                     :disabled="currentPage === 1"
                     @click="changePage(currentPage - 1)"
                   >
                     &laquo; Précédent
                   </button>
-                  
+
                   <span class="pagination-info">Page {{ currentPage }} sur {{ totalPages }}</span>
-                  
-                  <button 
+
+                  <button
                     class="pagination-button"
                     :disabled="currentPage >= totalPages"
                     @click="changePage(currentPage + 1)"
@@ -176,7 +176,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Modal pour les détails -->
     <div v-if="selectedRecord" class="modal" @click="closeModal">
       <div class="modal-content" @click.stop>
@@ -219,7 +219,7 @@
             <span class="label">Record en cours:</span>
             <span class="value">{{ selectedRecord.isCurrentRecord ? 'Oui' : 'Non' }}</span>
           </div>
-          
+
           <div class="modal-actions">
             <router-link :to="`/records/${selectedRecord.id}`" class="btn-primary">
               Voir la page détaillée
@@ -237,11 +237,10 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useQuery } from '@tanstack/vue-query';
 import { useRoute, useRouter } from 'vue-router';
 import recordsService from '../services/records.service';
-import type { RecordFilters, RecordEntity, GenderType, CategorieType } from '../types';
-import { DisciplineType } from '../types';
+import type { RecordFilters, RecordEntity, CategorieType } from '../types';
+import { DisciplineType, GenderType } from '../types';
 import { debounce } from '../utils/debounce';
 import authService from '../services/auth.service';
-import { hasMembers } from '@/utils/collection.s';
 
 // Récupérer la route pour extraire les paramètres d'URL
 const route = useRoute();
@@ -253,38 +252,42 @@ const currentYear = new Date().getFullYear();
 // État de pagination
 const currentPage = ref(1);
 const pageSize = ref(10);
-const totalRecords = ref(0);
-const totalPages = computed(() => Math.ceil(totalRecords.value / pageSize.value));
+const totalPages = computed(() => Math.ceil(filteredRecords.value.length / pageSize.value));
 
 // État de tri
 const sortField = ref<string>('lastRecord');
-const sortOrder = ref<'asc' | 'desc'>('desc');  // État de filtre - initialiser avec les query params de l'URL mais sans valeurs par défaut pour éviter les requêtes avec des filtres non voulus
+const sortOrder = ref<'asc' | 'desc'>('desc');
+
+// État de filtre
 const filters = reactive<RecordFilters>({
-  // Utiliser des chaînes vides au lieu de valeurs par défaut pour les filtres textuels
-  // Important : ne pas définir de valeur par défaut pour disciplineType pour éviter le problème discipline.type=run
-  disciplineType: undefined,  // Toujours initialiser à vide, sera mis à jour avec les params d'URL si nécessaire
+  disciplineType: undefined,
   gender: undefined,
   category: undefined,
   athleteName: '',
   yearFrom: undefined,
-  yearTo: undefined,
-  page: currentPage.value,
-  itemsPerPage: pageSize.value,
-  order: { [sortField.value]: sortOrder.value }
+  yearTo: undefined
 });
+
+// Stockage de toutes les données récupérées du serveur
+const allRecords = ref<RecordEntity[]>([]);
 
 // Mettre à jour les filtres depuis les paramètres d'URL seulement après l'initialisation
 onMounted(() => {
   if (route.query.disciplineType) filters.disciplineType = route.query.disciplineType as DisciplineType;
-  if (route.query.gender) filters.gender = route.query.gender as GenderType;
+  if (route.query.gender && (route.query.gender === 'M' || route.query.gender === 'W')) {
+    filters.gender = route.query.gender as GenderType;
+  }
   if (route.query.category) filters.category = route.query.category as CategorieType;
   if (route.query.athleteName) filters.athleteName = String(route.query.athleteName);
   if (route.query.yearFrom) filters.yearFrom = Number(route.query.yearFrom);
   if (route.query.yearTo) filters.yearTo = Number(route.query.yearTo);
+  if (route.query.page) currentPage.value = Number(route.query.page);
 });
 
 // État de sélection pour les détails
-const selectedRecord = ref<RecordEntity | null>(null);  // Vérifier l'authentification avant de charger les données
+const selectedRecord = ref<RecordEntity | null>(null);
+
+// Vérifier l'authentification avant de charger les données
 const isAuthenticated = ref(false);
 
 // S'authentifier au montage du composant
@@ -302,7 +305,7 @@ onMounted(async () => {
   }
 });
 
-// Utiliser TanStack Query pour récupérer les données
+// Utiliser TanStack Query pour récupérer toutes les données
 const {
   data: records,
   isLoading: loading,
@@ -310,7 +313,7 @@ const {
   error,
   refetch
 } = useQuery({
-  queryKey: ['records', filters],
+  queryKey: ['allRecords'],
   queryFn: async () => {
     try {
       // S'assurer que l'utilisateur est authentifié
@@ -321,26 +324,30 @@ const {
         });
       }
 
-      const data = await recordsService.getRecords(filters);
-      
-      // Si l'API renvoie des informations de pagination dans l'entête Hydra
-      if (data && 'hydra:totalItems' in (data as any)) {
-        totalRecords.value = (data as any)['hydra:totalItems'] as number;
-      } else if (data && 'members' in data && Array.isArray((data as any).members)) {
-        // Fallback: use the length of the members array if present
-        totalRecords.value = (data as any).members.length;
+      // Récupérer tous les records sans appliquer de filtres côté serveur
+      const data = await recordsService.getRecords({
+        itemsPerPage: 1000 // Un nombre suffisamment grand pour récupérer tous les records
+      });
+
+      // Stocker les données pour le filtrage local
+      if (data && 'items' in data) {
+        allRecords.value = data.items;
+        console.log(`Récupération de ${allRecords.value.length} records pour filtrage local`);
+        return data;
+      } else if (data && 'hydra:member' in (data as any)) {
+        allRecords.value = (data as any)['hydra:member'];
+        console.log(`Récupération de ${allRecords.value.length} records pour filtrage local (format Hydra)`);
+        return data;
       } else {
-        // Default fallback
-        totalRecords.value = 0;
+        console.error('Format de réponse inattendu:', data);
+        return { items: [], totalItems: 0 };
       }
-      
-      return data;
     } catch (error) {
       console.error('Erreur lors de la récupération des records:', error);
       throw error;
     }
   },
-  staleTime: 60 * 1000, // 1 minute avant de considérer les données comme périmées
+  staleTime: 5 * 60 * 1000, // 5 minutes avant de considérer les données comme périmées
   refetchOnWindowFocus: false // Désactiver le refetch automatique en cas de changement de focus
 });
 
@@ -348,7 +355,7 @@ const {
 function updateQueryParams() {
   // Ne conserver que les filtres non vides
   const queryParams: Record<string, string | number> = {};
-  
+
   if (filters.disciplineType && filters.disciplineType.trim() !== '') queryParams.disciplineType = filters.disciplineType;
   if (filters.gender && filters.gender.trim() !== '') queryParams.gender = filters.gender;
   if (filters.category && filters.category.trim() !== '') queryParams.category = filters.category;
@@ -356,108 +363,186 @@ function updateQueryParams() {
   if (filters.yearFrom) queryParams.yearFrom = filters.yearFrom;
   if (filters.yearTo) queryParams.yearTo = filters.yearTo;
   if (currentPage.value > 1) queryParams.page = currentPage.value;
-  
+
   // Remplacer les query params sans recharger la page
   router.replace({ query: queryParams });
 }
 
-// Calculer les records triés
-const sortedRecords = computed(() => {
+// Fonction pour vérifier si un record correspond au type de discipline
+function matchesDisciplineType(record: RecordEntity): boolean {
+  return !filters.disciplineType || record.discipline.type === filters.disciplineType;
+}
 
-  if (!records.value || !hasMembers(records.value)) return [];
+// Fonction pour vérifier si un record correspond au genre
+function matchesGender(record: RecordEntity): boolean {
+  return !filters.gender || record.genre === filters.gender;
+}
 
-  // After checking with hasMembers, we can safely access and type assert members
-  return [...((records.value as any).members || [])].sort((a, b) => {
-    // Fonction pour obtenir la valeur à comparer selon le champ
-    const getValue = (obj: any, path: string) => {
-      return path.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : null), obj);
-    };
+// Fonction pour vérifier si un record correspond à la catégorie
+function matchesCategory(record: RecordEntity): boolean {
+  return !filters.category || record.categorie === filters.category;
+}
 
-    const aVal = getValue(a, sortField.value);
-    const bVal = getValue(b, sortField.value);
-    
+// Fonction pour vérifier si un record correspond au nom de l'athlète
+function matchesAthleteName(record: RecordEntity): boolean {
+  if (!filters.athleteName || filters.athleteName.trim() === '') {
+    return true;
+  }
+
+  const searchTerm = filters.athleteName.toLowerCase();
+  const fullName = `${record.athlete.firstname} ${record.athlete.lastname}`.toLowerCase();
+  return fullName.includes(searchTerm);
+}
+
+// Fonction pour vérifier si un record est dans la plage d'années
+function matchesYearRange(record: RecordEntity): boolean {
+  const recordYear = new Date(record.lastRecord).getFullYear();
+
+  if (filters.yearFrom && recordYear < filters.yearFrom) {
+    return false;
+  }
+
+  if (filters.yearTo && recordYear > filters.yearTo) {
+    return false;
+  }
+
+  return true;
+}
+
+// Fonction principale pour filtrer les records selon les critères sélectionnés
+function filterRecords(records: RecordEntity[]): RecordEntity[] {
+  if (!records) return [];
+
+  return records.filter(record =>
+    matchesDisciplineType(record) &&
+    matchesGender(record) &&
+    matchesCategory(record) &&
+    matchesAthleteName(record) &&
+    matchesYearRange(record)
+  );
+}
+
+// Fonction utilitaire pour obtenir une valeur imbriquée à partir d'un chemin de propriété
+function getNestedValue(obj: any, path: string): any {
+  return path.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : null), obj);
+}
+
+// Fonction pour comparer deux valeurs numériques ou autres
+function compareValues(a: any, b: any): number {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
+
+// Fonction pour trier les records selon le champ sélectionné
+function sortByField(records: RecordEntity[], field: string, order: 'asc' | 'desc'): RecordEntity[] {
+  return [...records].sort((a, b) => {
+    // Obtenir les valeurs à comparer selon le chemin de propriété
+    const aVal = getNestedValue(a, field);
+    const bVal = getNestedValue(b, field);
+
     if (aVal === null || bVal === null) return 0;
-    
+
     // Comparer en fonction du type de valeur
     let comparison;
-    if (typeof aVal === 'string') {
-      comparison = aVal.localeCompare(bVal);
-    } else if (aVal < bVal) {
-      // Comparaison numérique
-      comparison = -1;
-    } else if (aVal > bVal) {
-      comparison = 1;
+
+    if (field === 'performance') {
+      // Pour les performances, la logique dépend du type de discipline
+      if (a.discipline.type === DisciplineType.RUN) {
+        // Pour les courses, les performances plus basses sont meilleures (temps)
+        comparison = aVal - bVal;
+      } else {
+        // Pour les sauts et lancers, les performances plus élevées sont meilleures (distance)
+        comparison = bVal - aVal;
+      }
+    } else if (typeof aVal === 'string') {
+      // Comparaison de chaînes (insensible à la casse)
+      comparison = aVal.localeCompare(bVal, undefined, { sensitivity: 'base' });
+    } else if (aVal instanceof Date && bVal instanceof Date) {
+      // Comparaison de dates
+      comparison = aVal.getTime() - bVal.getTime();
     } else {
-      comparison = 0;
+      // Comparaison numérique ou autre
+      comparison = compareValues(aVal, bVal);
     }
-    
+
     // Appliquer l'ordre de tri
-    return sortOrder.value === 'asc' ? comparison : -comparison;
+    if (order === 'asc') {
+      return comparison;
+    } else {
+      return -comparison;
+    }
   });
+}
+
+// Computed property pour les records filtrés
+const filteredRecords = computed(() => {
+  // Appliquer les filtres aux records récupérés
+  const filtered = filterRecords(allRecords.value);
+
+  // Trier les résultats filtrés
+  return sortByField(filtered, sortField.value, sortOrder.value);
+});
+
+// Computed property pour la pagination
+const paginatedRecords = computed(() => {
+  const startIndex = (currentPage.value - 1) * pageSize.value;
+  return filteredRecords.value.slice(startIndex, startIndex + pageSize.value);
 });
 
 // Fonction pour changer de page
 function changePage(page: number) {
   if (page < 1 || page > totalPages.value) return;
-  
+
   currentPage.value = page;
-  filters.page = page;
   updateQueryParams();
-  refetch();
 }
 
 // Fonction pour trier
 function sortBy(field: string) {
   // Si on clique sur le même champ, on inverse l'ordre
   if (sortField.value === field) {
-    if (sortOrder.value === 'asc') {
-      sortOrder.value = 'desc';
-    } else {
-      sortOrder.value = 'asc';
-    }
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
   } else {
     // Sinon, on utilise le nouveau champ avec l'ordre par défaut (asc)
     sortField.value = field;
     sortOrder.value = 'asc';
   }
-  
-  // Mettre à jour l'ordre de tri dans les filtres
-  filters.order = { [sortField.value]: sortOrder.value };
-  refetch();
+
+  // Pas besoin de refetch puisque nous filtrons localement
 }
 
-// Fonction pour appliquer les filtres
-function applyFilters() {
+// Fonction pour appliquer les filtres localement
+function applyFiltersLocally() {
   // Réinitialiser la pagination
   currentPage.value = 1;
-  filters.page = 1;
-  
+
   // Log pour déboguer les filtres appliqués
-  console.log('Filtres appliqués:', JSON.stringify(filters, null, 2));
-  
+  console.log('Filtres appliqués localement:', JSON.stringify(filters, null, 2));
+
   updateQueryParams();
-  refetch();
+  // Pas besoin de refetch puisque nous filtrons localement avec computed properties
 }
 
 // Fonction pour réinitialiser les filtres
 function resetFilters() {
   // Réinitialiser tous les filtres
   filters.disciplineType = undefined;
-  filters.gender = undefined; 
+  filters.gender = undefined;
   filters.category = undefined;
   filters.athleteName = '';
   filters.yearFrom = undefined;
   filters.yearTo = undefined;
-  filters.page = 1;
+
   currentPage.value = 1;
   updateQueryParams();
-  refetch();
+  // Pas besoin de refetch puisque nous filtrons localement
 }
 
 // Debounce pour les filtres textuels
 const debouncedFilterChange = debounce(() => {
-  applyFilters();
-}, 500);
+  applyFiltersLocally();
+}, 300);
 
 // Afficher les détails d'un record
 function showRecordDetails(record: RecordEntity) {
@@ -490,7 +575,7 @@ function formatPerformance(performance: number, disciplineType: DisciplineType |
     const minutes = Math.floor(performance / 60);
     const seconds = Math.floor(performance % 60);
     const milliseconds = Math.round((performance % 1) * 100);
-    
+
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
   } else {
     // Format distance in meters for jumps and throws
@@ -500,29 +585,13 @@ function formatPerformance(performance: number, disciplineType: DisciplineType |
 
 // Formatage des dates
 function formatDate(dateString: string): string {
-  if (!dateString) return 'N/A';
-  
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('fr-FR', { 
-    day: '2-digit', 
-    month: '2-digit',
-    year: 'numeric' 
-  }).format(date);
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
 }
-
-// Au montage du composant, appliquer les filtres si nécessaire
-onMounted(() => {
-  // Si des paramètres d'URL sont présents, les utiliser pour initialiser les filtres
-  if (route.query.page) {
-    currentPage.value = Number(route.query.page);
-    filters.page = currentPage.value;
-  }
-  
-  // Si des filtres sont définis dans l'URL, les utiliser
-  if (Object.keys(route.query).length > 0) {
-    refetch();
-  }
-});
 </script>
 
 <style scoped>
@@ -876,29 +945,29 @@ h1 {
   .filter-section {
     flex-direction: column;
   }
-  
+
   .filter-actions {
     width: 100%;
     margin-top: 1rem;
     margin-left: 0;
   }
-  
+
   .records-table thead {
     display: none;
   }
-  
+
   .records-table, .records-table tbody, .records-table tr, .records-table td {
     display: block;
     width: 100%;
   }
-  
+
   .records-table tr {
     margin-bottom: 1rem;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
-  
+
   .records-table td {
     display: flex;
     padding: 0.5rem 1rem;
@@ -907,7 +976,7 @@ h1 {
     min-height: 2.5rem;
     align-items: center;
   }
-  
+
   .records-table td::before {
     content: attr(data-label);
     width: 40%;
@@ -916,11 +985,11 @@ h1 {
     margin-right: 1rem;
     flex-shrink: 0;
   }
-  
+
   .pagination-info {
     text-align: center;
   }
-  
+
   .modal-actions {
     flex-direction: column;
     gap: 0.5rem;

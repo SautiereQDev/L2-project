@@ -13,7 +13,7 @@ const router = createRouter({
     {
       path: "/records",
       name: "records",
-      component: () => import("../views/RecordsViewNew.vue"),
+      component: () => import("../views/RecordsView.vue"),
     },
     {
       path: "/records/:id",
@@ -65,20 +65,20 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // Vérifier si la route nécessite une authentification
   const requiresAuth = to.meta.requiresAuth === true;
-  
+
   // Si l'auth store n'est pas encore disponible, on l'initialise
   // Note: ceci utilise la fonction au lieu du composable directement
   // car les composables Vue ne doivent être utilisés que dans des composants setup
   const authStore = useAuthStore();
-  
+
   // Si la route nécessite une authentification et que l'utilisateur n'est pas connecté
   if (requiresAuth && !authStore.isAuthenticated) {
     // Rediriger vers la page de connexion avec l'URL de retour
-    next({ 
+    next({
       name: 'login',
       query: { redirect: to.fullPath }
     });
-  } 
+  }
   // Sinon si l'utilisateur est sur la page de connexion mais déjà connecté
   else if (to.name === 'login' && authStore.isAuthenticated) {
     // Rediriger vers la page d'accueil ou la page demandée
@@ -89,7 +89,7 @@ router.beforeEach((to, from, next) => {
   else {
     next();
   }
-  
+
   // Mettre à jour le titre de la page
   if (to.meta.title && typeof to.meta.title === 'string') {
     document.title = `${to.meta.title} - Records d'Athlétisme`;

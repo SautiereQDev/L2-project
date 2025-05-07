@@ -1,0 +1,114 @@
+@startuml Records Data Lifecycle
+
+' Définition des styles
+skinparam backgroundColor white
+skinparam componentStyle uml2
+
+' Définition du titre
+title Cycle de vie des données - Affichage des records d'athlétisme
+
+' États des données
+state "Backend Database" as DB
+state "API Request" as APIReq
+state "API Response (JSON)" as APIResp {
+  state "Format Hydra" as Hydra
+  state "Format ApiCollection" as ApiColl
+  state "Format Legacy" as Legacy
+  Hydra --> ApiColl : Transformation\n(apiService)
+  Hydra --> Legacy : Fallback\nsupport
+}
+state "RecordsService Processing" as RecService
+state "Data State in RecordsView" as ViewState {
+  state "Loading" as Loading
+  state "Error" as Error
+  state "Data Ready" as Ready
+  Loading --> Error : API Error
+  Loading --> Ready : Data received
+  Error --> Loading : Retry
+}
+state "Data Transformation" as Transform {
+  state "Filtering" as Filter
+  state "Sorting" as Sort
+  state "Formatting" as Format
+}
+state "UI Rendering" as UI {
+  state "DataTable Component" as DataTable
+  state "Empty State" as Empty
+  state "Loading Indicator" as LoadingUI
+  state "Error Message" as ErrorUI
+}
+state "User Interactions" as UserActions {
+  state "Filter Change" as FilterAction
+  state "Sort Change" as SortAction
+  state "Page Change" as PageAction
+  state "Details View" as DetailsAction
+}
+
+' Transitions
+[*] --> DB : Données initiales
+DB --> APIReq : GET /api/records?params
+APIReq --> APIResp : Réponse du serveur
+APIResp --> RecService : Parsing & validation
+RecService --> ViewState : update data state
+ViewState --> Transform : si Ready
+ViewState --> UI : mise à jour UI
+
+' Cycle de transformation des données
+Transform --> UI : Données transformées
+UI --> UserActions : Interaction utilisateur
+UserActions --> APIReq : Nouveau chargement
+UserActions --> Transform : Tri côté client
+
+' Notes explicatives
+note right of DB
+  Entités Symfony:
+  - Record
+  - Discipline
+  - Athlete
+  - Location
+endnote
+
+note right of APIResp
+  Formats possibles:
+  1. {"hydra:member": [], "hydra:totalItems": 42}
+  2. {"items": [], "totalItems": 42}
+  3. {"members": []}
+endnote
+
+note right of RecService
+  Fichier: src/services/records.service.ts
+  - Conversion des filtres en params URL
+  - Traitement initial des données
+  - Structure unifiée
+endnote
+
+note right of Transform
+  Transformation dans RecordsView:
+  - Computed sortedRecords
+  - Formatage des performances
+  - Adaptation aux différentes structures
+endnote
+
+note right of ViewState
+  Gestion d'état avec Vue:
+  - reactive() et ref() pour l'état
+  - computed() pour les transformations
+  - isLoading/isError de TanStack Query
+endnote
+
+note right of UI
+  Components:
+  - RecordsTable.vue (DataTable)
+  - Affichage conditionnel selon l'état
+  - Formatage spécifique par colonne
+endnote
+
+note right of UserActions
+  Actions déclenchant des mises à jour:
+  - applyFilters()
+  - changePage()
+  - sortBy()
+  - showRecordDetails()
+endnote
+
+@enduml
