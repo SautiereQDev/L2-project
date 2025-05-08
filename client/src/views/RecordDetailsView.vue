@@ -108,8 +108,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
-import { useRecordDetails } from '@/composables/useRecordDetails';
-
+import {useRecordDetail} from '@/composables/useRecordDetail';
 const route = useRoute();
 const router = useRouter();
 const recordId = Number(route.params.id);
@@ -121,14 +120,13 @@ const {
   isLoading,
   isError,
   error,
-  loadRecord,
-  isFetching
-} = useRecordDetails(recordId);
+  refetch
+} = useRecordDetail(recordId);
 
 // Naviguer vers les détails d'un autre record
 function viewRecordDetails(id: number) {
   router.push(`/records/${id}`);
-  loadRecord(id);
+  refetch();
 }
 
 // Convertir le type de discipline en libellé
