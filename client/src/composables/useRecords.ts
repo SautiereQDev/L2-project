@@ -1,60 +1,100 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { ref, computed } from 'vue';
-import type { RecordEntity, RecordFilters } from '@/types';
+// Composable unifié pour la gestion des records (liste, recherche, pagination) et détails
+import { ref, computed, watch, type Ref } from 'vue';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import type { RecordFilters, RecordEntity } from '@/types';
 import recordsService from '../services/records.service';
-import apiService from '../services/api.service';
+import apiService from '@/services/api';
+import queryKeys from './queryKeys';
 
-// Clés de requête pour Vue Query
-export const queryKeys = {
-  records: {
-    all: ['records'],
-    byId: (id: number) => [...queryKeys.records.all, id],
-    byCategory: (category: string) => [...queryKeys.records.all, 'category', category],
-    byDiscipline: (disciplineType: string) => [...queryKeys.records.all, 'discipline', disciplineType],
-    byGenre: (gender: string) => [...queryKeys.records.all, 'genre', gender],
-    // Cloner les filtres pour s'assurer qu'ils sont sérialisables
-    filtered: (filters: RecordFilters) => [...queryKeys.records.all, 'filtered', JSON.stringify(filters)],
-  },
-};
+export interface UseRecordsOptions {
+  initialFilters?: RecordFilters;
+  initialPage?: number;
+  initialPageSize?: number;
+}
 
 /**
- * Hook pour récupérer tous les records avec pagination et filtres
- * @param filters - Filtres optionnels à appliquer
- * @returns Object - Query et données paginées
+ * Hook pour gérer records avec filtres, recherche et pagination
  */
-export function useRecords(filters: RecordFilters = {}) {
+export function useRecords(options: UseRecordsOptions = {}) {
+  const filters = ref<RecordFilters>({ ...(options.initialFilters ?? {}) });
+  const currentPage = ref<number>(options.initialPage ?? 1);
+  const pageSize = ref<number>(options.initialPageSize ?? 10);
+
   const query = useQuery({
-    queryKey: Object.keys(filters).length > 0 
-      ? queryKeys.records.filtered(filters) 
-      : queryKeys.records.all,
-    queryFn: () => recordsService.getRecords(filters),
+    queryKey: ['records', JSON.stringify(filters.value), currentPage.value, pageSize.value],
+    queryFn: () =>
+      recordsService.getRecords({
+        ...filters.value,
+        page: currentPage.value,
+        itemsPerPage: pageSize.value,
+      }),
   });
-  
-  // Extraire les données de la collection pour faciliter l'accès
-  const records = computed(() => query.data.value?.items || []);
-  const pagination = computed(() => {
-    if (!query.data.value) {
-      return {
-        totalItems: 0,
-        currentPage: 1,
-        totalPages: 1,
-        itemsPerPage: 10
-      };
-    }
-    
-    return {
-      totalItems: query.data.value.totalItems,
-      currentPage: query.data.value.currentPage,
-      totalPages: query.data.value.totalPages,
-      itemsPerPage: query.data.value.itemsPerPage
-    };
-  });
-  
+
+  watch([filters, currentPage, pageSize], () => query.refetch(), { deep: true });
+
+  const records = computed<RecordEntity[]>(() => query.data.value?.items || []);
+  const totalItems = computed<number>(() => query.data.value?.totalItems ?? records.value.length);
+  const totalPages = computed<number>(() => Math.ceil(totalItems.value / pageSize.value));
+
+  function updateFilters(newFilters: RecordFilters) {
+    filters.value = { ...newFilters };
+    currentPage.value = 1;
+  }
+  function setPage(page: number) {
+    if (page >= 1 && page <= totalPages.value) currentPage.value = page;
+  }
+  function setPageSize(size: number) {
+    pageSize.value = size;
+    if (currentPage.value > totalPages.value) currentPage.value = totalPages.value;
+  }
+
   return {
-    ...query,
+    filters,
+    currentPage,
+    pageSize,
     records,
-    pagination
+    totalItems,
+    totalPages,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    updateFilters,
+    setPage,
+    setPageSize,
+    refetch: query.refetch,
   };
+}
+
+/**
+ * Hook pour récupérer un record et ses records similaires
+ */
+export function useRecordDetail(id: number | Ref<number>) {
+  const recordQuery = useQuery({
+    queryKey: ['record', id],
+    queryFn: () => recordsService.getRecord(typeof id === 'object' ? id.value : id),
+    staleTime: 5 * 60 * 1000,
+  });
+  const similarQuery = useQuery({
+    queryKey: ['record', typeof id === 'object' ? id.value : id, 'similar'],
+    queryFn: async () => {
+      const rec = recordQuery.data.value;
+      if (!rec) return [];
+      const res = await recordsService.getRecords({
+        disciplineType: rec.discipline.type,
+        gender: rec.genre,
+      });
+      return (res.items || []).filter((r) => r.id !== (typeof id === 'object' ? id.value : id));
+    },
+    enabled: computed(() => !!recordQuery.data.value),
+  });
+
+  const record = computed(() => recordQuery.data.value);
+  const similarRecords = computed(() => similarQuery.data.value || []);
+  const isLoading = computed(() => recordQuery.isLoading.value || similarQuery.isLoading.value);
+  const isError = computed(() => recordQuery.isError.value || similarQuery.isError.value);
+  const error = computed(() => recordQuery.error.value || similarQuery.error.value);
+
+  return { record, similarRecords, isLoading, isError, error, refetch: recordQuery.refetch };
 }
 
 /**
@@ -64,7 +104,7 @@ export function useRecords(filters: RecordFilters = {}) {
  */
 export function useRecord(id: number) {
   return useQuery({
-    queryKey: queryKeys.records.byId(id),
+    queryKey: queryKeys.records.detail(id),
     queryFn: () => recordsService.getRecord(id),
     enabled: id > 0, // N'exécuter que si l'ID est valide
   });
@@ -85,28 +125,28 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
 
   // Récupérer les records avec tous les filtres appliqués
   const query = useQuery({
-    queryKey: queryKeys.records.byCategory(category),
+    queryKey: queryKeys.records.category(category),
     queryFn: () => recordsService.getRecords(filters.value),
     enabled: !!category, // N'exécuter que si une catégorie est sélectionnée
   });
 
   // Extraire les records de la collection de réponse API
   const records = computed(() => query.data.value?.items || []);
-  
+
   // Appliquer des filtres côté client si nécessaire
   const filteredRecords = computed(() => {
     if (!records.value.length) return [];
-    
+
     return records.value.filter((record: RecordEntity) => {
       // Appliquer les filtres additionnels s'ils existent
       if (filters.value.disciplineType && record.discipline.type !== filters.value.disciplineType) {
         return false;
       }
-      
+
       if (filters.value.gender && record.genre !== filters.value.gender) {
         return false;
       }
-      
+
       return true;
     });
   });
@@ -121,7 +161,7 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
         itemsPerPage: 10
       };
     }
-    
+
     return {
       totalItems: query.data.value.totalItems,
       currentPage: query.data.value.currentPage,
@@ -145,16 +185,16 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
  * @returns Object - Query et données paginées
  */
 export function useRecordsByDiscipline(disciplineType: string) {
-  const filters: RecordFilters = { 
+  const filters: RecordFilters = {
     disciplineType: disciplineType as any // Conversion temporaire pour compatibilité
   };
-  
+
   const query = useQuery({
-    queryKey: queryKeys.records.byDiscipline(disciplineType),
+    queryKey: queryKeys.records.discipline(disciplineType),
     queryFn: () => recordsService.getRecords(filters),
     enabled: !!disciplineType
   });
-  
+
   // Extraire les données de la collection pour faciliter l'accès
   const records = computed(() => query.data.value?.items || []);
   const pagination = computed(() => {
@@ -166,7 +206,7 @@ export function useRecordsByDiscipline(disciplineType: string) {
         itemsPerPage: 10
       };
     }
-    
+
     return {
       totalItems: query.data.value.totalItems,
       currentPage: query.data.value.currentPage,
@@ -174,7 +214,7 @@ export function useRecordsByDiscipline(disciplineType: string) {
       itemsPerPage: query.data.value.itemsPerPage
     };
   });
-  
+
   return {
     ...query,
     records,
@@ -188,16 +228,16 @@ export function useRecordsByDiscipline(disciplineType: string) {
  * @returns Object - Query et données paginées
  */
 export function useRecordsByGenre(gender: string) {
-  const filters: RecordFilters = { 
+  const filters: RecordFilters = {
     gender: gender as any // Conversion temporaire pour compatibilité
   };
-  
+
   const query = useQuery({
-    queryKey: queryKeys.records.byGenre(gender),
+    queryKey: queryKeys.records.genre(gender),
     queryFn: () => recordsService.getRecords(filters),
     enabled: !!gender
   });
-  
+
   // Extraire les données de la collection pour faciliter l'accès
   const records = computed(() => query.data.value?.items || []);
   const pagination = computed(() => {
@@ -209,7 +249,7 @@ export function useRecordsByGenre(gender: string) {
         itemsPerPage: 10
       };
     }
-    
+
     return {
       totalItems: query.data.value.totalItems,
       currentPage: query.data.value.currentPage,
@@ -217,7 +257,7 @@ export function useRecordsByGenre(gender: string) {
       itemsPerPage: query.data.value.itemsPerPage
     };
   });
-  
+
   return {
     ...query,
     records,
@@ -231,31 +271,31 @@ export function useRecordsByGenre(gender: string) {
  */
 export function useUpdateRecord() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<RecordEntity> }) => {
-      return await apiService.put<RecordEntity>(`/records/${id}`, data);
+      return await apiService.getClient().put<RecordEntity>(`/records/${id}`, data).then(res => res.data);
     },
     onSuccess: (updatedRecord) => {
       // Invalider et rafraîchir toutes les requêtes qui pourraient être affectées
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.all,
       });
-      
+
       // Mettre à jour la requête spécifique pour ce record
       queryClient.setQueryData(
-        queryKeys.records.byId(updatedRecord.id), 
+        queryKeys.records.detail(updatedRecord.id),
         updatedRecord
       );
-      
+
       // Invalider également les requêtes filtrées qui pourraient contenir ce record
       queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey;
-          return Array.isArray(queryKey) && 
-                queryKey[0] === 'records' && 
-                (queryKey[1] === 'category' || 
-                 queryKey[1] === 'discipline' || 
+          return Array.isArray(queryKey) &&
+                queryKey[0] === 'records' &&
+                (queryKey[1] === 'category' ||
+                 queryKey[1] === 'discipline' ||
                  queryKey[1] === 'genre');
         }
       });

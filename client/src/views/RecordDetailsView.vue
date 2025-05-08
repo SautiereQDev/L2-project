@@ -4,29 +4,29 @@
       <div class="spinner"></div>
       <p>Chargement des détails du record...</p>
     </div>
-    
+
     <div v-else-if="isError" class="error-state">
       <p>Une erreur est survenue: {{ error }}</p>
       <button @click="$router.go(-1)" class="back-button">Retour</button>
     </div>
-    
+
     <div v-else-if="record" class="record-details-container">
       <div class="header-with-back">
         <button class="back-button" @click="$router.go(-1)">← Retour</button>
         <h1>Détails du Record</h1>
       </div>
-      
+
       <div class="record-info">
         <div class="record-header">
           <h2>
-            {{ record.discipline.name }} 
+            {{ record.discipline.name }}
             <span class="discipline-type">({{ getDisciplineTypeLabel(record.discipline.type) }})</span>
           </h2>
           <div class="performance-badge" :class="record.discipline.type">
             {{ formatPerformance(record.performance, record.discipline.type) }}
           </div>
         </div>
-        
+
         <div class="info-grid">
           <div class="info-card">
             <h3>Athlète</h3>
@@ -35,7 +35,7 @@
               <div class="athlete-country">{{ record.athlete.country }}</div>
             </div>
           </div>
-          
+
           <div class="info-card">
             <h3>Détails</h3>
             <div class="detail-item">
@@ -51,7 +51,7 @@
               <span class="detail-value">{{ record.genre === 'MEN' ? 'Homme' : 'Femme' }}</span>
             </div>
           </div>
-          
+
           <div class="info-card">
             <h3>Lieu</h3>
             <div class="detail-item">
@@ -69,14 +69,14 @@
           </div>
         </div>
       </div>
-      
+
       <div v-if="similarRecords && similarRecords.length > 0" class="similar-records">
         <h2>Records similaires</h2>
-        
+
         <div class="similar-records-grid">
-          <div 
-            v-for="similarRecord in similarRecords" 
-            :key="similarRecord.id" 
+          <div
+            v-for="similarRecord in similarRecords"
+            :key="similarRecord.id"
             class="similar-record-card"
             @click="viewRecordDetails(similarRecord.id)"
           >
@@ -89,8 +89,8 @@
             <div class="similar-record-details">
               <div class="athlete-name">{{ similarRecord.athlete.firstname }} {{ similarRecord.athlete.lastname }}</div>
               <div class="record-meta">
-                {{ formatDate(similarRecord.lastRecord) }} • 
-                {{ similarRecord.genre === 'MEN' ? 'Homme' : 'Femme' }} • 
+                {{ formatDate(similarRecord.lastRecord) }} •
+                {{ similarRecord.genre === 'MEN' ? 'Homme' : 'Femme' }} •
                 {{ similarRecord.categorie }}
               </div>
             </div>
@@ -98,7 +98,7 @@
         </div>
       </div>
     </div>
-    
+
     <div v-else class="not-found">
       <p>Le record demandé n'a pas été trouvé.</p>
       <button @click="$router.go(-1)" class="back-button">Retour</button>
@@ -138,7 +138,7 @@ function getDisciplineTypeLabel(type: string): string {
     'jump': 'Saut',
     'throw': 'Lancer'
   };
-  
+
   return types[type] || type;
 }
 
@@ -151,7 +151,7 @@ function getCategoryLabel(category: string): string {
     'SENIOR': 'Senior',
     'MASTER': 'Master'
   };
-  
+
   return categoryLabels[category] || category;
 }
 
@@ -162,7 +162,7 @@ function formatPerformance(performance: number, disciplineType: string): string 
     const minutes = Math.floor(performance / 60);
     const seconds = Math.floor(performance % 60);
     const milliseconds = Math.round((performance % 1) * 100);
-    
+
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
   } else {
     // Format distance in meters for jumps and throws
@@ -173,10 +173,10 @@ function formatPerformance(performance: number, disciplineType: string): string 
 // Formatage des dates
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('fr-FR', { 
-    day: '2-digit', 
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
     month: '2-digit',
-    year: 'numeric' 
+    year: 'numeric'
   }).format(date);
 }
 </script>
@@ -400,11 +400,11 @@ h3 {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .info-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .similar-records-grid {
     grid-template-columns: 1fr;
   }

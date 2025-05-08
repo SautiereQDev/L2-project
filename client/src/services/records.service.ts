@@ -2,15 +2,11 @@
  * Service pour gérer les requêtes de records
  */
 import apiService from './api.service';
-import type { 
-  RecordEntity, 
-  RecordFilters, 
+import type {
+  RecordEntity,
+  RecordFilters,
   ApiCollection
 } from '../types';
-import { generateMockRecords } from './mock.service';
-
-// Permet de basculer sur des données simulées en cas d'échec de l'API
-const USE_API_FALLBACK = true;
 
 export class RecordsService {
   /**
@@ -22,34 +18,20 @@ export class RecordsService {
     try {
       // Convertir les filtres en paramètres d'API
       const params: Record<string, any> = this.prepareQueryParams(filters);
-      
+
       console.log('Appel API avec filtres:', filters);
-      
+
       // Utiliser la méthode get pour récupérer les données
       const response = await apiService.get<ApiCollection<RecordEntity>>('/records', params);
-      
+
       console.log(`API a renvoyé ${response.items.length} records sur ${response.totalItems} au total`);
       return response;
     } catch (error) {
       console.error('Erreur lors de la récupération des records:', error);
-      
-      // Utiliser des données simulées en cas d'erreur si activé
-      if (USE_API_FALLBACK) {
-        console.log('Utilisation des données simulées en fallback');
-        const mockRecords = generateMockRecords(15);
-        return {
-          items: mockRecords,
-          totalItems: mockRecords.length,
-          itemsPerPage: mockRecords.length,
-          currentPage: 1,
-          totalPages: 1
-        };
-      }
-      
       throw error;
     }
   }
-  
+
   /**
    * Prépare les paramètres de requête à partir des filtres
    * @param filters - Filtres pour la requête
@@ -57,14 +39,14 @@ export class RecordsService {
    */
   private prepareQueryParams(filters: RecordFilters): Record<string, any> {
     const params: Record<string, any> = {};
-    
+
     // Ne traiter que les filtres non-vides
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params[key] = value;
       }
     });
-    
+
     return params;
   }
 
@@ -75,14 +57,6 @@ export class RecordsService {
       return await apiService.get<RecordEntity>(`/records/${id}`);
     } catch (error) {
       console.error(`Erreur lors de la récupération du record ${id}:`, error);
-      
-      if (USE_API_FALLBACK) {
-        // Générer un record simulé avec l'ID spécifié
-        const mockRecords = generateMockRecords(1);
-        mockRecords[0].id = id;
-        return mockRecords[0];
-      }
-      
       throw error;
     }
   }
