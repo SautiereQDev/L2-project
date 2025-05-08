@@ -40,40 +40,21 @@
       <!-- Recherche par athlète -->
       <div class="filter-group">
         <label for="athlete-name">Nom d'athlète:</label>
-        <input
-          type="text"
-          id="athlete-name"
-          v-model="filters.athleteName"
-          placeholder="Rechercher un athlète"
-          @input="debouncedFilterChange"
-        />
+        <input type="text" id="athlete-name" v-model="filters.athleteName" placeholder="Rechercher un athlète"
+          @input="debouncedFilterChange" />
       </div>
 
       <!-- Période (années) -->
       <div class="filter-group">
         <label for="year-from">Année (de):</label>
-        <input
-          type="number"
-          id="year-from"
-          v-model.number="filters.yearFrom"
-          placeholder="Ex: 2020"
-          min="1900"
-          :max="currentYear"
-          @change="applyFiltersLocally"
-        />
+        <input type="number" id="year-from" v-model.number="filters.yearFrom" placeholder="Ex: 2020" min="1900"
+          :max="currentYear" @change="applyFiltersLocally" />
       </div>
 
       <div class="filter-group">
         <label for="year-to">Année (à):</label>
-        <input
-          type="number"
-          id="year-to"
-          v-model.number="filters.yearTo"
-          placeholder="Ex: 2025"
-          :min="filters.yearFrom || 1900"
-          :max="currentYear"
-          @change="applyFiltersLocally"
-        />
+        <input type="number" id="year-to" v-model.number="filters.yearTo" placeholder="Ex: 2025"
+          :min="filters.yearFrom || 1900" :max="currentYear" @change="applyFiltersLocally" />
       </div>
 
       <!-- Boutons d'action -->
@@ -99,81 +80,9 @@
 
       <!-- Tableau des records -->
       <div v-else class="table-responsive">
-        <table v-if="paginatedRecords.length > 0" class="records-table">
-          <thead>
-            <tr>
-              <th scope="col" @click="sortBy('discipline.name')">
-                Discipline
-                <span v-if="sortField === 'discipline.name'" class="sort-icon">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-              </th>
-              <th scope="col" @click="sortBy('performance')">
-                Performance
-                <span v-if="sortField === 'performance'" class="sort-icon">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-              </th>
-              <th scope="col" @click="sortBy('athlete.lastname')">
-                Athlète
-                <span v-if="sortField === 'athlete.lastname'" class="sort-icon">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-              </th>
-              <th scope="col" @click="sortBy('lastRecord')">
-                Date
-                <span v-if="sortField === 'lastRecord'" class="sort-icon">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-              </th>
-              <th scope="col" @click="sortBy('categorie')">
-                Catégorie
-                <span v-if="sortField === 'categorie'" class="sort-icon">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-              </th>
-              <th scope="col" @click="sortBy('genre')">
-                Genre
-                <span v-if="sortField === 'genre'" class="sort-icon">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-              </th>
-              <th scope="col">Lieu</th>
-              <th scope="col">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="record in paginatedRecords" :key="record.id">
-              <td data-label="Discipline">{{ record.discipline.name }}</td>
-              <td data-label="Performance">{{ formatPerformance(record.performance, record.discipline.type) }}</td>
-              <td data-label="Athlète">{{ record.athlete.firstname }} {{ record.athlete.lastname }}</td>
-              <td data-label="Date">{{ formatDate(record.lastRecord) }}</td>
-              <td data-label="Catégorie">{{ record.categorie }}</td>
-              <td data-label="Genre">{{ record.genre === 'M' ? 'Homme' : 'Femme' }}</td>
-              <td data-label="Lieu">{{ record.location.name }}, {{ record.location.city }}</td>
-              <td data-label="Actions">
-                <button class="btn-action" @click="showRecordDetails(record)">Détails</button>
-                <router-link :to="`/records/${record.id}`" class="btn-link">Voir</router-link>
-              </td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="8">
-                <div class="pagination">
-                  <button
-                    class="pagination-button"
-                    :disabled="currentPage === 1"
-                    @click="changePage(currentPage - 1)"
-                  >
-                    &laquo; Précédent
-                  </button>
-
-                  <span class="pagination-info">Page {{ currentPage }} sur {{ totalPages }}</span>
-
-                  <button
-                    class="pagination-button"
-                    :disabled="currentPage >= totalPages"
-                    @click="changePage(currentPage + 1)"
-                  >
-                    Suivant &raquo;
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-        <div v-else class="no-records">
-          <p>Aucun record trouvé avec les filtres sélectionnés.</p>
-        </div>
+        <RecordsTable :records="paginatedRecords" :currentPage="currentPage" :totalPages="totalPages"
+          :sortField="sortField" :sortOrder="sortOrder" @update:page="changePage" @update:sort="sortBy"
+          @show-details="showRecordDetails" v-if="!loading && !isError"/>
       </div>
     </div>
 
@@ -193,7 +102,8 @@
           </div>
           <div class="record-detail-item">
             <span class="label">Performance:</span>
-            <span class="value">{{ formatPerformance(selectedRecord.performance, selectedRecord.discipline.type) }}</span>
+            <span class="value">{{ formatPerformance(selectedRecord.performance, selectedRecord.discipline.type)
+              }}</span>
           </div>
           <div class="record-detail-item">
             <span class="label">Athlète:</span>
@@ -213,7 +123,8 @@
           </div>
           <div class="record-detail-item">
             <span class="label">Lieu:</span>
-            <span class="value">{{ selectedRecord.location.name }}, {{ selectedRecord.location.city }}, {{ selectedRecord.location.country }}</span>
+            <span class="value">{{ selectedRecord.location.name }}, {{ selectedRecord.location.city }}, {{
+              selectedRecord.location.country }}</span>
           </div>
           <div class="record-detail-item">
             <span class="label">Record en cours:</span>
@@ -241,6 +152,7 @@ import type { RecordFilters, RecordEntity, CategorieType } from '../types';
 import { DisciplineType, GenderType } from '../types';
 import { debounce } from '../utils/debounce';
 import authService from '../services/auth.service';
+import RecordsTable from '../components/RecordsTable.vue';
 
 // Récupérer la route pour extraire les paramètres d'URL
 const route = useRoute();
@@ -633,7 +545,8 @@ h1 {
   font-size: 0.875rem;
 }
 
-.filter-group select, .filter-group input {
+.filter-group select,
+.filter-group input {
   width: 100%;
   padding: 0.625rem 0.75rem;
   border: 1px solid #cbd5e1;
@@ -643,11 +556,13 @@ h1 {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.filter-group select:hover, .filter-group input:hover {
+.filter-group select:hover,
+.filter-group input:hover {
   border-color: #94a3b8;
 }
 
-.filter-group select:focus, .filter-group input:focus {
+.filter-group select:focus,
+.filter-group input:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
@@ -692,7 +607,9 @@ h1 {
   background-color: #cbd5e1;
 }
 
-.loading, .error, .no-records {
+.loading,
+.error,
+.no-records {
   text-align: center;
   padding: 2rem;
   background-color: #f8fafc;
@@ -712,7 +629,9 @@ h1 {
 }
 
 @keyframes spinner {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
@@ -750,7 +669,8 @@ h1 {
   font-size: 0.875rem;
 }
 
-.records-table th, .records-table td {
+.records-table th,
+.records-table td {
   padding: 0.875rem 1rem;
   text-align: left;
 }
@@ -956,7 +876,10 @@ h1 {
     display: none;
   }
 
-  .records-table, .records-table tbody, .records-table tr, .records-table td {
+  .records-table,
+  .records-table tbody,
+  .records-table tr,
+  .records-table td {
     display: block;
     width: 100%;
   }
