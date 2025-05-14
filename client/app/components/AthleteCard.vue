@@ -23,7 +23,7 @@
         <div class="flex items-center text-sm text-gray-500 mt-1">
           <span v-if="showCountry" class="flex items-center">
             <span class="text-lg mr-1">{{ countryFlag }}</span>
-            {{ athlete.country }}
+            {{ getCountryName(athlete.country) }}
           </span>
           <UIcon v-if="showCountry && showAge" name="i-heroicons-circle-small" class="h-4 w-4 mx-1" />
           <span v-if="showAge">
@@ -58,8 +58,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { GenderType } from '~/types/record.types';
-import type { Athlete } from '~/types/record.types';
+import { GenderType } from '@/types/record.types';
+import type { Athlete } from '@/types/record.types';
+import { useCountries } from '@/composables/useCountries';
 
 const props = defineProps({
   /**
@@ -113,6 +114,8 @@ const props = defineProps({
   }
 });
 
+const { getCountryFlag, getCountryName } = useCountries();
+
 /**
  * Genre à utiliser (celui fourni en prop ou celui de l'athlète)
  */
@@ -151,50 +154,4 @@ function calculateAge(birthdate: string): number {
   return age;
 }
 
-/**
- * Récupère l'emoji du drapeau à partir du nom du pays
- */
-function getCountryFlag(countryName: string): string {
-  // Implémentation simplifiée - utiliser une bibliothèque de drapeaux dans une application réelle
-  const countryFlags: Record<string, string> = {
-    'France': '🇫🇷',
-    'États-Unis': '🇺🇸',
-    'USA': '🇺🇸',
-    'Jamaïque': '🇯🇲',
-    'Kenya': '🇰🇪',
-    'Éthiopie': '🇪🇹',
-    'Royaume-Uni': '🇬🇧',
-    'Grande-Bretagne': '🇬🇧',
-    'Allemagne': '🇩🇪',
-    'Japon': '🇯🇵',
-    'Chine': '🇨🇳',
-    'Russie': '🇷🇺',
-    'Brésil': '🇧🇷',
-    'Italie': '🇮🇹',
-    'Espagne': '🇪🇸',
-    'Canada': '🇨🇦',
-    'Australie': '🇦🇺',
-    'Nouvelle-Zélande': '🇳🇿',
-    'Afrique du Sud': '🇿🇦',
-    'Norvège': '🇳🇴',
-    'Suède': '🇸🇪',
-    'Finlande': '🇫🇮',
-    'Danemark': '🇩🇰',
-    'Pays-Bas': '🇳🇱',
-    'Belgique': '🇧🇪',
-    'Suisse': '🇨🇭',
-    'Autriche': '🇦🇹',
-    'Portugal': '🇵🇹',
-    'Grèce': '🇬🇷',
-    'Irlande': '🇮🇪'
-  };
-  
-  return countryFlags[countryName] || '🏳️'; 
-}
 </script>
-
-<style scoped>
-.athlete-card {
-  transition: all 0.2s ease;
-}
-</style>

@@ -7,7 +7,7 @@
 export enum DisciplineType {
   RUN = "run",
   JUMP = "jump",
-  THROW = "throw"
+  THROW = "throw",
 }
 
 /**
@@ -17,7 +17,7 @@ export enum RunningType {
   SHORT = "short",
   MIDDLE = "middle",
   LONG = "long",
-  HURDLES = "hurdles"
+  HURDLES = "hurdles",
 }
 
 /**
@@ -25,7 +25,7 @@ export enum RunningType {
  */
 export enum GenderType {
   MEN = "M",
-  WOMEN = "W"
+  WOMEN = "W",
 }
 
 /**
@@ -36,7 +36,7 @@ export enum CategorieType {
   U20 = "U20",
   U23 = "U23",
   SENIOR = "SENIOR",
-  MASTER = "MASTER"
+  MASTER = "MASTER",
 }
 
 /**
@@ -91,7 +91,7 @@ export interface Location extends Identifiable, TimestampedEntity {
 /**
  * Types d'ordre pour le tri
  */
-export type SortOrder = 'asc' | 'desc';
+export type SortOrder = "asc" | "desc";
 
 /**
  * Interface représentant un record d'athlétisme
@@ -112,17 +112,22 @@ export interface RecordEntity extends Identifiable, TimestampedEntity {
 /**
  * Interface pour la création d'un nouveau record (sans ID ni timestamps)
  */
-export type CreateRecordDto = Omit<RecordEntity, 'id' | 'createdAt' | 'updatedAt'>;
+export type CreateRecordDto = Omit<
+  RecordEntity,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 /**
  * Interface pour la mise à jour partielle d'un record
  */
-export type UpdateRecordDto = Partial<Omit<RecordEntity, 'id' | 'createdAt' | 'updatedAt'>>;
+export type UpdateRecordDto = Partial<
+  Omit<RecordEntity, "id" | "createdAt" | "updatedAt">
+>;
 
 /**
  * Type personalisé pour supporter à la fois les valeurs enum et 'all'
  */
-export type AllOr<T> = T | 'all';
+export type AllOr<T> = T | "all";
 
 /**
  * Interface pour les filtres de recherche de records
@@ -148,4 +153,22 @@ export interface RecordFilters {
 export interface PaginationParams {
   page: number;
   itemsPerPage: number;
+}
+
+export interface SimilarRecord {
+  sameDiscipline: boolean;
+  sameAthlete: boolean;
+  discipline: Discipline;
+  athlete: Athlete;
+  lastRecord: string;
+  performance: number;
+  genre: GenderType;
+  categorie: CategorieType;
+  isCurrentRecord: boolean;
+  previousRecord?: RecordEntity | null;
+  nextRecords?: RecordEntity[];
+  location: Location;
+  id: number;
+  createdAt: string;
+  updatedAt: string;
 }
