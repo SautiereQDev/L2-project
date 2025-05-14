@@ -1,3 +1,6 @@
+<!-- TODO: Utiliser nuxt leaflet pour creer la map -->
+<!-- TODO: Utiliser node-i18n-iso-countries pour convertir les noms de pays de 2 lettres au pays entier + drapeau -->
+<!-- TODO: Modifier les infos affichés pour qu'elles correspondent aux données stockés sur les records et les athlètes correspondants -->
 <template>
   <UContainer>
     <!-- Gestion du mode chargement avec shimmer effect -->
@@ -123,7 +126,7 @@
 
             <!-- Performance -->
             <div
-                class="absolute right-4 bottom-0 translate-y-1/2 bg-gray-100 dark:bg-gray-900 shadow-lg rounded-full p-2 border-2 border-white dark:border-gray-800">
+                class="absolute right-4 bottom-0 translate-y-1/2 bg-gray-700 dark:bg-gray-100 shadow-lg rounded-full p-2 border-2 border-white dark:border-gray-800">
               <PerformanceDisplay
                   :value="record.performance"
                   :discipline-type="record.discipline.type"
@@ -205,7 +208,7 @@
               <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Pays</div>
               <div class="sm:col-span-2 flex items-center gap-2">
                 <span class="text-lg">{{ getCountryFlag(record.athlete.country) }}</span>
-                {{ record.athlete.country }}
+                {{ getCountryName(record.athlete.country) }}
               </div>
             </div>
 
@@ -278,7 +281,7 @@
                 <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Pays</div>
                 <div class="sm:col-span-2 flex items-center gap-2">
                   <span class="text-lg">{{ getCountryFlag(record.location.country) }}</span>
-                  {{ record.location.country }}
+                  {{ getCountryName(record.location.country) }}
                 </div>
               </div>
             </div>
@@ -562,8 +565,10 @@
 <script setup lang="ts">
 import {computed, ref, onMounted} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
-import {useRecordDetail} from '~/composables/useRecordDetail';
-import {CategorieType, GenderType, DisciplineType} from '~/types/record.types';
+import {useRecordDetail} from '@/composables/useRecordDetail';
+import {useCountries} from '~/composables/useCountries'
+import RecordsMap from "@/components/RecordsMap.vue";
+import {CategorieType, GenderType, DisciplineType} from '@/types/record.types';
 
 // Configuration de la page et validation
 definePageMeta({
@@ -577,6 +582,8 @@ definePageMeta({
     mode: 'out-in'
   }
 });
+
+const { getCountryName, getCountryFlag } = useCountries()
 
 // Router et paramètres
 const route = useRoute();
@@ -764,53 +771,17 @@ function calculateAge(birthdate: string): number {
   return age;
 }
 
-// Obtenir le drapeau d'un pays (émoji)
-function getCountryFlag(countryName: string): string {
-  // Implémentation simplifiée - dans une app réelle, utilisez une bibliothèque de drapeaux
-  const countryFlags: Record<string, string> = {
-    'France': '🇫🇷',
-    'États-Unis': '🇺🇸',
-    'Jamaïque': '🇯🇲',
-    'Kenya': '🇰🇪',
-    'Éthiopie': '🇪🇹',
-    'Royaume-Uni': '🇬🇧',
-    'Allemagne': '🇩🇪',
-    'Japon': '🇯🇵',
-    'Chine': '🇨🇳',
-    'Russie': '🇷🇺',
-    'Brésil': '🇧🇷',
-    'Italie': '🇮🇹',
-    'Espagne': '🇪🇸'
-  };
-
-  return countryFlags[countryName] || '🏳️';
-}
-
-// Obtenir la couleur associée au type de discipline
-function getDisciplineColor(type: string): string {
-  switch (type) {
-    case DisciplineType.RUN:
-      return 'running';
-    case DisciplineType.JUMP:
-      return 'jumping';
-    case DisciplineType.THROW:
-      return 'throwing';
-    default:
-      return 'primary';
-  }
-}
-
 // Obtenir le gradient associé au type de discipline
 function getDisciplineGradient(type: string): string {
   switch (type) {
     case DisciplineType.RUN:
-      return 'from-running-600 to-running-400';
+      return 'from-blue-600 to-blue-400';
     case DisciplineType.JUMP:
-      return 'from-jumping-600 to-jumping-400';
+      return 'from-yellow-600 to-yellow-400';
     case DisciplineType.THROW:
-      return 'from-throwing-600 to-throwing-400';
+      return 'from-green-600 to-green-400';
     default:
-      return 'from-primary-600 to-primary-400';
+      return 'from-gray-600 to-gray-400';
   }
 }
 
