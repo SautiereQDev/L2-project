@@ -4,9 +4,9 @@
  */
 import {createApp, defineComponent, h, ref } from 'vue';
 import { defineNuxtPlugin } from '#app';
-import AuthErrorNotification from '../components/AuthErrorNotification.vue';
+import AuthErrorNotification from '../app/components/AuthErrorNotification.vue';
 import type { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth.store';
+import { useAuthStore } from '../app/stores/auth.store';
 
 // État global pour les notifications d'erreur d'authentification
 const authErrorState = {
@@ -96,7 +96,7 @@ const AuthErrorContainer = defineComponent({
 
 export default defineNuxtPlugin((nuxtApp) => {
   // Ne pas exécuter ce plugin côté serveur
-  if (process.client) {
+  if (import.meta.client) {
     const { vueApp } = nuxtApp;
     // Monter le conteneur de notification
     const errorContainer = document.createElement('div');

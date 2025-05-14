@@ -3,7 +3,7 @@
  * Ce plugin charge les données d'authentification au démarrage de l'application
  */
 import { defineNuxtPlugin } from '#app'
-import { useAuthStore } from '../stores/auth.store';
+import { useAuthStore } from '../app/stores/auth.store';
 
 // Plugin Nuxt pour initialiser l'authentification au démarrage
 export default defineNuxtPlugin((nuxtApp) => {
@@ -31,8 +31,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       if (!import.meta.env.DEV) useAuthStore().logout();
     }
   };
-  // Initialiser l'authentification dès le démarrage du plugin
-  authInit();
-  // Exposer la fonction d'initialisation si besoin ultérieur
+  // Exposer la fonction au globalProperties
   vueApp.config.globalProperties.$initAuth = authInit;
 });
