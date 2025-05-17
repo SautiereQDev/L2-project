@@ -96,4 +96,4 @@ export default defineAppConfig({
       divide: 'divide-y divide-gray-200 dark:divide-gray-800'
     }
   }
-})
+});

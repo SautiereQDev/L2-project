@@ -1,50 +1,50 @@
 <template>
   <UContainer>
     <UPageHeader
-      title="Records d'Athlétisme"
-      description="Consultez les records d'athlétisme classés par discipline, genre et catégorie"
-      :ui="{ title: 'font-bold text-2xl mb-4 text-primary-600 dark:text-primary-400' }"
+        title="Records d'Athlétisme"
+        description="Consultez les records d'athlétisme classés par discipline, genre et catégorie"
+        :ui="{ title: 'font-bold text-2xl mb-4 text-primary-600 dark:text-primary-400' }"
     >
       <template #icon>
-        <Icon name="heroicons:trophy" class="w-6 h-6 text-primary-500 dark:text-primary-400" />
+        <Icon name="heroicons:trophy" class="w-6 h-6 text-primary-500 dark:text-primary-400"/>
       </template>
     </UPageHeader>
 
     <!-- Composant de filtres -->
-    <RecordsFilter 
-      :modelValue="filters"
-      @update:modelValue="newValue => Object.assign(filters, newValue)"
-      :visible="showFilters"
-      @update:visible="showFilters = $event"
+    <RecordsFilter
+        :modelValue="filters"
+        @update:modelValue="newValue => Object.assign(filters, newValue)"
+        :visible="showFilters"
+        @update:visible="showFilters = $event"
     />
 
     <!-- Composant liste des records -->
     <RecordsListCard
-      :records="paginatedRecords"
-      :loading="loading"
-      :is-error="isError"
-      :error="error"
-      :sort-field="sortField"
-      :sort-order="sortOrder"
-      :total-items="totalItems"
-      :total-pages="totalPages"
-      :current-page="currentPage"
-      @refetch="refetch"
-      @update:sort="sortBy"
-      @update:page="changePage"
-      @show-details="showRecordDetails"
+        :records="paginatedRecords"
+        :loading="loading"
+        :is-error="isError"
+        :error="error"
+        :sort-field="sortField"
+        :sort-order="sortOrder"
+        :total-items="totalItems"
+        :total-pages="totalPages"
+        :current-page="currentPage"
+        @refetch="refetch"
+        @update:sort="sortBy"
+        @update:page="changePage"
+        @show-details="showRecordDetails"
     />
   </UContainer>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
-import { useQuery } from '@tanstack/vue-query';
-import { useRoute, useRouter } from 'vue-router';
-import type { RecordFilters, RecordEntity, CategorieType, GenderType } from '../../types';
-import { DisciplineType } from '../../types';
-import { compareValues } from '../../utils/comparison';
-import { debounce } from '../../utils/debounce';
+import {ref, reactive, computed, watch} from 'vue';
+import {useQuery} from '@tanstack/vue-query';
+import {useRoute, useRouter} from 'vue-router';
+import type {RecordFilters, RecordEntity, CategorieType, GenderType} from '~/types';
+import {DisciplineType} from '~/types';
+import {compareValues} from '~/utils/comparison';
+import {debounce} from '~/utils/debounce';
 import authService from '../../services/auth.service';
 import recordsService from '../../services/records.service';
 import RecordsFilter from '@/components/RecordsFilter.vue';
@@ -86,18 +86,18 @@ const filters = reactive<RecordFilters>({
 const debouncedFilterUpdate = debounce(() => {
   // Ne pas mettre à jour si on est au milieu d'une réinitialisation
   if (filters.disciplineType === undefined) return;
-  
+
   console.log('Filtres modifiés (debounced):', JSON.stringify(filters));
   // Revenir à la première page lors d'un changement de filtre
   currentPage.value = 1;
   // Mettre à jour les paramètres d'URL
   updateQueryParams();
-  
+
   // Recalculer les filtres
   console.log('Recalcul des filtres après changement');
 }, 300);
 
-watch(filters, debouncedFilterUpdate, { deep: true });
+watch(filters, debouncedFilterUpdate, {deep: true});
 
 // Stockage de toutes les données récupérées du serveur
 const allRecords = ref<RecordEntity[]>([]);
@@ -108,7 +108,7 @@ onMounted(() => {
   filters.disciplineType = 'all';
   filters.gender = 'all';
   filters.category = 'all';
-  
+
   // Remplacer par les valeurs des paramètres d'URL s'ils existent
   if (route.query.disciplineType) filters.disciplineType = route.query.disciplineType as DisciplineType;
   if (route.query.gender && (route.query.gender === 'M' || route.query.gender === 'W')) {
@@ -154,7 +154,7 @@ const {
         return data;
       } else {
         console.error('Format de réponse inattendu:', data);
-        return { items: [], totalItems: 0 };
+        return {items: [], totalItems: 0};
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des records:', error);
@@ -165,7 +165,9 @@ const {
   refetchOnWindowFocus: false // Désactiver le refetch automatique en cas de changement de focus
 });
 // Forcer un refetch une fois que le composant est monté côté client
-onMounted(() => { refetch(); });
+onMounted(() => {
+  refetch();
+});
 
 // Synchroniser les filtres avec l'URL
 function updateQueryParams() {
@@ -181,7 +183,7 @@ function updateQueryParams() {
   if (currentPage.value > 1) queryParams.page = currentPage.value;
 
   // Remplacer les query params sans recharger la page
-  router.replace({ query: queryParams });
+  router.replace({query: queryParams});
 }
 
 // Fonctions de filtres
@@ -203,12 +205,12 @@ function filterRecords(records: RecordEntity[]): RecordEntity[] {
     const recordYear = new Date(record.lastRecord).getFullYear();
     const fullName = `${record.athlete.firstname} ${record.athlete.lastname}`.toLowerCase();
     return (
-      (normalizedFilters.disciplineType === 'all' || record.discipline.type === normalizedFilters.disciplineType) &&
-      (normalizedFilters.gender === 'all' || record.genre === normalizedFilters.gender) &&
-      (normalizedFilters.category === 'all' || record.categorie === normalizedFilters.category) &&
-      (normalizedFilters.athleteName === '' || fullName.includes(normalizedFilters.athleteName)) &&
-      (normalizedFilters.yearFrom === 0 || recordYear >= normalizedFilters.yearFrom) &&
-      (normalizedFilters.yearTo === new Date().getFullYear() + 100 || recordYear <= normalizedFilters.yearTo)
+        (normalizedFilters.disciplineType === 'all' || record.discipline.type === normalizedFilters.disciplineType) &&
+        (normalizedFilters.gender === 'all' || record.genre === normalizedFilters.gender) &&
+        (normalizedFilters.category === 'all' || record.categorie === normalizedFilters.category) &&
+        (normalizedFilters.athleteName === '' || fullName.includes(normalizedFilters.athleteName)) &&
+        (normalizedFilters.yearFrom === 0 || recordYear >= normalizedFilters.yearFrom) &&
+        (normalizedFilters.yearTo === new Date().getFullYear() + 100 || recordYear <= normalizedFilters.yearTo)
     );
   });
 }
@@ -237,7 +239,7 @@ function sortByField(records: RecordEntity[], field: string, order: 'asc' | 'des
         comparison = bVal - aVal;
       }
     } else if (typeof aVal === 'string') {
-      comparison = aVal.localeCompare(bVal, undefined, { sensitivity: 'base' });
+      comparison = aVal.localeCompare(bVal, undefined, {sensitivity: 'base'});
     } else if (aVal instanceof Date && bVal instanceof Date) {
       comparison = aVal.getTime() - bVal.getTime();
     } else {
@@ -260,14 +262,14 @@ const filteredRecords = computed(() => {
     yearFrom,
     yearTo
   } = filters;
-  
+
   // Capture également les dépendances de tri
   const field = sortField.value;
   const order = sortOrder.value;
-  
+
   // Appliquer les filtres aux records récupérés
   const filtered = filterRecords(allRecords.value);
-  
+
   // Afficher les informations de filtrage (pour debugging)
   console.log(`Filtrage: ${filtered.length}/${allRecords.value.length} records correspondant aux filtres`, {
     disciplineType,
@@ -306,19 +308,9 @@ function sortBy(field: string, order: 'asc' | 'desc') {
 
 // Fonction de filtrage supprimée car déplacée dans le composant RecordsFilter
 
-// Afficher les détails d'un record
 function showRecordDetails(record: RecordEntity) {
   selectedRecord.value = record;
   modalOpen.value = true;
 }
 
-// Fermer la modal
-function closeModal() {
-  modalOpen.value = false;
-  setTimeout(() => {
-    selectedRecord.value = null;
-  }, 300); // Attendre que l'animation de fermeture soit terminée
-}
-
-// Note: Les fonctions de formatage ont été déplacées vers le composant RecordDetailModal
 </script>
