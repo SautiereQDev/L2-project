@@ -50,6 +50,27 @@ export default defineNuxtConfig({
         }
       }
     }
+  },
+
+  ui: {
+    theme: {
+      colors: [
+        'primary',
+        'secondary',
+        'tertiary',
+        'info',
+        'success',
+        'warning',
+        'error',
+        'neutral',
+        'running',
+        'jumping',
+        'throwing',
+        'female',
+        'male',
+        'accent'
+      ]
+    }
   }
 })
 

@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="performance-display inline-flex items-center"
+    class="performance-display inline-flex items-center text-white"
     :class="[sizeClasses, colorClasses]"
   >
     <UIcon 
@@ -9,7 +9,7 @@
       class="performance-icon mr-1.5" 
       :class="iconSizeClass"
     />
-    <span class="font-mono font-medium" :class="valueClass">
+    <span class="font-mono font-medium">
       {{ formattedValue }}
     </span>
     <span 
@@ -156,42 +156,6 @@ const iconSizeClass = computed(() => {
     default: 
       return 'h-5 w-5'
   }
-})
-
-/**
- * Classes de couleur en fonction du type de discipline et de la variante
- */
-const colorClasses = computed(() => {
-  const colorMap = {
-    [DisciplineType.RUN]: {
-      normal: 'text-running-600 dark:text-running-400',
-      solid: 'text-white bg-running-600 dark:bg-running-500 px-2 py-0.5 rounded-md',
-      subtle: 'text-running-700 dark:text-running-300 bg-running-50 dark:bg-running-900/30 px-2 py-0.5 rounded-md'
-    },
-    [DisciplineType.JUMP]: {
-      normal: 'text-jumping-600 dark:text-jumping-400',
-      solid: 'text-white bg-jumping-600 dark:bg-jumping-500 px-2 py-0.5 rounded-md',
-      subtle: 'text-jumping-700 dark:text-jumping-300 bg-jumping-50 dark:bg-jumping-900/30 px-2 py-0.5 rounded-md'
-    },
-    [DisciplineType.THROW]: {
-      normal: 'text-throwing-600 dark:text-throwing-400',
-      solid: 'text-white bg-throwing-600 dark:bg-throwing-500 px-2 py-0.5 rounded-md',
-      subtle: 'text-throwing-700 dark:text-throwing-300 bg-throwing-50 dark:bg-throwing-900/30 px-2 py-0.5 rounded-md'
-    }
-  }
-
-  // Fallback au cas où la discipline n'est pas reconnue
-  const defaultColor = {
-    normal: 'text-primary-600 dark:text-primary-400',
-    solid: 'text-white bg-primary-600 dark:bg-primary-500 px-2 py-0.5 rounded-md',
-    subtle: 'text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-md'
-  }
-
-  // Récupère la couleur de la discipline ou utilise la couleur par défaut
-  const disciplineColor = colorMap[props.disciplineType as DisciplineType] || defaultColor;
-  
-  // Retourne la variante appropriée
-  return disciplineColor[props.variant as 'normal' | 'solid' | 'subtle'] || disciplineColor.normal;
 })
 
 /**
