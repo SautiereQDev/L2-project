@@ -86,6 +86,9 @@ export interface Location extends Identifiable, TimestampedEntity {
   city: string;
   country: string;
   type: string;
+  latitude: number;
+  longitude: number;
+  capacity: number;
 }
 
 /**

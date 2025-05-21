@@ -24,6 +24,15 @@ final readonly class LocationOutput
 		public LocationType $type,
 
 		#[Groups(['location:read', 'record:read'])]
+		public float $longitude,
+
+		#[Groups(['location:read', 'record:read'])]
+		public float $latitude,
+
+		#[Groups(['location:read', 'record:read'])]
+		public int $capacity,
+
+	#[Groups(['location:read', 'record:read'])]
 		public \DateTimeImmutable $createdAt,
 
 		#[Groups(['location:read', 'record:read'])]

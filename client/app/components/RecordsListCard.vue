@@ -10,23 +10,22 @@
     </template>
 
     <!-- États du tableau -->
-    <!-- États du tableau -->
     <div class="min-h-[400px]">
       <!-- Affichage du chargement -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-12">
-        <Spinner class="mb-4"/>
+        <Spinner class="mb-4" />
         <p class="text-sm text-gray-500">Chargement des records...</p>
       </div>
 
       <!-- Affichage des erreurs -->
       <div v-else-if="isError" class="flex flex-col items-center justify-center py-6">
         <UAlert
-            :title="'Erreur de chargement'"
-            :description="error?.message ?? 'Une erreur est survenue lors du chargement des records.'"
-            color="error"
-            variant="soft"
-            icon="i-heroicons-exclamation-circle"
-            class="mb-4 max-w-md"
+          :title="'Erreur de chargement'"
+          :description="error?.message || 'Une erreur est survenue lors du chargement des records.'"
+          color="error"
+          variant="soft"
+          icon="i-heroicons-exclamation-circle"
+          class="mb-4 max-w-md"
         />
         <UButton color="primary" icon="i-heroicons-arrow-path" @click="refetch">
           Réessayer
@@ -36,34 +35,31 @@
       <!-- Tableau des records -->
       <div v-else>
         <RecordsTable
-            :records="records"
-            :sort-field="sortField"
-            :sort-order="sortOrder"
-            @show-details="showDetails"
-            @update:sort="handleSort"
-        />
-      </div>
-
-      <!-- Pagination -->
-      <div v-if="totalItems > 0" class="flex justify-center mt-4">
-        <Paginator
-            :first="(props.currentPage - 1) * 10"
-            :rows="10"
-            :totalRecords="totalItems"
-            :template="`FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink`"
-            @page="onPage"
-            class="py-4"
+          :records="records"
+          :sort-field="sortField"
+          :sort-order="sortOrder"
+          @show-details="showDetails"
+          @update:sort="handleSort"
         />
       </div>
     </div>
+    
+    <template v-if="!loading && !isError && totalPages > 1" #footer>
+      <div class="flex justify-center">
+        <UPagination
+          v-model="currentPageModel"
+          :total="totalPages"
+        />
+      </div>
+    </template>
   </UCard>
 </template>
 
 <script setup lang="ts">
 import Spinner from './ui/Spinner.vue';
 import RecordsTable from './RecordsTable.vue';
-import {computed} from 'vue';
-import type {RecordEntity} from '~/types';
+import { computed } from 'vue';
+import type { RecordEntity } from '../types';
 
 const props = defineProps({
   /**
@@ -125,7 +121,7 @@ const props = defineProps({
   /**
    * Page actuelle
    */
-  currentPage: {
+  page: {
     type: Number,
     default: 1
   }
@@ -133,9 +129,11 @@ const props = defineProps({
 
 const emit = defineEmits(['refetch', 'update:sort', 'update:page', 'show-details']);
 
-function onPage(event: { page: number; rows: number }) {
-  emit('update:page', event.page + 1);
-}
+// Modèle pour la pagination avec two-way binding
+const currentPageModel = computed({
+  get: () => props.currentPage,
+  set: (value) => emit('update:page', value)
+});
 
 // Fonction pour réessayer en cas d'erreur
 function refetch() {

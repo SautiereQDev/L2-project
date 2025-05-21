@@ -44,7 +44,7 @@ const features = ref([
           de tous les athlètes.
         </p>
         <div class="mt-8 flex items-center justify-center gap-x-6">
-          <UButton label="Voir les records" @click="router.push('/records')" trailing-icon="heroicons:arrow-right" />
+          <UButton label="Voir les records" trailing-icon="heroicons:arrow-right" @click="router.push('/records')" />
           <UButton label="En savoir plus" variant="outline" @click="router.push('/about')" />
         </div>
       </div>

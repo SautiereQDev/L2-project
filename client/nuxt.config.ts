@@ -2,8 +2,19 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
+  build: {
+    postcss: {
+      plugins: {
+        tailwindcss: {},
+        autoprefixer: {},
+      }
+    },
+    // Configuration pour transpiler les modules node si nécessaire
+    transpile: process.env.NODE_ENV === 'production' ? ['leaflet'] : [],
+  },
+
   modules: [// Pinia store support
-  '@pinia/nuxt', '@nuxt/ui', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/icon', '@nuxt/image', '@primevue/nuxt-module'],
+  '@pinia/nuxt', '@nuxt/ui', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/icon', '@nuxt/image', '@primevue/nuxt-module', '@nuxtjs/leaflet'],
   // Enable default component auto-import (will import from components/ and app/components/)
   components: true,
   // Auto-import local components from the app/components directory
@@ -15,7 +26,7 @@ export default defineNuxtConfig({
   // Explicit plugin configuration
   plugins: [
     './plugins/vue-query',
-    './plugins/primevue.js'
+    './plugins/primevue.js',
   ],
 
   css: [
@@ -41,3 +52,4 @@ export default defineNuxtConfig({
     }
   }
 })
+

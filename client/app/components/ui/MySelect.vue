@@ -21,18 +21,18 @@
       @change="$emit('change', $event)"
     >
       <!-- Leading Icon Handling -->
-      <template #leading v-if="$slots.leading">
+      <template v-if="$slots.leading" #leading>
         <slot name="leading" />
       </template>
-      <template #leading v-else-if="icon">
+      <template v-else-if="icon" #leading>
         <Icon :name="icon" class="w-4 h-4" /> 
       </template>
 
       <!-- Trailing Icon Handling -->
-      <template #trailing v-if="$slots.trailing">
+      <template v-if="$slots.trailing" #trailing>
         <slot name="trailing" />
       </template>
-      <template #trailing v-else-if="trailingIcon">
+      <template v-else-if="trailingIcon" #trailing>
         <Icon :name="trailingIcon" class="w-5 h-5" />
       </template>
 

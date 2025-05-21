@@ -12,9 +12,9 @@
 
     <!-- Composant de filtres -->
     <RecordsFilter
-        :modelValue="filters"
-        @update:modelValue="newValue => Object.assign(filters, newValue)"
+        :model-value="filters"
         :visible="showFilters"
+        @update:model-value="newValue => Object.assign(filters, newValue)"
         @update:visible="showFilters = $event"
     />
 
@@ -29,9 +29,9 @@
         :total-items="totalItems"
         :total-pages="totalPages"
         :current-page="currentPage"
+        @update:page="changePage"
         @refetch="refetch"
         @update:sort="sortBy"
-        @update:page="changePage"
         @show-details="showRecordDetails"
     />
   </UContainer>
@@ -41,10 +41,10 @@
 import {ref, reactive, computed, watch} from 'vue';
 import {useQuery} from '@tanstack/vue-query';
 import {useRoute, useRouter} from 'vue-router';
-import type {RecordFilters, RecordEntity, CategorieType, GenderType} from '~/types';
-import {DisciplineType} from '~/types';
-import {compareValues} from '~/utils/comparison';
-import {debounce} from '~/utils/debounce';
+import type {RecordFilters, RecordEntity, CategorieType, GenderType} from '../../types';
+import {DisciplineType} from '../../types';
+import {compareValues} from '../../utils/comparison';
+import {debounce} from '../../utils/debounce';
 import authService from '../../services/auth.service';
 import recordsService from '../../services/records.service';
 import RecordsFilter from '@/components/RecordsFilter.vue';
@@ -64,7 +64,7 @@ const selectedRecord = ref<RecordEntity | null>(null);
 // État de pagination
 const currentPage = ref(1);
 const pageSize = ref(10);
-const totalPages = computed(() => Math.ceil(filteredRecords.value.length / pageSize.value));
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredRecords.value.length / pageSize.value)));
 const totalItems = computed(() => filteredRecords.value.length);
 
 // État de tri
@@ -292,8 +292,7 @@ const paginatedRecords = computed(() => {
 
 // Fonction pour changer de page
 function changePage(page: number) {
-  if (page < 1 || page > totalPages.value) return;
-  currentPage.value = page;
+  currentPage.value = Math.min(Math.max(1, page), totalPages.value);
   updateQueryParams();
 }
 
@@ -308,9 +307,19 @@ function sortBy(field: string, order: 'asc' | 'desc') {
 
 // Fonction de filtrage supprimée car déplacée dans le composant RecordsFilter
 
+// Afficher les détails d'un record
 function showRecordDetails(record: RecordEntity) {
   selectedRecord.value = record;
   modalOpen.value = true;
 }
 
+// Fermer la modal
+function closeModal() {
+  modalOpen.value = false;
+  setTimeout(() => {
+    selectedRecord.value = null;
+  }, 300); // Attendre que l'animation de fermeture soit terminée
+}
+
+// Note: Les fonctions de formatage ont été déplacées vers le composant RecordDetailModal
 </script>

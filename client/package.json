@@ -19,6 +19,7 @@
     "@nuxt/icon": "^1.12.0",
     "@nuxt/image": "^1.10.0",
     "@nuxt/ui": "^3.1.1",
+    "@nuxtjs/leaflet": "^1.2.6",
     "@pinia/nuxt": "^0.11.0",
     "@primevue/forms": "^4.3.4",
     "@primevue/nuxt-module": "^4.3.4",

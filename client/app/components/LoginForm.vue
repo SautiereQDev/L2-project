@@ -1,5 +1,6 @@
 <template>
-  <UCard class="max-w-md mx-auto w-5/6" :ui="{
+  <UCard
+class="max-w-md mx-auto w-5/6" :ui="{
     root: 'overflow-hidden bg-white dark:bg-gray-800'
   }">
     <template #header>
@@ -7,20 +8,24 @@
     </template>
 
     <UForm :schema="loginSchema" :state="state" class="space-y-6 flex flex-col" @submit="handleSubmit">
-      <UAlert v-if="errorMessage" icon="i-heroicons-exclamation-triangle" color="error" variant="soft"
+      <UAlert
+v-if="errorMessage" icon="i-heroicons-exclamation-triangle" color="error" variant="soft"
         title="Erreur de connexion" :description="errorMessage" class="mb-6" />
 
       <UFormGroup label="Email" name="email" required>
-        <UInput v-model="state.email" type="email" :disabled="isLoading" placeholder="vous@exemple.com"
+        <UInput
+v-model="state.email" type="email" :disabled="isLoading" placeholder="vous@exemple.com"
           icon="i-heroicons-envelope" size="lg" autocomplete="email" class="w-full" />
       </UFormGroup>
 
       <UFormGroup label="Mot de passe" name="password" required>
-        <UInput v-model="state.password" type="password" placeholder="••••••••" icon="i-heroicons-lock-closed" size="lg"
+        <UInput
+v-model="state.password" type="password" placeholder="••••••••" icon="i-heroicons-lock-closed" size="lg"
           :disabled="isLoading" autocomplete="current-password" class="w-full" />
       </UFormGroup>
 
-      <UButton type="submit" label="Se connecter" color="primary" size="lg" block :loading="isLoading"
+      <UButton
+type="submit" label="Se connecter" color="primary" size="lg" block :loading="isLoading"
         :disabled="isLoading" />
     </UForm>
   </UCard>

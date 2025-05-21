@@ -1,5 +1,4 @@
 <!-- TODO: Utiliser nuxt leaflet pour creer la map -->
-<!-- TODO: Modifier les infos affichés pour qu'elles correspondent aux données stockés sur les records et les athlètes correspondants -->
 <template>
   <UContainer>
     <!-- Gestion du mode chargement avec shimmer effect -->
@@ -53,21 +52,6 @@
                 icon="i-heroicons-arrow-path" color="secondary" variant="soft" :loading="isRefetching"
                 @click="refetch"/>
           </UButtonGroup>
-
-          <div class="flex gap-2">
-            <SharePopover
-                :title="record ? `Record: ${record.discipline.name}` : 'Record d\'athlétisme'"
-                :url="currentUrl"/>
-            <div v-if="isAdmin" class="relative">
-              <!-- Bouton pour ouvrir/fermer le menu -->
-              <button
-                  class="p-2 rounded-md text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
-                  type="button" aria-haspopup="true" :aria-expanded="isAdminMenuOpen" @click="toggleAdminMenu">
-                <UIcon name="i-heroicons-ellipsis-horizontal" class="h-5 w-5"/>
-              </button>
-
-            </div>
-          </div>
         </div>
       </div>
 
@@ -160,6 +144,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Nom complet</div>
               <div class="sm:col-span-2 font-medium">
+                <!--                TODO : Mettre un lien vers les details de l'athlete -->
                 {{ record.athlete.firstname }} {{ record.athlete.lastname }}
               </div>
             </div>
@@ -187,30 +172,21 @@
         <!-- Carte Lieu avec carte interactive -->
         <UCard class="hover:shadow-lg transition-all transform hover:-translate-y-1" :ui="{ body: 'p-0' }">
           <template #header>
-            <div class="p-4 flex items-center justify-between">
+            <div class="p-3 flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <UIcon name="i-heroicons-map-pin" class="h-5 w-5 text-primary-600 dark:text-primary-400"/>
                 <h3 class="text-lg font-semibold">Lieu du Record</h3>
               </div>
-              <UButton
-                  v-if="canDisplayMap" color="primary" variant="ghost" size="xs"
-                  :icon="showMap ? 'i-heroicons-minus-small' : 'i-heroicons-map'" @click="toggleMapView">
-                {{ showMap ? 'Cacher la carte' : 'Voir sur la carte' }}
-              </UButton>
             </div>
           </template>
 
-          <div v-if="showMap && canDisplayMap" class="w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
-            <!-- Carte interactive du lieu -->
-            <RecordsMap
-                :location-name="record.location.name" :city="record.location.city"
-                :country="record.location.country" :lat="locationCoords?.lat" :lng="locationCoords?.lng"
-                height="220px"/>
-          </div>
+          <!-- Carte interactive du lieu -->
+          <RecordsMap
+              :location-name="record.location.name" :city="record.location.city"
+              :country="record.location.country" :lat="record.location.latitude" :lng="record.location.longitude"
+              height="320px"/>
 
-          <USeparator v-if="showMap && canDisplayMap"/>
-
-          <div class="p-4">
+          <div class="my-6">
             <div class="space-y-4">
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Stade/Lieu</div>
@@ -237,38 +213,6 @@
               </div>
             </div>
           </div>
-
-          <template v-if="canShowWeatherData" #footer>
-            <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded-b-lg">
-              <div class="flex items||-center gap-1 mb-2">
-                <UIcon name="i-heroicons-cloud" class="h-4 w-4 text-blue-500"/>
-                <span class="text-sm font-medium">Conditions météo le jour du record</span>
-              </div>
-              <div class="grid grid-cols-3 gap-2 text-center">
-                <div class="bg-white dark:bg-gray-800 rounded-md p-2">
-                  <div class="text-xs text-gray-500 mb-1">Température</div>
-                  <div class="font-medium flex items-center justify-center">
-                    <UIcon name="i-heroicons-sun" class="h-4 w-4 text-amber-400 mr-1"/>
-                    {{ weatherData?.temperature ?? '--' }}°C
-                  </div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-md p-2">
-                  <div class="text-xs text-gray-500 mb-1">Vent</div>
-                  <div class="font-medium flex items-center justify-center">
-                    <UIcon name="i-heroicons-arrow-right" class="h-4 w-4 text-blue-400 mr-1"/>
-                    {{ weatherData?.wind ?? '--' }} m/s
-                  </div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-md p-2">
-                  <div class="text-xs text-gray-500 mb-1">Humidité</div>
-                  <div class="font-medium flex items-center justify-center">
-                    <UIcon name="i-heroicons-beaker" class="h-4 w-4 text-blue-400 mr-1"/>
-                    {{ weatherData?.humidity ?? '--' }}%
-                  </div>
-                </div>
-              </div>
-            </div>
-          </template>
         </UCard>
       </div>
 
@@ -405,7 +349,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, onMounted} from 'vue';
+import {computed, ref} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {useRecordDetail} from '@/composables/useRecordDetail';
 import {useCountries} from '~/composables/useCountries'
@@ -441,8 +385,6 @@ const similarRecordsTab = ref<'all' | 'same-discipline' | 'same-athlete'>('all')
 
 // Simulations de données pour l'exemple
 const isAdmin = ref(false); // Dans une vraie app, utilisez composable useAuth
-const weatherData = ref<{ temperature: number; wind: number; humidity: number } | null>(null);
-const locationCoords = ref<{ lat: number; lng: number } | null>(null);
 const isAdminMenuOpen = ref(false);
 
 
@@ -453,26 +395,6 @@ const {
   isLoading,
   refetch
 } = useRecordDetail(recordId);
-
-// Charger les données simulées au montage du composant
-onMounted(() => {
-  // Simuler le chargement de données météo (uniquement pour l'exemple)
-  setTimeout(() => {
-    if (record.value) {
-      weatherData.value = {
-        temperature: Math.round(15 + Math.random() * 10),  // Entre 15 et 25°C
-        wind: parseFloat((Math.random() * 3).toFixed(1)),  // Entre 0 et 3 m/s
-        humidity: Math.round(40 + Math.random() * 40)      // Entre 40% et 80%
-      };
-
-      // Simuler les coordonnées pour la carte (uniquement pour l'exemple)
-      locationCoords.value = {
-        lat: 48.8566 + (Math.random() * 2 - 1),  // Proche de Paris (pour la démo)
-        lng: 2.3522 + (Math.random() * 2 - 1)
-      };
-    }
-  }, 1500);
-});
 
 // Calculer le fil d'Ariane
 const breadcrumbs = computed(() => [
@@ -611,3 +533,4 @@ function calculateAge(birthdate: string): number {
 }
 
 </script>
+

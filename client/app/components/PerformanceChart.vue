@@ -21,7 +21,7 @@
       <UIcon name="i-heroicons-chart-bar-square" class="h-8 w-8 text-gray-400 mx-auto mb-2" />
       <div class="text-gray-500">Pas assez de données pour afficher l'évolution</div>
     </div>
-    <div v-else ref="chartContainer" class="w-full h-64"></div>
+    <div v-else ref="chartContainer" class="w-full h-64"/>
 
     <div v-if="chartData && !noData && !loading && !error" class="flex justify-center items-center gap-3 mt-4">
       <UButton 

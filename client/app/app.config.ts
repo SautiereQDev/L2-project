@@ -7,7 +7,7 @@ export default defineAppConfig({
       primary: 'emerald',
       neutral: 'slate',
       accent: 'rose',
-      
+
       // Couleurs pour les disciplines d'athlétisme
       running: {
         50: '#f0f9ff',
@@ -48,25 +48,25 @@ export default defineAppConfig({
         900: '#831843',
         950: '#500724',
       },
-      
+
       // Couleurs pour les genres
       male: 'blue',     // Bleu pour les hommes
       female: 'pink',   // Rose pour les femmes
-      
+
       // Couleurs pour les catégories
       u18: 'amber',
       u20: 'orange',
-      u23: 'lime', 
+      u23: 'lime',
       senior: 'cyan',
       master: 'indigo',
-      
+
       // Couleurs additionnelles
       success: 'green',
       warning: 'amber',
       error: 'red',
       info: 'sky'
     },
-    
+
     // Configuration globale des badges
     badge: {
       rounded: 'rounded-md',
@@ -80,7 +80,7 @@ export default defineAppConfig({
       },
       font: 'font-medium'
     },
-    
+
     // Configuration des boutons
     button: {
       rounded: 'rounded-md',
@@ -88,7 +88,7 @@ export default defineAppConfig({
         size: 'sm'
       }
     },
-    
+
     // Configuration des cards
     card: {
       rounded: 'rounded-lg',

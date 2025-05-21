@@ -89,7 +89,7 @@ class Record
 	#[MaxDepth(1)]
 	private ?Location $location = null;
 
-	#[ORM\Column(type: 'string', length: 10, enumType: CategorieType::class, nullable: true)]
+	#[ORM\Column(type: 'string', length: 10, nullable: true, enumType: CategorieType::class)]
 	#[Assert\Choice(choices: CategorieType::CHOICES, message: 'Choisissez une catégorie d\'âge valide.')]
 	private ?CategorieType $categorie = null;
 
