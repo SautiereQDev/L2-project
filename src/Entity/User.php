@@ -15,15 +15,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 	#[ORM\Id]
 	#[ORM\GeneratedValue]
 	#[ORM\Column]
+    #[Groups(['user:read'])]
 	private ?int $id = null;
 
 	#[ORM\Column(length: 180)]
+    #[Groups(['user:read'])]
 	private ?string $email = null;
 
 	/**
 	 * @var list<string> The user roles
 	 */
 	#[ORM\Column]
+    #[Groups(['user:read'])]
 	private array $roles = [];
 
 	/**
@@ -31,6 +34,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 	 */
 	#[ORM\Column]
 	private ?string $password = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $firstName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $lastName = null;
+
+    #[ORM\Column]
+    #[Groups(['user:read'])]
+    private \DateTimeImmutable $createdAt;
+
+    #[ORM\Column]
+    #[Groups(['user:read'])]
+    private \DateTimeImmutable $updatedAt;
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
+    }
 
 	public function getId(): ?int
 	{
@@ -98,7 +123,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 		return $this;
 	}
 
-	/**
+    /**
 	 * @see UserInterface
 	 */
 	public function eraseCredentials(): void
@@ -106,4 +131,45 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 		// If you store any temporary, sensitive data on the user, clear it here
 		// $this->plainPassword = null;
 	}
+
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    public function setFirstName(?string $firstName): static
+    {
+        $this->firstName = $firstName;
+
+        return $this;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function setLastName(?string $lastName): static
+    {
+        $this->lastName = $lastName;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
 }

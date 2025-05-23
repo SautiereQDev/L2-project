@@ -7,7 +7,7 @@ class="max-w-md mx-auto w-5/6" :ui="{
       <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white">Se connecter</h2>
     </template>
 
-    <UForm :schema="loginSchema" :state="state" class="space-y-6 flex flex-col" @submit="handleSubmit">
+    <form class="space-y-6 flex flex-col" @submit.prevent="onSubmit">
       <UAlert
 v-if="errorMessage" icon="i-heroicons-exclamation-triangle" color="error" variant="soft"
         title="Erreur de connexion" :description="errorMessage" class="mb-6" />
@@ -27,7 +27,7 @@ v-model="state.password" type="password" placeholder="••••••••" 
       <UButton
 type="submit" label="Se connecter" color="primary" size="lg" block :loading="isLoading"
         :disabled="isLoading" />
-    </UForm>
+    </form>
   </UCard>
 </template>
 
@@ -35,8 +35,8 @@ type="submit" label="Se connecter" color="primary" size="lg" block :loading="isL
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { z } from 'zod';
-import type { FormSubmitEvent } from '#ui/types';
 import { useAuthStore } from '../stores/auth.store';
+import type { AuthCredentials } from '../types/auth.types';
 
 const props = defineProps<{
   redirectPath?: string;
@@ -53,25 +53,40 @@ const authStore = useAuthStore();
 const isLoading = ref(false);
 const errorMessage = ref('');
 
-const loginSchema = z.object({
+// Schéma de validation avec Zod
+const validationSchema = z.object({
   email: z.string().email('Adresse email invalide'),
   password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
 });
 
-type LoginSchema = z.output<typeof loginSchema>;
-
-const state = reactive<LoginSchema>({
+// State pour le formulaire
+const state = reactive({
   email: '',
   password: ''
 });
 
-async function handleSubmit(event: FormSubmitEvent<LoginSchema>) {
+async function onSubmit() {
   errorMessage.value = '';
   isLoading.value = true;
 
   try {
-    // Validation is handled by UForm, event.data contains validated data
-    const success = await authStore.login(event.data);
+    // Valider manuellement les données avant de les envoyer
+    const result = validationSchema.safeParse(state);
+    
+    if (!result.success) {
+      // Afficher l'erreur de validation
+      const firstError = result.error.errors[0];
+      errorMessage.value = firstError?.message || 'Données de formulaire invalides';
+      return;
+    }
+    
+    // Créer l'objet credentials pour le service d'authentification
+    const credentials: AuthCredentials = {
+      email: state.email,
+      password: state.password
+    };
+    
+    const success = await authStore.login(credentials);
 
     if (success) {
       emit('login-success');
@@ -82,8 +97,9 @@ async function handleSubmit(event: FormSubmitEvent<LoginSchema>) {
       errorMessage.value = authStore.authError || 'Échec de la connexion. Vérifiez vos identifiants.';
       emit('login-error', errorMessage.value);
     }
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Une erreur est survenue lors de la connexion.';
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : 'Une erreur est survenue lors de la connexion.';
+    errorMessage.value = errorMsg;
     emit('login-error', errorMessage.value);
   } finally {
     isLoading.value = false;

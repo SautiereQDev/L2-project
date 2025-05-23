@@ -122,7 +122,7 @@ export const authService = {
     
     try {
       console.log('Récupération du profil utilisateur...');
-      const response = await fetch(`${API_URL}/users/me`, {
+      const response = await fetch(`${API_URL}/v1/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken.value}`,
@@ -131,26 +131,18 @@ export const authService = {
       });
       
       if (!response.ok) {
-        // En cas d'erreur 404, il est possible que l'endpoint ne soit pas encore implémenté
-        if (response.status === 404 || response.status === 405) {
-          console.warn(`Endpoint /users/me non disponible: ${response.status}`);
-          // Renvoyer un profil factice en développement
-          return {
-            id: 1,
-            email: 'user@example.com',
-            firstName: 'Utilisateur',
-            lastName: 'Test',
-            roles: ['ROLE_USER'],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-        }
-        
         throw new Error(`Erreur lors de la récupération du profil: ${response.status}`);
       }
       
-      return await response.json();
-    } catch (error: any) {
+      const result = await response.json();
+      
+      // Vérifier si la réponse est dans notre format API (success, data)
+      if (result.success && result.data) {
+        return result.data;
+      }
+      
+      return result;
+    } catch (error) {
       console.error('Erreur lors de la récupération du profil:', error);
       
       // En mode développement, retourner un profil factice
@@ -166,6 +158,7 @@ export const authService = {
           updatedAt: new Date().toISOString()
         };
       }
+      console.error('Erreur lors de la récupération du profil:', error);
       
       return null;
     }

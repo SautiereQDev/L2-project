@@ -12,3 +12,7 @@ api_health:
     path: /api/v1/health
     controller: App\Controller\HealthController::health
     methods: [GET]
+user_me:
+    path: /api/v1/me
+    controller: App\Controller\UserController::me
+    methods: [GET]
