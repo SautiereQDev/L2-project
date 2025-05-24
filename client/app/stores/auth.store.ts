@@ -5,7 +5,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { authService } from '../services/auth.service';
-import type { AuthCredentials, UserProfile } from '@/types'
+import type { AuthCredentials, UserProfile, UserRegistrationData } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
   // Vérifier l'environnement client pour localStorage
@@ -73,6 +73,49 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (error: any) {
       authError.value = error.message ?? 'Erreur inattendue lors de la connexion';
+      return false;
+    } finally {
+      isAuthenticating.value = false;
+    }
+  }
+
+  /**
+   * Inscrit un nouvel utilisateur
+   */
+  async function register(userData: UserRegistrationData): Promise<boolean> {
+    try {
+      isAuthenticating.value = true;
+      authError.value = null;
+      
+      const result = await authService.register(userData);
+      
+      if (result.success) {
+        // L'inscription a réussi, maintenant connecter l'utilisateur
+        const loginResult = await authService.login({
+          email: userData.email,
+          password: userData.password
+        });
+        
+        if (loginResult.success) {
+          token.value = loginResult.token ?? null;
+          tokenExpiration.value = parseTokenExpiration(loginResult.token ?? null);
+          if (loginResult.token && isClient) {
+            window.localStorage.setItem('auth_token', loginResult.token);
+          }
+          
+          // Récupérer le profil utilisateur
+          await fetchUserProfile();
+          return true;
+        } else {
+          authError.value = loginResult.error ?? 'Connexion automatique échouée après inscription';
+          return false;
+        }
+      } else {
+        authError.value = result.error ?? 'Échec de l\'inscription';
+        return false;
+      }
+    } catch (error: any) {
+      authError.value = error.message ?? 'Erreur inattendue lors de l\'inscription';
       return false;
     } finally {
       isAuthenticating.value = false;
@@ -156,6 +199,7 @@ export const useAuthStore = defineStore('auth', () => {
     
     // Actions
     login,
+    register,
     logout,
     refreshTokenIfNeeded,
     fetchUserProfile,

@@ -28,3 +28,8 @@ services:
     # The `bind` configuration above is sufficient for injecting the correct providers.
     # Use the `provider` attribute on each ApiResource to specify the provider for a resource type.
     # Avoid direct service decoration to prevent conflicts or unintended behavior.
+
+    # User password hasher processor
+    App\State\UserPasswordHasher:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'

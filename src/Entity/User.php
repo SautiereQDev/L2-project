@@ -2,14 +2,56 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Delete;
 use App\Repository\UserRepository;
+use App\State\UserPasswordHasher;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+#[UniqueEntity(fields: ['email'], message: 'Il y a déjà un compte avec cet e-mail')]
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            security: "is_granted('ROLE_ADMIN')",
+            normalizationContext: ['groups' => ['user:read']]
+        ),
+        new Post(
+            uriTemplate: '/register',
+            processor: UserPasswordHasher::class,
+            validationContext: ['groups' => ['user:create']],
+            normalizationContext: ['groups' => ['user:read']],
+            denormalizationContext: ['groups' => ['user:create']],
+            name: 'app_user_register'
+        ),
+        new Get(
+            security: "is_granted('ROLE_ADMIN') or object == user",
+            normalizationContext: ['groups' => ['user:read']]
+        ),
+        new Put(
+            security: "is_granted('ROLE_ADMIN') or object == user",
+            processor: UserPasswordHasher::class,
+            validationContext: ['groups' => ['user:update']],
+            normalizationContext: ['groups' => ['user:read']],
+            denormalizationContext: ['groups' => ['user:update']]
+        ),
+        new Delete(
+            security: "is_granted('ROLE_ADMIN') or object == user"
+        )
+    ],
+    normalizationContext: ['groups' => ['user:read']],
+    denormalizationContext: ['groups' => ['user:create']]
+)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
 	#[ORM\Id]
@@ -19,7 +61,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 	private ?int $id = null;
 
 	#[ORM\Column(length: 180)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'user:create', 'user:update'])]
+    #[Assert\NotBlank(groups: ['user:create'])]
+    #[Assert\Email(groups: ['user:create', 'user:update'])]
 	private ?string $email = null;
 
 	/**
@@ -33,14 +77,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 	 * @var string The hashed password
 	 */
 	#[ORM\Column]
+    #[Groups(['user:create', 'user:update'])]
+    #[Assert\NotBlank(groups: ['user:create'])]
+    #[Assert\Length(min: 6, groups: ['user:create', 'user:update'])]
 	private ?string $password = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'user:create', 'user:update'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'user:create', 'user:update'])]
     private ?string $lastName = null;
 
     #[ORM\Column]
@@ -170,6 +217,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->updatedAt = $updatedAt;
 
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        if ($this->firstName && $this->lastName) {
+            return $this->firstName . ' ' . $this->lastName;
+        }
+        return $this->firstName ?: $this->lastName;
+    }
+
+    public function setName(?string $name): static
+    {
+        if ($name) {
+            $parts = explode(' ', $name, 2);
+            $this->firstName = $parts[0];
+            $this->lastName = $parts[1] ?? null;
+        }
         return $this;
     }
 }

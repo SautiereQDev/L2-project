@@ -11,6 +11,16 @@ export interface AuthCredentials {
 }
 
 /**
+ * Données d'inscription utilisateur
+ */
+export interface UserRegistrationData {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+/**
  * Réponse d'authentification
  */
 export interface AuthResponse {
@@ -25,6 +35,15 @@ export interface AuthResponse {
 export interface RefreshResponse {
   success: boolean;
   token?: string;
+  error?: string;
+}
+
+/**
+ * Réponse d'inscription
+ */
+export interface RegistrationResponse {
+  success: boolean;
+  user?: UserProfile;
   error?: string;
 }
 
@@ -58,4 +77,23 @@ export interface DecodedToken {
   username?: string;
   roles?: string[];
   email?: string;
+}
+
+/**
+ * Erreur d'API
+ */
+export interface ApiError {
+  code?: number;
+  message?: string;
+  detail?: string;
+  violations?: Array<{ message: string; property?: string }>;
+}
+
+/**
+ * Réponse d'erreur HTTP
+ */
+export interface HttpErrorResponse {
+  status: number;
+  statusText: string;
+  data?: ApiError;
 }

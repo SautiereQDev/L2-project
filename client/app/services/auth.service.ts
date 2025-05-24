@@ -3,7 +3,7 @@
  * Gère les opérations liées à l'authentification des utilisateurs
  */
 import { ref } from 'vue';
-import type { AuthCredentials, AuthResponse, RefreshResponse, UserProfile } from '../types';
+import type { AuthCredentials, AuthResponse, RefreshResponse, UserProfile, UserRegistrationData, RegistrationResponse } from '../types';
 import { isTokenExpired, shouldRefreshToken, getTokenRemainingTime } from '../utils/jwt.utils';
 
 // Utiliser le proxy Vite pour éviter les problèmes de certificat
@@ -27,7 +27,7 @@ export const authService = {
       console.log('Authentification avec', credentials.email);
       
       // Utiliser le proxy Vite pour éviter les problèmes de certificat
-      const response = await fetch(`${API_URL}/auth`, {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,6 +71,59 @@ export const authService = {
       return { 
         success: false, 
         error: error.message ?? 'Erreur inconnue lors de la connexion' 
+      };
+    }
+  },
+
+  /**
+   * Inscription d'un nouvel utilisateur
+   * @param userData - Données d'inscription
+   * @returns Réponse d'inscription avec utilisateur créé si succès
+   */
+  async register(userData: UserRegistrationData): Promise<RegistrationResponse> {
+    try {
+      console.log('Inscription d\'un nouvel utilisateur avec email:', userData.email);
+      
+      const response = await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(userData),
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Erreur d'inscription: ${response.status} ${response.statusText}`, errorData);
+        
+        // Extraire le message d'erreur de la réponse API Platform si disponible
+        let errorMessage = `${response.status} ${response.statusText}`;
+        if (errorData?.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData?.violations && errorData.violations.length > 0) {
+          errorMessage = errorData.violations.map((v: any) => v.message).join(', ');
+        }
+        
+        return { 
+          success: false, 
+          error: errorMessage
+        };
+      }
+
+      const user = await response.json();
+      console.log('Utilisateur créé avec succès:', user.email);
+      
+      return { 
+        success: true, 
+        user: user 
+      };
+    } catch (error: any) {
+      console.error('Erreur lors de l\'inscription:', error);
+      return { 
+        success: false, 
+        error: error.message ?? 'Erreur inconnue lors de l\'inscription' 
       };
     }
   },
@@ -283,7 +336,42 @@ export const authService = {
     console.log("Suppression du token expiré");
     authToken.value = null;
     localStorage.removeItem(AUTH_TOKEN_KEY);
-  }
+  },
+
+  /**
+   * Force une reconnexion en supprimant le token expiré
+   * Utile quand on reçoit une erreur 401 "Expired JWT Token"
+   */
+  forceReconnection(): void {
+    console.log("Suppression du token expiré pour forcer une nouvelle authentification");
+    this.logout();
+  },
+
+  /**
+   * Gère automatiquement les erreurs d'authentification (401)
+   * @param error Erreur reçue de l'API
+   * @returns true si l'erreur a été gérée automatiquement
+   */
+  async handleAuthError(error: any): Promise<boolean> {
+    // Vérifier si c'est une erreur de token expiré
+    if (error?.code === 401 || error?.message?.includes('Expired JWT Token')) {
+      console.warn("Token expiré détecté, tentative de rafraîchissement automatique...");
+      
+      // Essayer de rafraîchir le token
+      const refreshSuccess = await this.refreshTokenIfNeeded(0);
+      if (refreshSuccess) {
+        console.log("Token rafraîchi automatiquement après erreur 401");
+        return true;
+      }
+      
+      // Si le rafraîchissement échoue, forcer la déconnexion
+      console.warn("Impossible de rafraîchir le token, déconnexion forcée");
+      this.forceReconnection();
+      return true;
+    }
+    
+    return false;
+  },
 };
 
 export default authService;

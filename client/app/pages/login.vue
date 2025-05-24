@@ -10,6 +10,8 @@
     
     <div class="auth-links">
       <router-link to="/forgot-password">Mot de passe oublié ?</router-link>
+      <span class="separator"> | </span>
+      <router-link to="/register">Créer un compte</router-link>
     </div>
   </div>
 </template>
@@ -78,5 +80,10 @@ h1 {
 
 .auth-links a:hover {
   text-decoration: underline;
+}
+
+.separator {
+  margin: 0 0.5rem;
+  color: #6b7280;
 }
 </style>
