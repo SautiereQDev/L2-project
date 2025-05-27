@@ -2,10 +2,10 @@
  * Store pour gérer l'authentification de l'utilisateur
  * Utilise Pinia pour la gestion d'état
  */
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import { authService } from '../services/auth.service';
-import type { AuthCredentials, UserProfile, UserRegistrationData } from '@/types'
+import {defineStore} from 'pinia';
+import {ref, computed} from 'vue';
+import {authService} from '../services/auth.service';
+import type {AuthCredentials, UserProfile, UserRegistrationData} from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
   // Vérifier l'environnement client pour localStorage
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore('auth', () => {
    */
   function parseTokenExpiration(jwt: string | null): number | null {
     if (!jwt) return null;
-    
+
     try {
       // Décoder le payload du token (partie du milieu)
       const payloadPart = jwt.split('.')[1];
@@ -53,9 +53,9 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       isAuthenticating.value = true;
       authError.value = null;
-      
+
       const result = await authService.login(credentials);
-      
+
       if (result.success) {
         // Stocker le token et son expiration
         token.value = result.token ?? null;
@@ -63,7 +63,7 @@ export const useAuthStore = defineStore('auth', () => {
         if (result.token && isClient) {
           window.localStorage.setItem('auth_token', result.token);
         }
-        
+
         // Récupérer le profil utilisateur
         await fetchUserProfile();
         return true;
@@ -86,23 +86,23 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       isAuthenticating.value = true;
       authError.value = null;
-      
+
       const result = await authService.register(userData);
-      
+
       if (result.success) {
         // L'inscription a réussi, maintenant connecter l'utilisateur
         const loginResult = await authService.login({
           email: userData.email,
           password: userData.password
         });
-        
+
         if (loginResult.success) {
           token.value = loginResult.token ?? null;
           tokenExpiration.value = parseTokenExpiration(loginResult.token ?? null);
           if (loginResult.token && isClient) {
             window.localStorage.setItem('auth_token', loginResult.token);
           }
-          
+
           // Récupérer le profil utilisateur
           await fetchUserProfile();
           return true;
@@ -123,11 +123,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Récupère le profil de l'utilisateur 
+   * Récupère le profil de l'utilisateur
    */
   async function fetchUserProfile(): Promise<boolean> {
     if (!token.value) return false;
-    
+
     try {
       const profile = await authService.getUserProfile();
       userProfile.value = profile;
@@ -156,13 +156,13 @@ export const useAuthStore = defineStore('auth', () => {
    */
   async function refreshTokenIfNeeded(minimumValidityMinutes: number = 5): Promise<boolean> {
     if (!token.value || !tokenExpiration.value) return false;
-    
+
     // Calculer le temps restant en minutes
     const expirationTime = tokenExpiration.value * 1000; // en ms
     const currentTime = Date.now();
     const timeLeftMs = expirationTime - currentTime;
     const timeLeftMinutes = timeLeftMs / (1000 * 60);
-    
+
     // Si le token expire dans moins que le minimum spécifié, on le rafraîchit
     if (timeLeftMinutes < minimumValidityMinutes) {
       try {
@@ -181,7 +181,7 @@ export const useAuthStore = defineStore('auth', () => {
         return false;
       }
     }
-    
+
     return true; // Le token est encore valide assez longtemps
   }
 
@@ -192,11 +192,11 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticating,
     authError,
     userProfile,
-    
+
     // Getters
     isAuthenticated,
     isAdmin,
-    
+
     // Actions
     login,
     register,

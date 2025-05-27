@@ -6,7 +6,7 @@ import {createApp, defineComponent, h, ref } from 'vue';
 import { defineNuxtPlugin } from '#app';
 import AuthErrorNotification from '../app/components/AuthErrorNotification.vue';
 import type { useRouter } from 'vue-router';
-import { useAuthStore } from '../app/stores/auth.store';
+import { useAuthStore } from '~/stores/auth.store';
 
 // État global pour les notifications d'erreur d'authentification
 const authErrorState = {

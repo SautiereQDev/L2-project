@@ -3,14 +3,14 @@
  * Fournit une interface type-safe pour communiquer avec le backend
  */
 import authService from './auth.service';
-import type { ApiError } from '../types/api.types';
+import type {ApiError} from '../types/api.types';
 
 export class ApiService {
   /**
    * URL de base de l'API - utilise le proxy Vite configuré dans vite.config.ts
    */
   private readonly baseUrl: string = '/api';
-  
+
   /**
    * Méthode pour effectuer une connexion et obtenir un token
    * @param email - Email de l'utilisateur
@@ -18,10 +18,10 @@ export class ApiService {
    * @returns Promise<boolean> - true si authentification réussie, false sinon
    */
   async authenticate(email: string, password: string): Promise<boolean> {
-    const response = await authService.login({ email, password });
+    const response = await authService.login({email, password});
     return !!response && !('error' in response);
   }
-  
+
   /**
    * Vérifier si un token est disponible et valide, sinon tenter une connexion
    * @returns Promise<boolean> - true si l'authentification est valide
@@ -47,15 +47,15 @@ export class ApiService {
     if (!authSuccess) {
       throw new Error("Échec de l'authentification");
     }
-    
+
     // Construire l'URL complète - utiliser le proxy Vite
     const url = new URL(`${this.baseUrl}${endpoint}`, window.location.origin);
     console.log('Requête API via proxy Vite:', url.toString());
-    
+
     try {
       // Récupérer le token d'authentification
       const authToken = authService.getToken();
-      
+
       // Effectuer la requête API réelle via le proxy Vite
       const response = await fetch(url.toString(), {
         method: 'GET',
@@ -66,26 +66,26 @@ export class ApiService {
         },
         cache: 'no-store',
       });
-      
+
       if (!response.ok) {
         console.error(`Erreur API: ${response.status} ${response.statusText}`);
-        
+
         // En cas d'erreur d'authentification, tenter une nouvelle authentification
         if (response.status === 401) {
           console.log('Token expiré ou invalide, tentative de réauthentification...');
           const reconnected = await this.authenticate('sautiereq@gmail.com', 'abcd1234');
-          
+
           if (reconnected) {
             console.log('Réauthentification réussie, nouvelle tentative de requête');
             return await this.get<T>(endpoint, params);
           }
         }
-        
+
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       // Gérer la réponse Hydra de API Platform pour les collections
       if (responseData && typeof responseData === 'object') {
         if (responseData['@type'] === 'hydra:Collection' && responseData['hydra:member']) {
@@ -95,7 +95,7 @@ export class ApiService {
             view: responseData['hydra:view'] ?? null
           } as unknown as T;
         }
-        
+
         // Si c'est un tableau JSON standard
         if (Array.isArray(responseData)) {
           return {
@@ -105,7 +105,7 @@ export class ApiService {
           } as unknown as T;
         }
       }
-      
+
       return responseData as T;
     } catch (error) {
       console.error('Erreur lors de la requête API:', error);
@@ -121,10 +121,10 @@ export class ApiService {
     if (!authSuccess) {
       throw new Error("Échec de l'authentification");
     }
-    
+
     const url = `${this.baseUrl}${endpoint}`;
     const authToken = authService.getToken();
-    
+
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -136,31 +136,31 @@ export class ApiService {
         body: JSON.stringify(requestData),
         cache: 'no-store',
       });
-      
+
       if (!response.ok) {
         console.error(`Erreur API POST: ${response.status} ${response.statusText}`);
-        
+
         // Pour les erreurs d'authentification, tenter une nouvelle authentification
         if (response.status === 401) {
           console.log('Token expiré, tentative de réauthentification...');
           const reconnected = await this.authenticate('sautiereq@gmail.com', 'abcd1234');
-          
+
           if (reconnected) {
             console.log('Réauthentification réussie, nouvelle tentative de requête POST');
             return await this.post<T>(endpoint, requestData);
           }
         }
-        
+
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
-      
+
       return await response.json() as T;
     } catch (error) {
       console.error('Erreur lors de la requête POST:', error);
       throw error;
     }
   }
-  
+
   /**
    * Méthode pour effectuer des requêtes PUT (mise à jour de données)
    * @param endpoint - Chemin de l'API sans la base URL
@@ -174,10 +174,10 @@ export class ApiService {
     if (!authSuccess) {
       throw new Error("Échec de l'authentification");
     }
-    
+
     const url = `${this.baseUrl}${endpoint}`;
     const authToken = authService.getToken();
-    
+
     try {
       const response = await fetch(url, {
         method: 'PUT',
@@ -189,21 +189,21 @@ export class ApiService {
         body: JSON.stringify(requestData),
         cache: 'no-store',
       });
-      
+
       if (!response.ok) {
         console.error(`Erreur API PUT: ${response.status} ${response.statusText}`);
-        
+
         // Pour les erreurs d'authentification, tenter une nouvelle authentification
         if (response.status === 401) {
           console.log('Token expiré, tentative de réauthentification...');
           const reconnected = await this.authenticate('sautiereq@gmail.com', 'abcd1234');
-          
+
           if (reconnected) {
             console.log('Réauthentification réussie, nouvelle tentative de requête PUT');
             return await this.put<T>(endpoint, requestData);
           }
         }
-        
+
         // Essayez d'analyser l'erreur en tant qu'ApiError
         try {
           const errorData = await response.json() as ApiError;
@@ -213,7 +213,7 @@ export class ApiService {
           throw new Error(`Erreur ${response.status}: ${response.statusText}`);
         }
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Erreur lors de la requête API PUT:', error);

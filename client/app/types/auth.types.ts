@@ -2,6 +2,12 @@
  * Types pour l'authentification et la gestion des utilisateurs
  */
 
+export enum UserRoles {
+  ADMIN = 'ROLE_ADMIN',
+  USER = 'ROLE_USER',
+  GUEST = 'ROLE_GUEST'
+}
+
 /**
  * Credentials pour l'authentification
  */
@@ -23,10 +29,19 @@ export interface UserRegistrationData {
 /**
  * Réponse d'authentification
  */
-export interface AuthResponse {
+export type AuthResponse = DeniedAuthResponse | AcceptedAuthResponse;
+
+export interface DeniedAuthResponse {
+  title: string;
+  detail: string;
+  status: number;
+
+}
+
+export interface AcceptedAuthResponse {
   success: boolean;
   token?: string;
-  error?: string;
+  user: UserProfile;
 }
 
 /**
@@ -55,7 +70,7 @@ export interface UserProfile {
   email: string;
   firstName?: string;
   lastName?: string;
-  roles: string[];
+  roles: UserRoles[];
   createdAt: string;
   updatedAt: string;
 }
@@ -97,3 +112,15 @@ export interface HttpErrorResponse {
   statusText: string;
   data?: ApiError;
 }
+
+/**
+ * Réponse de l'API générique
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  code: number;
+  message: string;
+  data: T | null;
+  errors: ApiError | null;
+}
+

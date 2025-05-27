@@ -7,22 +7,32 @@
 export interface ApiCollection<T> {
   items: T[];
   totalItems: number;
-  itemsPerPage: number;
-  currentPage: number;
-  totalPages: number;
+  page?: number;
+  pageSize?: number;
+  itemsPerPage?: number;
+  currentPage?: number;
+  totalPages?: number;
 }
 
 /**
- * Type générique pour une réponse d'erreur API
+ * Type générique pour une réponse d'API
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  code: number;
+  message: string;
+  data: T | null;
+  errors: ApiError | null;
+}
+
+/**
+ * Type d'erreur standard de l'API
  */
 export interface ApiError {
-  status: number;
-  title: string;
-  detail: string;
-  violations?: Array<{
-    propertyPath: string;
-    message: string;
-  }>;
+  code: number;
+  message: string;
+  detail?: string;
+  violations?: Array<{ property?: string; message: string }>;
 }
 
 /**
