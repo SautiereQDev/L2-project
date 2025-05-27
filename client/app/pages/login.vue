@@ -1,13 +1,13 @@
 <template>
   <div class="login-view">
     <h1>Connexion</h1>
-    
-    <LoginForm 
-      redirect-path="/"
-      @login-success="handleLoginSuccess"
-      @login-error="handleLoginError"
+
+    <LoginForm
+        redirect-path="/"
+        @login-success="handleLoginSuccess"
+        @login-error="handleLoginError"
     />
-    
+
     <div class="auth-links">
       <router-link to="/forgot-password">Mot de passe oublié ?</router-link>
       <span class="separator"> | </span>
@@ -17,9 +17,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth.store';
+import {onMounted} from 'vue';
+import {useRouter} from 'vue-router';
+import {useAuthStore} from '../stores/auth.store';
 import LoginForm from '../components/LoginForm.vue';
 
 const router = useRouter();

@@ -125,8 +125,8 @@ onMounted(() => {
 const {
   data: records,
   isLoading: loading,
-  isError,
-  error,
+  isError: queryIsError,
+  error: queryError,
   refetch
 } = useQuery({
   queryKey: ['allRecords'],
@@ -164,6 +164,19 @@ const {
   staleTime: 5 * 60 * 1000, // 5 minutes avant de considérer les données comme périmées
   refetchOnWindowFocus: false // Désactiver le refetch automatique en cas de changement de focus
 });
+
+// Calculer l'état d'erreur réel basé sur la présence de données
+const isError = computed(() => {
+  // Considérer qu'il y a une erreur uniquement si:
+  // 1. TanStack Query indique une erreur ET
+  // 2. Aucune donnée n'est disponible
+  return queryIsError && (!allRecords.value || allRecords.value.length === 0);
+});
+
+const error = computed(() => {
+  return isError.value ? queryError : null;
+});
+
 // Forcer un refetch une fois que le composant est monté côté client
 onMounted(() => {
   refetch();
@@ -323,3 +336,4 @@ function closeModal() {
 
 // Note: Les fonctions de formatage ont été déplacées vers le composant RecordDetailModal
 </script>
+

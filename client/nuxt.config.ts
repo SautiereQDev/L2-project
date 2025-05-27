@@ -14,7 +14,7 @@ export default defineNuxtConfig({
   },
 
   modules: [// Pinia store support
-  '@pinia/nuxt', '@nuxt/ui', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/icon', '@nuxt/image', '@primevue/nuxt-module', '@nuxtjs/leaflet'],
+  '@pinia/nuxt', '@nuxt/ui', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/icon', '@nuxt/image', '@nuxtjs/leaflet', '@nuxt/test-utils'],
   // Enable default component auto-import (will import from components/ and app/components/)
   components: true,
   // Auto-import local components from the app/components directory
@@ -26,7 +26,6 @@ export default defineNuxtConfig({
   // Explicit plugin configuration
   plugins: [
     './plugins/vue-query',
-    './plugins/primevue.js',
   ],
 
   css: [
