@@ -1,6 +1,6 @@
 <template>
-  <div class="login-view">
-    <h1>Connexion</h1>
+  <div class="max-w-md mx-auto w-full px-4 py-8 flex flex-col items-center">
+    <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-8 text-center">Connexion</h1>
 
     <LoginForm
         redirect-path="/"
@@ -8,19 +8,18 @@
         @login-error="handleLoginError"
     />
 
-    <div class="auth-links">
-      <router-link to="/forgot-password">Mot de passe oublié ?</router-link>
-      <span class="separator"> | </span>
-      <router-link to="/register">Créer un compte</router-link>
+    <div class="mt-6 text-center">
+      <NuxtLink to="/forgot-password" class="text-sm text-indigo-600 hover:underline">Mot de passe oublié ?</NuxtLink>
+      <span class="mx-2 text-gray-500"> | </span>
+      <NuxtLink to="/register" class="text-sm text-indigo-600 hover:underline">Créer un compte</NuxtLink>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {onMounted} from 'vue';
-import {useRouter} from 'vue-router';
-import {useAuthStore} from '../stores/auth.store';
-import LoginForm from '../components/LoginForm.vue';
+import {onMounted, useRouter} from '#imports';
+import {useAuthStore} from '~/stores/auth.store';
+import LoginForm from '~/components/auth/LoginForm.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -37,7 +36,6 @@ onMounted(() => {
  */
 function handleLoginSuccess() {
   console.log('Connexion réussie');
-  // Vous pouvez ajouter des analytics ou d'autres actions ici
 }
 
 /**
@@ -45,45 +43,6 @@ function handleLoginSuccess() {
  */
 function handleLoginError(error: string) {
   console.error('Erreur de connexion:', error);
-  // Vous pourriez envoyer ces erreurs à un service d'analytics ou de logging
 }
 </script>
 
-<style scoped>
-.login-view {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 500px;
-  margin: 2rem auto;
-  padding: 1rem;
-}
-
-h1 {
-  margin-bottom: 2rem;
-  color: #1f2937;
-  font-size: 1.875rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.auth-links {
-  margin-top: 1.5rem;
-  text-align: center;
-}
-
-.auth-links a {
-  color: #4f46e5;
-  text-decoration: none;
-  font-size: 0.875rem;
-}
-
-.auth-links a:hover {
-  text-decoration: underline;
-}
-
-.separator {
-  margin: 0 0.5rem;
-  color: #6b7280;
-}
-</style>

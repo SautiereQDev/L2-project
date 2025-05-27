@@ -9,34 +9,56 @@
 
     <form class="space-y-6 flex flex-col" @submit.prevent="onSubmit">
       <UAlert
-          v-if="errorMessage" icon="i-heroicons-exclamation-triangle" color="error" variant="soft"
-          title="Erreur de connexion" :description="errorMessage" class="mb-6"/>
+          v-if="errorMessage"
+          icon="i-heroicons-exclamation-triangle"
+          color="error"
+          variant="soft"
+          title="Erreur d'authentification"
+          :description="errorMessage"
+          class="mb-6"/>
 
       <UFormGroup label="Email" name="email" required>
         <UInput
-            v-model="state.email" type="email" :disabled="isLoading" placeholder="vous@exemple.com"
-            icon="i-heroicons-envelope" size="lg" autocomplete="email" class="w-full"/>
+            v-model="state.email"
+            type="email"
+            :disabled="isLoading"
+            placeholder="vous@exemple.com"
+            icon="i-heroicons-envelope"
+            size="lg"
+            autocomplete="email"
+            class="w-full"/>
       </UFormGroup>
 
       <UFormGroup label="Mot de passe" name="password" required>
         <UInput
-            v-model="state.password" type="password" placeholder="••••••••" icon="i-heroicons-lock-closed" size="lg"
-            :disabled="isLoading" autocomplete="current-password" class="w-full"/>
+            v-model="state.password"
+            type="password"
+            placeholder="••••••••"
+            icon="i-heroicons-lock-closed"
+            size="lg"
+            :disabled="isLoading"
+            autocomplete="current-password"
+            class="w-full"/>
       </UFormGroup>
 
       <UButton
-          type="submit" label="Se connecter" color="primary" size="lg" block :loading="isLoading"
+          type="submit"
+          label="Se connecter"
+          color="primary"
+          size="lg"
+          block
+          :loading="isLoading"
           :disabled="isLoading"/>
     </form>
   </UCard>
 </template>
 
 <script setup lang="ts">
-import {reactive, ref} from 'vue';
-import {useRouter} from 'vue-router';
+import {reactive, ref} from '#imports';
+import {useRouter} from '#app';
 import {z} from 'zod';
-import {useAuthStore} from '../stores/auth.store';
-import type {AuthCredentials} from '../types/auth.types';
+import {useAuthStore} from '~/stores/auth.store';
+import type {AuthCredentials} from '~/types/auth.types';
 
 const props = defineProps<{
   redirectPath?: string;
@@ -77,6 +99,7 @@ async function onSubmit() {
       // Afficher l'erreur de validation
       const firstError = result.error.errors[0];
       errorMessage.value = firstError?.message || 'Données de formulaire invalides';
+      isLoading.value = false;
       return;
     }
 
@@ -104,4 +127,6 @@ async function onSubmit() {
   } finally {
     isLoading.value = false;
   }
-}</script>
+}
+</script>
+
