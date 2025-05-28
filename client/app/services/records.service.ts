@@ -18,22 +18,47 @@ export class RecordsService {
    */
   async getRecords(filters: RecordFilters = {}): Promise<ApiCollection<RecordEntity>> {
     try {
+      console.log('RecordsService - Appel API avec filtres:', filters);
+
       // Construire manuellement les query params pour support Hydra 'order[field]'
       const params = new URLSearchParams();
+
+      // Ajouter les paramètres de pagination
+      if (filters.page) {
+        params.append('page', String(filters.page));
+      }
+      if (filters.itemsPerPage) {
+        params.append('itemsPerPage', String(filters.itemsPerPage));
+      }
+
+      // Traiter les autres filtres
       for (const [key, value] of Object.entries(filters)) {
-        if (value == null) continue;
+        if (value == null || key === 'page' || key === 'itemsPerPage') continue;
+
+        // Traitement spécial pour le paramètre de tri
         if (key === 'order' && typeof value === 'object') {
           for (const [field, dir] of Object.entries(value as Record<string, string>)) {
             params.append(`order[${field}]`, dir);
           }
-        } else {
+        }
+        // Traitement pour les autres filtres
+        else {
           params.append(key, String(value));
         }
       }
+
+      // S'assurer qu'un tri par défaut est toujours appliqué si aucun n'est spécifié
+      if (!filters.order && !params.has('order[discipline.name]')) {
+        params.append('order[discipline.name]', 'asc');
+      }
+
+      console.log('RecordsService - Paramètres URL:', Object.fromEntries(params.entries()));
+
       const {data} = await apiClient.get<JsonLdCollection<RecordEntity> | HydraCollection<RecordEntity>>(
         'records',
         {params}
       );
+
       // Normaliser format Hydra vers ApiCollection
       return normalizeHydraCollection(data);
     } catch (error) {
@@ -90,4 +115,6 @@ export class RecordsService {
 }
 
 export default new RecordsService();
+
+
 

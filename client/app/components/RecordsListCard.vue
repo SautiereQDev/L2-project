@@ -138,8 +138,20 @@ function showDetails(record: RecordEntity) {
 }
 
 function handleSort(field: string, order: 'asc' | 'desc') {
+  console.log('RecordsListCard - Réception de la demande de tri:', field, order);
   sortField.value = field;
   sortOrder.value = order;
+
+  // Mise à jour des filtres avec les nouveaux paramètres de tri
+  const newFilters = {
+    ...props.initialFilters,
+    order: { [field]: order }
+  };
+
+  console.log('RecordsListCard - Mise à jour des filtres:', newFilters);
+  updateFilters(newFilters);
+  // Forcer le rechargement des données
+  refetch();
 }
 
 // Gère le changement de page et met à jour l'URL

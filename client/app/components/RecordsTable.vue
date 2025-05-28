@@ -104,7 +104,7 @@ v-if="currentSortField === 'location.name'"
       </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
-      <tr v-for="record in sortedRecords" :key="record.id" class="hover:bg-gray-100 dark:hover:bg-gray-800">
+      <tr v-for="record in props.records" :key="record.id" class="hover:bg-gray-100 dark:hover:bg-gray-800">
         <td class="px-6 py-4 whitespace-nowrap">
           {{ record.discipline.name }}
         </td>
@@ -159,7 +159,6 @@ v-if="currentSortField === 'location.name'"
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue';
 import type {RecordEntity} from '../types';
-import recordsService from '../services/records.service';
 
 interface Props {
   records: RecordEntity[];
@@ -191,53 +190,14 @@ watch(() => props.sortOrder, (newValue) => {
   }
 }, { immediate: true });
 
-// Récupère les records triés
-const sortedRecords = computed(() => {
-  // Si le tri est fait côté serveur, on retourne simplement les records tels quels
-  if (props.records.length <= 1) return props.records;
-
-  // Sinon, on fait un tri côté client pour plus de réactivité
-  return [...props.records].sort((a, b) => {
-    // Récupération des valeurs à comparer en fonction du champ de tri
-    const fieldPath = currentSortField.value.split('.');
-    let valueA = a;
-    let valueB = b;
-
-    // Navigation dans l'objet pour obtenir la valeur du champ (ex: athlete.lastname)
-    for (const field of fieldPath) {
-      valueA = valueA?.[field];
-      valueB = valueB?.[field];
-    }
-
-    // Gestion des valeurs null ou undefined
-    if (valueA == null) return currentSortOrder.value === 'asc' ? -1 : 1;
-    if (valueB == null) return currentSortOrder.value === 'asc' ? 1 : -1;
-
-    // Comparaison selon le type de données
-    let result;
-    if (typeof valueA === 'string' && typeof valueB === 'string') {
-      result = valueA.localeCompare(valueB, 'fr', { sensitivity: 'base' });
-    } else if (valueA instanceof Date && valueB instanceof Date) {
-      result = valueA.getTime() - valueB.getTime();
-    } else if (currentSortField.value === 'performance') {
-      // Performances sont triées par valeurs numériques
-      result = Number(valueA) - Number(valueB);
-    } else {
-      // Comparaison générique
-      result = valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
-    }
-
-    // Inversion du résultat si l'ordre est décroissant
-    return currentSortOrder.value === 'asc' ? result : -result;
-  });
-});
-
 // Méthodes
 function onShow(record: RecordEntity) {
   emit('show-details', record);
 }
 
 function sort(field: string) {
+  console.log('RecordsTable - Tri demandé:', field, 'Direction actuelle:', currentSortField.value === field ? currentSortOrder.value : 'nouveau champ');
+
   // Si on clique sur le même champ, on inverse l'ordre de tri
   if (field === currentSortField.value) {
     currentSortOrder.value = currentSortOrder.value === 'asc' ? 'desc' : 'asc';
@@ -246,6 +206,8 @@ function sort(field: string) {
     currentSortField.value = field;
     currentSortOrder.value = 'asc';
   }
+
+  console.log('RecordsTable - Émission de l\'événement update:sort avec:', currentSortField.value, currentSortOrder.value);
 
   // Émettre l'événement de tri
   emit('update:sort', currentSortField.value, currentSortOrder.value);

@@ -4,6 +4,12 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Enums\GenderType;
 use App\Repository\RecordRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -20,12 +26,30 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use App\State\RecordOutputProvider;
 
 #[ApiResource(
-	normalizationContext: ['groups' => ['record:read'], 'enable_max_depth' => true],
-	denormalizationContext: ['groups' => ['record:write']],
-	input: RecordInput::class,
-	output: RecordOutput::class,
-	provider: RecordOutputProvider::class
+    operations: [
+        new GetCollection(),
+        new Get(),
+        new Post(),
+        new Put()
+    ],
+    normalizationContext: ['groups' => ['record:read'], 'enable_max_depth' => true],
+    denormalizationContext: ['groups' => ['record:write']],
+    input: RecordInput::class,
+    output: RecordOutput::class,
+    provider: RecordOutputProvider::class
 )]
+#[ApiFilter(OrderFilter::class, properties: [
+    'id',
+    'discipline.name',
+    'athlete.lastname',
+    'athlete.firstname',
+    'performance',
+    'lastRecord',
+    'genre',
+    'categorie',
+    'location.name',
+    'isCurrentRecord'
+], arguments: ['orderParameterName' => 'order'])]
 #[ORM\Entity(repositoryClass: RecordRepository::class)]
 #[UniqueEntity(
     fields: ['discipline', 'genre', 'categorie'],
