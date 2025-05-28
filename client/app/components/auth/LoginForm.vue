@@ -17,7 +17,7 @@
           :description="errorMessage"
           class="mb-6"/>
 
-      <UFormGroup label="Email" name="email" required>
+      <MyFormGroup label="Email" name="email" required>
         <UInput
             v-model="state.email"
             type="email"
@@ -27,9 +27,9 @@
             size="lg"
             autocomplete="email"
             class="w-full"/>
-      </UFormGroup>
+      </MyFormGroup>
 
-      <UFormGroup label="Mot de passe" name="password" required>
+      <MyFormGroup label="Mot de passe" name="password" required>
         <UInput
             v-model="state.password"
             type="password"
@@ -39,7 +39,7 @@
             :disabled="isLoading"
             autocomplete="current-password"
             class="w-full"/>
-      </UFormGroup>
+      </MyFormGroup>
 
       <UButton
           type="submit"
@@ -59,6 +59,7 @@ import {useRouter} from '#app';
 import {z} from 'zod';
 import {useAuthStore} from '~/stores/auth.store';
 import type {AuthCredentials} from '~/types/auth.types';
+import MyFormGroup from '../ui/MyFormGroup.vue';
 
 const props = defineProps<{
   redirectPath?: string;
@@ -121,8 +122,7 @@ async function onSubmit() {
       emit('login-error', errorMessage.value);
     }
   } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : 'Une erreur est survenue lors de la connexion.';
-    errorMessage.value = errorMsg;
+    errorMessage.value = error instanceof Error ? error.message : 'Une erreur est survenue lors de la connexion.';
     emit('login-error', errorMessage.value);
   } finally {
     isLoading.value = false;

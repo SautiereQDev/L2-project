@@ -1,9 +1,10 @@
 // Composable unifié pour la gestion des records (liste, recherche, pagination) et détails
-import { ref, computed, watch } from 'vue';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import type { RecordFilters, RecordEntity } from '@/types';
+import {ref, computed, watch} from 'vue';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/vue-query';
+import type {RecordFilters, RecordEntity} from '@/types';
 import recordsService from '../services/records.service';
 import apiService from '@/services/api';
+import type {ApiCollection} from '~/types/api.types';
 import queryKeys from './queryKeys';
 
 export interface UseRecordsOptions {
@@ -13,55 +14,101 @@ export interface UseRecordsOptions {
 }
 
 /**
- * Hook pour gérer records avec filtres, recherche et pagination
+ * Composable pour gérer la récupération et la pagination des records
  */
 export function useRecords(options: UseRecordsOptions = {}) {
-  const filters = ref<RecordFilters>({ ...(options.initialFilters ?? {}) });
+  // État local
+  const filters = ref<RecordFilters>({...(options.initialFilters ?? {})});
   const currentPage = ref<number>(options.initialPage ?? 1);
   const pageSize = ref<number>(options.initialPageSize ?? 10);
 
-  const query = useQuery({
-    queryKey: ['records', JSON.stringify(filters.value), currentPage.value, pageSize.value],
-    queryFn: () =>
-      recordsService.getRecords({
-        ...filters.value,
-        page: currentPage.value,
-        itemsPerPage: pageSize.value,
-      }),
+  // Utiliser un queryKey structuré suivant les recommandations de TanStack Query
+  const recordsQueryKey = computed(() => [
+    'records',
+    {
+      filters: filters.value,
+      page: currentPage.value,
+      pageSize: pageSize.value
+    }
+  ]);
+
+  // Configuration de la requête avec TanStack Query
+  const {
+    data: recordsData,
+    isLoading,
+    isError,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: recordsQueryKey.value,
+    queryFn: () => recordsService.getRecords({
+      ...filters.value,
+      page: currentPage.value,
+      itemsPerPage: pageSize.value,
+    }),
+    select: (data: ApiCollection<RecordEntity>) => data,
+    staleTime: 60 * 1000, // 1 minute
   });
 
-  watch([filters, currentPage, pageSize], () => query.refetch(), { deep: true });
+  // Réexécuter la requête lorsque les filtres ou la pagination changent
+  watch([filters, currentPage, pageSize], () => {
+    refetch();
+  }, {deep: true});
 
-  const records = computed<RecordEntity[]>(() => query.data.value?.items ?? []);
-  const totalItems = computed<number>(() => query.data.value?.totalItems ?? records.value.length);
-  const totalPages = computed<number>(() => Math.ceil(totalItems.value / pageSize.value));
+  // Données dérivées
+  const records = computed<RecordEntity[]>(() => recordsData.value?.items ?? []);
+  const totalItems = computed<number>(() => recordsData.value?.totalItems ?? 0);
+  const totalPages = computed<number>(() => recordsData.value?.totalPages ?? 1);
 
+  // Informations de pagination
+  const paginationInfo = computed(() => ({
+    currentPage: recordsData.value?.currentPage ?? currentPage.value,
+    itemsPerPage: recordsData.value?.itemsPerPage ?? pageSize.value,
+    totalItems: totalItems.value,
+    totalPages: totalPages.value,
+    hasNextPage: currentPage.value < totalPages.value,
+    hasPreviousPage: currentPage.value > 1
+  }));
+
+  // Actions
   function updateFilters(newFilters: RecordFilters) {
-    filters.value = { ...newFilters };
-    currentPage.value = 1;
+    filters.value = {...newFilters};
+    currentPage.value = 1; // Retour à la première page lors du changement de filtres
   }
+
   function setPage(page: number) {
-    if (page >= 1 && page <= totalPages.value) currentPage.value = page;
+    if (page >= 1 && page <= totalPages.value) {
+      currentPage.value = page;
+    }
   }
+
   function setPageSize(size: number) {
     pageSize.value = size;
-    if (currentPage.value > totalPages.value) currentPage.value = totalPages.value;
+    if (currentPage.value > totalPages.value) {
+      currentPage.value = totalPages.value || 1;
+    }
   }
 
   return {
+    // État
     filters,
     currentPage,
     pageSize,
     records,
     totalItems,
     totalPages,
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
+    paginationInfo,
+
+    // État de la requête
+    isLoading,
+    isError,
+    error,
+
+    // Actions
     updateFilters,
     setPage,
     setPageSize,
-    refetch: query.refetch,
+    refetch,
   };
 }
 
@@ -113,11 +160,7 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
         return false;
       }
 
-      if (filters.value.gender && record.genre !== filters.value.gender) {
-        return false;
-      }
-
-      return true;
+      return !(filters.value.gender && record.genre !== filters.value.gender);
     });
   });
 
@@ -243,7 +286,7 @@ export function useUpdateRecord() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<RecordEntity> }) => {
+    mutationFn: async ({id, data}: { id: number; data: Partial<RecordEntity> }) => {
       return await apiService.getClient().put<RecordEntity>(`/records/${id}`, data).then(res => res.data);
     },
     onSuccess: (updatedRecord) => {
@@ -263,10 +306,10 @@ export function useUpdateRecord() {
         predicate: (query) => {
           const queryKey = query.queryKey;
           return Array.isArray(queryKey) &&
-                queryKey[0] === 'records' &&
-                (queryKey[1] === 'category' ||
-                 queryKey[1] === 'discipline' ||
-                 queryKey[1] === 'genre');
+            queryKey[0] === 'records' &&
+            (queryKey[1] === 'category' ||
+              queryKey[1] === 'discipline' ||
+              queryKey[1] === 'genre');
         }
       });
     },

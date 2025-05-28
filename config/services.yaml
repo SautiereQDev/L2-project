@@ -25,6 +25,11 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    # Configuration explicite de l'écouteur de pagination
+    App\EventListener\PaginationHeaderListener:
+        tags:
+            - { name: 'kernel.event_subscriber' }
+
     # The `bind` configuration above is sufficient for injecting the correct providers.
     # Use the `provider` attribute on each ApiResource to specify the provider for a resource type.
     # Avoid direct service decoration to prevent conflicts or unintended behavior.
@@ -33,3 +38,4 @@ services:
     App\State\UserPasswordHasher:
         bind:
             $processor: '@api_platform.doctrine.orm.state.persist_processor'
+

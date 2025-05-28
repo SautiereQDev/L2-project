@@ -10,8 +10,8 @@ import type {
   UserProfile,
   UserRegistrationData,
   RegistrationResponse
-} from '../types';
-import {isTokenExpired, shouldRefreshToken, getTokenRemainingTime} from '../utils/jwt.utils';
+} from '~/types';
+import {isTokenExpired, shouldRefreshToken, getTokenRemainingTime} from '~/utils/jwt.utils';
 
 // Utiliser le proxy Vite pour éviter les problèmes de certificat
 const API_URL = '/api';
@@ -38,7 +38,6 @@ export const authService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: JSON.stringify(credentials),
         cache: 'no-store',
@@ -95,7 +94,6 @@ export const authService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: JSON.stringify(userData),
         cache: 'no-store',
@@ -186,7 +184,6 @@ export const authService = {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken.value}`,
-          'Content-Type': 'application/json',
         }
       });
 
@@ -238,7 +235,6 @@ export const authService = {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken.value}`,
-          'Content-Type': 'application/json',
         }
       });
 
@@ -382,3 +378,4 @@ export const authService = {
 };
 
 export default authService;
+

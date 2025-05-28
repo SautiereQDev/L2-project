@@ -1,7 +1,7 @@
 <template>
-  <UCard 
-    class="max-w-md mx-auto w-5/6" 
-    :ui="{
+  <UCard
+      class="max-w-md mx-auto w-5/6"
+      :ui="{
       root: 'overflow-hidden bg-white dark:bg-gray-800'
     }"
   >
@@ -11,107 +11,107 @@
 
     <form class="space-y-6 flex flex-col" @submit.prevent="onSubmit">
       <UAlert
-        v-if="errorMessage" 
-        icon="i-heroicons-exclamation-triangle" 
-        color="error" 
-        variant="soft"
-        title="Erreur d'inscription" 
-        :description="errorMessage" 
-        class="mb-6" 
+          v-if="errorMessage"
+          icon="i-heroicons-exclamation-triangle"
+          color="error"
+          variant="soft"
+          title="Erreur d'inscription"
+          :description="errorMessage"
+          class="mb-6"
       />
 
       <UAlert
-        v-if="successMessage" 
-        icon="i-heroicons-check-circle" 
-        color="success" 
-        variant="soft"
-        title="Succès" 
-        :description="successMessage" 
-        class="mb-6" 
+          v-if="successMessage"
+          icon="i-heroicons-check-circle"
+          color="success"
+          variant="soft"
+          title="Succès"
+          :description="successMessage"
+          class="mb-6"
       />
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UFormGroup label="Prénom" name="firstName">
+        <MyFormGroup label="Prénom" name="firstName">
           <UInput
-            v-model="state.firstName" 
-            type="text" 
-            :disabled="isLoading" 
-            placeholder="Jean"
-            icon="i-heroicons-user" 
-            size="lg" 
-            autocomplete="given-name" 
-            class="w-full" 
+              v-model="state.firstName"
+              type="text"
+              :disabled="isLoading"
+              placeholder="Jean"
+              icon="i-heroicons-user"
+              size="lg"
+              autocomplete="given-name"
+              class="w-full"
           />
-        </UFormGroup>
+        </MyFormGroup>
 
-        <UFormGroup label="Nom" name="lastName">
+        <MyFormGroup label="Nom" name="lastName">
           <UInput
-            v-model="state.lastName" 
-            type="text" 
-            :disabled="isLoading" 
-            placeholder="Dupont"
-            icon="i-heroicons-user" 
-            size="lg" 
-            autocomplete="family-name" 
-            class="w-full" 
+              v-model="state.lastName"
+              type="text"
+              :disabled="isLoading"
+              placeholder="Dupont"
+              icon="i-heroicons-user"
+              size="lg"
+              autocomplete="family-name"
+              class="w-full"
           />
-        </UFormGroup>
+        </MyFormGroup>
       </div>
 
-      <UFormGroup label="Email" name="email" required>
+      <MyFormGroup label="Email" name="email" required>
         <UInput
-          v-model="state.email" 
-          type="email" 
-          :disabled="isLoading" 
-          placeholder="jean.dupont@exemple.com"
-          icon="i-heroicons-envelope" 
-          size="lg" 
-          autocomplete="email" 
-          class="w-full" 
+            v-model="state.email"
+            type="email"
+            :disabled="isLoading"
+            placeholder="jean.dupont@exemple.com"
+            icon="i-heroicons-envelope"
+            size="lg"
+            autocomplete="email"
+            class="w-full"
         />
-      </UFormGroup>
+      </MyFormGroup>
 
-      <UFormGroup label="Mot de passe" name="password" required>
+      <MyFormGroup label="Mot de passe" name="password" required>
         <UInput
-          v-model="state.password" 
-          type="password" 
-          placeholder="••••••••" 
-          icon="i-heroicons-lock-closed" 
-          size="lg"
-          :disabled="isLoading" 
-          autocomplete="new-password" 
-          class="w-full" 
+            v-model="state.password"
+            type="password"
+            placeholder="••••••••"
+            icon="i-heroicons-lock-closed"
+            size="lg"
+            :disabled="isLoading"
+            autocomplete="new-password"
+            class="w-full"
         />
-      </UFormGroup>
+      </MyFormGroup>
 
-      <UFormGroup label="Confirmer le mot de passe" name="passwordConfirm" required>
+      <MyFormGroup label="Confirmer le mot de passe" name="passwordConfirm" required>
         <UInput
-          v-model="state.passwordConfirm" 
-          type="password" 
-          placeholder="••••••••" 
-          icon="i-heroicons-lock-closed" 
-          size="lg"
-          :disabled="isLoading" 
-          autocomplete="new-password" 
-          class="w-full" 
+            v-model="state.passwordConfirm"
+            type="password"
+            placeholder="••••••••"
+            icon="i-heroicons-lock-closed"
+            size="lg"
+            :disabled="isLoading"
+            autocomplete="new-password"
+            class="w-full"
         />
-      </UFormGroup>
+      </MyFormGroup>
 
       <UButton
-        type="submit" 
-        label="Créer mon compte" 
-        color="primary" 
-        size="lg" 
-        block 
-        :loading="isLoading"
-        :disabled="isLoading" 
+          type="submit"
+          label="Créer mon compte"
+          color="primary"
+          size="lg"
+          block
+          :loading="isLoading"
+          :disabled="isLoading"
       />
     </form>
 
     <template #footer>
       <div class="text-center">
         <p class="text-sm text-gray-600 dark:text-gray-400">
-          Déjà un compte ? 
+          Déjà un compte ?
           <NuxtLink to="/login" class="text-primary-600 hover:text-primary-500 font-medium">
             Se connecter
           </NuxtLink>
@@ -122,11 +122,11 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { z } from 'zod';
-import { useAuthStore } from '../stores/auth.store';
-import type { UserRegistrationData } from '../types/auth.types';
+import {reactive, ref} from 'vue';
+import {useRouter} from 'vue-router';
+import {z} from 'zod';
+import {useAuthStore} from '~/stores/auth.store';
+import MyFormGroup from './ui/MyFormGroup.vue';
 
 const props = defineProps<{
   redirectPath?: string;
@@ -171,48 +171,29 @@ async function onSubmit() {
   isLoading.value = true;
 
   try {
-    // Valider manuellement les données avant de les envoyer
-    const result = validationSchema.safeParse(state);
-    
-    if (!result.success) {
-      // Afficher l'erreur de validation
-      const firstError = result.error.errors[0];
-      errorMessage.value = firstError?.message || 'Données de formulaire invalides';
-      return;
-    }
-    
-    // Créer l'objet de données d'inscription
-    const registrationData: UserRegistrationData = {
-      email: state.email,
-      password: state.password,
-      firstName: state.firstName || undefined,
-      lastName: state.lastName || undefined
-    };
-    
-    const success = await authStore.register(registrationData);
+    // Validation du formulaire}
+    const validatedData = validationSchema.parse(state);
 
-    if (success) {
-      successMessage.value = 'Compte créé avec succès ! Vous êtes maintenant connecté.';
-      emit('registration-success');
-      
-      // Rediriger après un court délai pour permettre à l'utilisateur de voir le message de succès
-      setTimeout(() => {
-        if (props.redirectPath) {
-          router.push(props.redirectPath);
-        } else {
-          router.push('/');
-        }
-      }, 1500);
-    } else {
-      errorMessage.value = authStore.authError || 'Échec de l\'inscription. Veuillez réessayer.';
-      emit('registration-error', errorMessage.value);
+    // Appel à l'API pour l'inscription
+    await authStore.register(validatedData);
+
+    successMessage.value = 'Votre compte a été créé avec succès !';
+    emit('registration-success');
+
+    // Redirection si un chemin de redirection est spécifié
+    if (props.redirectPath) {
+      router.push(props.redirectPath);
     }
-  } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : 'Une erreur est survenue lors de l\'inscription.';
-    errorMessage.value = errorMsg;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      errorMessage.value = error.errors.map(e => e.message).join(', ');
+    } else {
+      errorMessage.value = 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.';
+    }
     emit('registration-error', errorMessage.value);
   } finally {
     isLoading.value = false;
   }
 }
+
 </script>

@@ -5,17 +5,17 @@
         <h3 class="text-base font-semibold">Filtrer les records</h3>
         <UButton color="neutral" variant="ghost" size="sm" @click="toggleFiltersVisibility">
           <template #leading>
-            <Icon name="heroicons:funnel" />
+            <UIcon name="heroicons:funnel" />
           </template>
           {{ isVisible ? 'Masquer les filtres' : 'Afficher les filtres' }}
         </UButton>
       </div>
     </template>
-    
+
     <div v-if="isVisible" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- Types de disciplines -->
-        <UFormGroup label="Type de discipline">
+        <MyFormGroup label="Type de discipline">
           <MySelect
             v-model="filtersModel.disciplineType"
             :items="disciplineOptions"
@@ -25,13 +25,13 @@
             aria-label="Type de discipline"
           >
             <template #leading>
-              <Icon name="heroicons:funnel" />
+              <UIcon name="heroicons:funnel" />
             </template>
           </MySelect>
-        </UFormGroup>
+        </MyFormGroup>
 
         <!-- Genres -->
-        <UFormGroup label="Genre">
+        <MyFormGroup label="Genre">
           <MySelect
             v-model="filtersModel.gender"
             :items="genderOptions"
@@ -41,13 +41,13 @@
             aria-label="Genre"
           >
             <template #leading>
-              <Icon name="heroicons:user" />
+              <UIcon name="heroicons:user" />
             </template>
           </MySelect>
-        </UFormGroup>
+        </MyFormGroup>
 
         <!-- Catégories -->
-        <UFormGroup label="Catégorie">
+        <MyFormGroup label="Catégorie">
           <MySelect
             v-model="filtersModel.category"
             :items="categoryOptions"
@@ -57,13 +57,13 @@
             aria-label="Catégorie"
           >
             <template #leading>
-              <Icon name="heroicons:tag" />
+              <UIcon name="heroicons:tag" />
             </template>
           </MySelect>
-        </UFormGroup>
+        </MyFormGroup>
 
         <!-- Recherche par athlète -->
-        <UFormGroup label="Nom d'athlète">
+        <MyFormGroup label="Nom d'athlète">
           <UInput
             v-model="filtersModel.athleteName"
             placeholder="Rechercher un athlète"
@@ -75,13 +75,13 @@
             class="w-full"
           >
             <template #leading>
-              <Icon name="heroicons:magnifying-glass" />
+              <UIcon name="heroicons:magnifying-glass" />
             </template>
           </UInput>
-        </UFormGroup>
+        </MyFormGroup>
 
         <!-- Période (années) -->
-        <UFormGroup label="Année (de)">
+        <MyFormGroup label="Année (de)">
           <UInput
             v-model.number="filtersModel.yearFrom"
             type="number"
@@ -95,9 +95,9 @@
             autocomplete="off"
             class="w-full"
           />
-        </UFormGroup>
+        </MyFormGroup>
 
-        <UFormGroup label="Année (à)">
+        <MyFormGroup label="Année (à)">
           <UInput
             v-model.number="filtersModel.yearTo"
             type="number"
@@ -111,7 +111,7 @@
             autocomplete="off"
             class="w-full"
           />
-        </UFormGroup>
+        </MyFormGroup>
       </div>
     </div>
   </UCard>
@@ -119,7 +119,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue';
-import type { RecordFilters } from '../types';
+import type { RecordFilters } from '~/types';
+import MyFormGroup from './ui/MyFormGroup.vue';
 import MySelect from './ui/MySelect.vue';
 
 const props = defineProps({

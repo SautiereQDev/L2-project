@@ -10,7 +10,7 @@ const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/ld+json',
   },
   // Désactiver la vérification SSL en dev pour éviter les problèmes de certificat
   ...(import.meta.env.DEV ? {httpsAgent: {rejectUnauthorized: false}} : {})
@@ -161,3 +161,4 @@ export {apiClient};
 
 // Exporter le service API par défaut
 export default apiService;
+

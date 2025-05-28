@@ -55,14 +55,44 @@ export interface HydraCollection<T> {
 }
 
 /**
- * Transforme une réponse Hydra en ApiCollection standard
+ * Type d'une réponse d'API paginée avec JSON-LD metadata
  */
-export function normalizeHydraCollection<T>(hydraData: HydraCollection<T>): ApiCollection<T> {
-  return {
-    items: hydraData['hydra:member'],
-    totalItems: hydraData['hydra:totalItems'],
-    itemsPerPage: 30, // Valeur par défaut, à extraire de l'URL si disponible
-    currentPage: 1, // Valeur par défaut, à extraire de l'URL si disponible
-    totalPages: Math.ceil(hydraData['hydra:totalItems'] / 30)
+export interface JsonLdCollection<T> {
+  totalItems: number;
+  member: T[];
+  view?: {
+    '@id'?: string;
+    '@type'?: string;
+    first?: string;
+    last?: string;
+    next?: string;
+    previous?: string;
   };
+}
+
+/**
+ * Transforme une réponse Hydra ou JSON-LD en ApiCollection standard
+ */
+export function normalizeHydraCollection<T>(data: JsonLdCollection<T> | HydraCollection<T>): ApiCollection<T> {
+  // Support both hydra:member and member
+  const items = 'hydra:member' in data ? data['hydra:member'] : data.member;
+  // Support both hydra:totalItems and totalItems
+  const totalItems = 'hydra:totalItems' in data ? data['hydra:totalItems'] : data.totalItems;
+
+  // Determine pagination params
+  let currentPage = 1;
+  let itemsPerPage = 10;
+  const view = ('hydra:view' in data ? data['hydra:view'] : (data as JsonLdCollection<T>).view);
+  if (view?.['@id']) {
+    const base = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = new URL(view['@id'], base);
+    const sp = url.searchParams;
+    const p = sp.get('page');
+    const ipp = sp.get('itemsPerPage');
+    if (p) currentPage = parseInt(p, 10);
+    if (ipp) itemsPerPage = parseInt(ipp, 10);
+  }
+  const totalPages = itemsPerPage > 0 ? Math.ceil(totalItems / itemsPerPage) : 1;
+
+  return {items, totalItems, currentPage, pageSize: itemsPerPage, totalPages};
 }
