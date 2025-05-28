@@ -10,10 +10,9 @@
         >
           <div class="flex items-center">
             <span>Discipline</span>
-            <UIcon
-                v-if="currentSortField === 'discipline.name'"
-                :name="sortIcon"
-                class="ml-1 h-4 w-4"
+            <i
+v-if="currentSortField === 'discipline.name'"
+                :class="['pi ml-1 text-xs', currentSortOrder === 'asc' ? 'pi-sort-up' : 'pi-sort-down']"
             />
           </div>
         </th>
@@ -24,10 +23,9 @@
         >
           <div class="flex items-center">
             <span>Performance</span>
-            <UIcon
-                v-if="currentSortField === 'performance'"
-                :name="sortIcon"
-                class="ml-1 h-4 w-4"
+            <i
+v-if="currentSortField === 'performance'"
+                :class="['pi ml-1 text-xs', currentSortOrder === 'asc' ? 'pi-sort-up' : 'pi-sort-down']"
             />
           </div>
         </th>
@@ -38,10 +36,9 @@
         >
           <div class="flex items-center">
             <span>Athlète</span>
-            <UIcon
-                v-if="currentSortField === 'athlete.lastname'"
-                :name="sortIcon"
-                class="ml-1 h-4 w-4"
+            <i
+v-if="currentSortField === 'athlete.lastname'"
+                :class="['pi ml-1 text-xs', currentSortOrder === 'asc' ? 'pi-sort-up' : 'pi-sort-down']"
             />
           </div>
         </th>
@@ -52,10 +49,9 @@
         >
           <div class="flex items-center">
             <span>Date</span>
-            <UIcon
-                v-if="currentSortField === 'lastRecord'"
-                :name="sortIcon"
-                class="ml-1 h-4 w-4"
+            <i
+v-if="currentSortField === 'lastRecord'"
+                :class="['pi ml-1 text-xs', currentSortOrder === 'asc' ? 'pi-sort-up' : 'pi-sort-down']"
             />
           </div>
         </th>
@@ -66,10 +62,9 @@
         >
           <div class="flex items-center">
             <span>Catégorie</span>
-            <UIcon
-                v-if="currentSortField === 'categorie'"
-                :name="sortIcon"
-                class="ml-1 h-4 w-4"
+            <i
+v-if="currentSortField === 'categorie'"
+                :class="['pi ml-1 text-xs', currentSortOrder === 'asc' ? 'pi-sort-up' : 'pi-sort-down']"
             />
           </div>
         </th>
@@ -80,10 +75,9 @@
         >
           <div class="flex items-center">
             <span>Genre</span>
-            <UIcon
-                v-if="currentSortField === 'genre'"
-                :name="sortIcon"
-                class="ml-1 h-4 w-4"
+            <i
+v-if="currentSortField === 'genre'"
+                :class="['pi ml-1 text-xs', currentSortOrder === 'asc' ? 'pi-sort-up' : 'pi-sort-down']"
             />
           </div>
         </th>
@@ -94,15 +88,14 @@
         >
           <div class="flex items-center">
             <span>Lieu</span>
-            <UIcon
-                v-if="currentSortField === 'location.name'"
-                :name="sortIcon"
-                class="ml-1 h-4 w-4"
+            <i
+v-if="currentSortField === 'location.name'"
+                :class="['pi ml-1 text-xs', currentSortOrder === 'asc' ? 'pi-sort-up' : 'pi-sort-down']"
             />
           </div>
         </th>
         <th
-scope="col"
+            scope="col"
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
           <div class="flex items-center">
             <span>Actions</span>
@@ -111,7 +104,7 @@ scope="col"
       </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
-      <tr v-for="record in records" :key="record.id" class="hover:bg-gray-100 dark:hover:bg-gray-800">
+      <tr v-for="record in sortedRecords" :key="record.id" class="hover:bg-gray-100 dark:hover:bg-gray-800">
         <td class="px-6 py-4 whitespace-nowrap">
           {{ record.discipline.name }}
         </td>
@@ -137,13 +130,13 @@ scope="col"
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
             <span
-v-if="record.genre === 'M'"
-                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                v-if="record.genre === 'M'"
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
               Homme
             </span>
           <span
-v-else
-                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">
+              v-else
+              class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">
               Femme
             </span>
         </td>
@@ -152,8 +145,8 @@ v-else
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ">
           <NuxtLink
-:to="`/records/${record.id}`"
-                    class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+              :to="`/records/${record.id}`"
+              class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
             Voir
           </NuxtLink>
         </td>
@@ -164,8 +157,9 @@ v-else
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue';
+import {computed, ref, watch} from 'vue';
 import type {RecordEntity} from '../types';
+import recordsService from '../services/records.service';
 
 interface Props {
   records: RecordEntity[];
@@ -184,11 +178,58 @@ const emit = defineEmits(['show-details', 'update:sort']);
 const currentSortField = ref(props.sortField);
 const currentSortOrder = ref<'asc' | 'desc'>(props.sortOrder);
 
-// Icône de tri basée sur l'ordre de tri actuel
-const sortIcon = computed(() => {
-  return currentSortOrder.value === 'asc'
-      ? 'i-heroicons-arrow-up'
-      : 'i-heroicons-arrow-down';
+// Surveiller les changements des props pour mettre à jour l'état local
+watch(() => props.sortField, (newValue) => {
+  if (newValue !== currentSortField.value) {
+    currentSortField.value = newValue;
+  }
+}, { immediate: true });
+
+watch(() => props.sortOrder, (newValue) => {
+  if (newValue !== currentSortOrder.value) {
+    currentSortOrder.value = newValue;
+  }
+}, { immediate: true });
+
+// Récupère les records triés
+const sortedRecords = computed(() => {
+  // Si le tri est fait côté serveur, on retourne simplement les records tels quels
+  if (props.records.length <= 1) return props.records;
+
+  // Sinon, on fait un tri côté client pour plus de réactivité
+  return [...props.records].sort((a, b) => {
+    // Récupération des valeurs à comparer en fonction du champ de tri
+    const fieldPath = currentSortField.value.split('.');
+    let valueA = a;
+    let valueB = b;
+
+    // Navigation dans l'objet pour obtenir la valeur du champ (ex: athlete.lastname)
+    for (const field of fieldPath) {
+      valueA = valueA?.[field];
+      valueB = valueB?.[field];
+    }
+
+    // Gestion des valeurs null ou undefined
+    if (valueA == null) return currentSortOrder.value === 'asc' ? -1 : 1;
+    if (valueB == null) return currentSortOrder.value === 'asc' ? 1 : -1;
+
+    // Comparaison selon le type de données
+    let result;
+    if (typeof valueA === 'string' && typeof valueB === 'string') {
+      result = valueA.localeCompare(valueB, 'fr', { sensitivity: 'base' });
+    } else if (valueA instanceof Date && valueB instanceof Date) {
+      result = valueA.getTime() - valueB.getTime();
+    } else if (currentSortField.value === 'performance') {
+      // Performances sont triées par valeurs numériques
+      result = Number(valueA) - Number(valueB);
+    } else {
+      // Comparaison générique
+      result = valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+    }
+
+    // Inversion du résultat si l'ordre est décroissant
+    return currentSortOrder.value === 'asc' ? result : -result;
+  });
 });
 
 // Méthodes
@@ -225,3 +266,4 @@ function formatDate(dateString: string): string {
   return d.toLocaleDateString('fr-FR');
 }
 </script>
+

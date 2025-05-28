@@ -18,10 +18,21 @@ export class RecordsService {
    */
   async getRecords(filters: RecordFilters = {}): Promise<ApiCollection<RecordEntity>> {
     try {
-      // Appel API Platform en JSON-LD ou Hydra
+      // Construire manuellement les query params pour support Hydra 'order[field]'
+      const params = new URLSearchParams();
+      for (const [key, value] of Object.entries(filters)) {
+        if (value == null) continue;
+        if (key === 'order' && typeof value === 'object') {
+          for (const [field, dir] of Object.entries(value as Record<string, string>)) {
+            params.append(`order[${field}]`, dir);
+          }
+        } else {
+          params.append(key, String(value));
+        }
+      }
       const {data} = await apiClient.get<JsonLdCollection<RecordEntity> | HydraCollection<RecordEntity>>(
         'records',
-        {params: filters}
+        {params}
       );
       // Normaliser format Hydra vers ApiCollection
       return normalizeHydraCollection(data);
