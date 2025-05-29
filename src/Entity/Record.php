@@ -6,6 +6,8 @@ use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Post;
@@ -50,6 +52,14 @@ use App\State\RecordOutputProvider;
 	'location.name',
 	'isCurrentRecord'
 ], arguments: ['orderParameterName' => 'order'])]
+#[ApiFilter(SearchFilter::class, properties: [
+	'discipline.type' => 'exact',
+	'genre' => 'exact',
+	'categorie' => 'exact',
+	'athlete.lastname' => 'partial',
+	'athlete.firstname' => 'partial'
+])]
+#[ApiFilter(DateFilter::class, properties: ['lastRecord'])]
 #[ORM\Entity(repositoryClass: RecordRepository::class)]
 #[UniqueEntity(
 	fields: ['discipline', 'genre', 'categorie'],
@@ -67,70 +77,148 @@ class Record
 	#[Assert\NotBlank(message: 'Discipline cannot be blank')]
 	#[ApiProperty(readableLink: true)]
 	#[MaxDepth(1)]
+	#[Groups(['record:read', 'record:write'])]
 	private ?Discipline $discipline = null;
 
 	#[ORM\ManyToOne(inversedBy: 'records')]
 	#[Assert\NotBlank(message: 'Athlete cannot be blank')]
 	#[ApiProperty(readableLink: true)]
 	#[MaxDepth(1)]
+	#[Groups(['record:read', 'record:write'])]
 	private ?Athlete $athlete = null;
 
 	#[ORM\Column(type: Types::DATE_MUTABLE)]
+	#[Groups(['record:read', 'record:write'])]
 	private ?\DateTimeInterface $lastRecord = null;
 
 	#[ORM\Column]
+	#[Groups(['record:read', 'record:write'])]
 	private \DateTime|float|null $performance = null;
 
+	#[ORM\Column(type: 'string', length: 10, nullable: true, enumType: CategorieType::class)]
+	#[Groups(['record:read', 'record:write'])]
+	private ?CategorieType $categorie = null;
+
 	#[ORM\Column(type: 'string', length: 1, enumType: GenderType::class)]
-	#[Assert\Choice(choices: GenderType::CHOICES, message: 'Choisissez un genre valide.')]
-	private ?GenderType $genre = GenderType::MEN;
+	#[Groups(['record:read', 'record:write'])]
+	private ?GenderType $genre = null;
 
 	#[ORM\Column]
-	#[Assert\NotBlank(message: 'The record performance cannot be blank')]
+	#[Groups(['record:read', 'record:write'])]
 	private ?bool $isCurrentRecord = false;
 
 	#[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'nextRecords')]
 	#[ORM\JoinColumn(nullable: true)]
 	#[ApiProperty(readableLink: true)]
 	#[MaxDepth(1)]
+	#[Groups(['record:read', 'record:write'])]
 	private ?self $previousRecord = null;
 
 	#[ORM\OneToMany(targetEntity: self::class, mappedBy: 'previousRecord')]
-	#[ORM\JoinColumn(nullable: true)]
 	#[ApiProperty(readableLink: true)]
 	#[MaxDepth(1)]
-	private ?Collection $nextRecords;
+	#[Groups(['record:read', 'record:write'])]
+	private Collection $nextRecords;
 
 	#[ORM\Column]
+	#[Groups(['record:read', 'record:write'])]
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column]
+	#[Groups(['record:read', 'record:write'])]
 	private ?\DateTimeImmutable $updatedAt = null;
 
 	#[ORM\ManyToOne(targetEntity: Location::class, inversedBy: 'records')]
 	#[ORM\JoinColumn(nullable: false)]
 	#[ApiProperty(readableLink: true)]
 	#[MaxDepth(1)]
+	#[Groups(['record:read', 'record:write'])]
 	private ?Location $location = null;
-
-	#[ORM\Column(type: 'string', length: 10, nullable: true, enumType: CategorieType::class)]
-	#[Assert\Choice(choices: CategorieType::CHOICES, message: 'Choisissez une catégorie d\'âge valide.')]
-	private ?CategorieType $categorie = null;
 
 	public function __construct()
 	{
 		$this->nextRecords = new ArrayCollection();
 	}
 
-	public function isCurrentRecord(): bool
+	public function getId(): ?int
+	{
+		return $this->id;
+	}
+
+	public function getDiscipline(): ?Discipline
+	{
+		return $this->discipline;
+	}
+
+	public function setDiscipline(?Discipline $discipline): self
+	{
+		$this->discipline = $discipline;
+		return $this;
+	}
+
+	public function getAthlete(): ?Athlete
+	{
+		return $this->athlete;
+	}
+
+	public function setAthlete(?Athlete $athlete): self
+	{
+		$this->athlete = $athlete;
+		return $this;
+	}
+
+	public function getLastRecord(): ?\DateTimeInterface
+	{
+		return $this->lastRecord;
+	}
+
+	public function setLastRecord(?\DateTimeInterface $lastRecord): self
+	{
+		$this->lastRecord = $lastRecord;
+		return $this;
+	}
+
+	public function getPerformance(): \DateTime|float|null
+	{
+		return $this->performance;
+	}
+
+	public function setPerformance(\DateTime|float|null $performance): self
+	{
+		$this->performance = $performance;
+		return $this;
+	}
+
+	public function getCategorie(): ?CategorieType
+	{
+		return $this->categorie;
+	}
+
+	public function setCategorie(?CategorieType $categorie): self
+	{
+		$this->categorie = $categorie;
+		return $this;
+	}
+
+	public function getGenre(): ?GenderType
+	{
+		return $this->genre;
+	}
+
+	public function setGenre(GenderType $genre): self
+	{
+		$this->genre = $genre;
+		return $this;
+	}
+
+	public function isCurrentRecord(): ?bool
 	{
 		return $this->isCurrentRecord;
 	}
 
-	public function setIsCurrentRecord(bool $isCurrentRecord): static
+	public function setIsCurrentRecord(bool $isCurrentRecord): self
 	{
 		$this->isCurrentRecord = $isCurrentRecord;
-
 		return $this;
 	}
 
@@ -139,10 +227,9 @@ class Record
 		return $this->previousRecord;
 	}
 
-	public function setPreviousRecord(?self $previousRecord): static
+	public function setPreviousRecord(?self $previousRecord): self
 	{
 		$this->previousRecord = $previousRecord;
-
 		return $this;
 	}
 
@@ -154,46 +241,20 @@ class Record
 		return $this->nextRecords;
 	}
 
-	public function addNextRecord(self $nextRecord): static
+	public function addNextRecord(self $nextRecord): self
 	{
 		if (!$this->nextRecords->contains($nextRecord)) {
 			$this->nextRecords->add($nextRecord);
 			$nextRecord->setPreviousRecord($this);
 		}
-
 		return $this;
 	}
 
-	public function removeNextRecord(self $nextRecord): static
+	public function removeNextRecord(self $nextRecord): self
 	{
 		if ($this->nextRecords->removeElement($nextRecord) && $nextRecord->getPreviousRecord() === $this) {
 			$nextRecord->setPreviousRecord(null);
 		}
-
-		return $this;
-	}
-
-	public function getPerformance(): \DateTime|float|null
-	{
-		return $this->performance;
-	}
-
-	public function setPerformance(\DateTime|float|null $performance): static
-	{
-		$this->performance = $performance;
-
-		return $this;
-	}
-
-	public function getGenre(): GenderType
-	{
-		return $this->genre;
-	}
-
-	public function setGenre(GenderType $genre): static
-	{
-		$this->genre = $genre;
-
 		return $this;
 	}
 
@@ -202,10 +263,9 @@ class Record
 		return $this->createdAt;
 	}
 
-	public function setCreatedAt(\DateTimeImmutable $createdAt): static
+	public function setCreatedAt(\DateTimeImmutable $createdAt): self
 	{
 		$this->createdAt = $createdAt;
-
 		return $this;
 	}
 
@@ -214,54 +274,9 @@ class Record
 		return $this->updatedAt;
 	}
 
-	public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
+	public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
 	{
 		$this->updatedAt = $updatedAt;
-
-		return $this;
-	}
-
-	public function getId(): ?int
-	{
-		return $this->id;
-	}
-
-	public function setId(?int $id): static
-	{
-		$this->id = $id;
-		return $this;
-	}
-
-	public function getDiscipline(): ?Discipline
-	{
-		return $this->discipline;
-	}
-
-	public function setDiscipline(?Discipline $discipline): static
-	{
-		$this->discipline = $discipline;
-		return $this;
-	}
-
-	public function getAthlete(): ?Athlete
-	{
-		return $this->athlete;
-	}
-
-	public function setAthlete(?Athlete $athlete): static
-	{
-		$this->athlete = $athlete;
-		return $this;
-	}
-
-	public function getLastRecord(): ?\DateTimeInterface
-	{
-		return $this->lastRecord;
-	}
-
-	public function setLastRecord(?\DateTimeInterface $lastRecord): static
-	{
-		$this->lastRecord = $lastRecord;
 		return $this;
 	}
 
@@ -270,22 +285,9 @@ class Record
 		return $this->location;
 	}
 
-	public function setLocation(?Location $location): static
+	public function setLocation(?Location $location): self
 	{
 		$this->location = $location;
-
-		return $this;
-	}
-
-	public function getCategorie(): ?CategorieType
-	{
-		return $this->categorie;
-	}
-
-	public function setCategorie(?CategorieType $categorie): static
-	{
-		$this->categorie = $categorie;
-
 		return $this;
 	}
 

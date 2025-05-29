@@ -25,7 +25,7 @@
         <slot name="leading" />
       </template>
       <template v-else-if="icon" #leading>
-        <Icon :name="icon" class="w-4 h-4" /> 
+        <Icon :name="icon" class="w-4 h-4" />
       </template>
 
       <!-- Trailing Icon Handling -->
@@ -37,7 +37,11 @@
       </template>
 
       <!-- Pass through other slots -->
-      <template v-for="slotDef in passThroughSlots" #[slotDef.name]="slotData" :key="slotDef.name">
+      <template
+        v-for="slotDef in passThroughSlots"
+        #[slotDef.name]="slotData"
+        :key="slotDef.name"
+      >
         <slot :name="slotDef.name" v-bind="slotData" />
       </template>
     </USelect>
@@ -45,85 +49,88 @@
 </template>
 
 <script setup>
-import { computed, useSlots } from 'vue';
+import { computed, useSlots } from "vue";
 
 const props = defineProps({
   modelValue: {
     type: [String, Number, Array, Object],
-    default: null
+    default: null,
   },
   options: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   items: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   placeholder: {
     type: String,
-    default: 'Sélectionner...'
+    default: "Sélectionner...",
   },
   size: {
     type: String,
-    default: 'md'
+    default: "md",
   },
   clearable: {
     type: Boolean,
-    default: false
+    default: false,
   },
   disabled: {
     type: Boolean,
-    default: false
+    default: false,
   },
   color: {
     type: String,
-    default: 'primary'
+    default: "primary",
   },
   variant: {
     type: String,
-    default: 'outline'
+    default: "outline",
   },
-  icon: { // Expects "heroicons:name" or similar for <Icon>
+  icon: {
+    // Expects "heroicons:name" or similar for <Icon>
     type: String,
-    default: null
+    default: null,
   },
-  trailingIcon: { // Expects "heroicons:name" or similar for <Icon>
+  trailingIcon: {
+    // Expects "heroicons:name" or similar for <Icon>
     type: String,
-    default: 'heroicons:chevron-down' // Updated default
+    default: "heroicons:chevron-down", // Updated default
   },
   loading: {
     type: Boolean,
-    default: false
+    default: false,
   },
-  arrow: { // USelect prop
+  arrow: {
+    // USelect prop
     type: Boolean,
-    default: false
+    default: false,
   },
   // selectedIcon prop removed as USelect does not use it
   ui: {
     type: Object,
-    default: () => ({})
+    default: () => ({}),
   },
   multiple: {
     type: Boolean,
-    default: false
+    default: false,
   },
   searchable: {
     type: Boolean,
-    default: false
+    default: false,
   },
   searchablePlaceholder: {
     type: String,
-    default: 'Rechercher...'
-  }
+    default: "Rechercher...",
+  },
 });
 
-const emit = defineEmits(['update:modelValue', 'focus', 'blur', 'change']);
+const emit = defineEmits(["update:modelValue", "focus", "blur", "change"]);
 
 const value = computed({
   get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val)
+  set: (val) => emit("update:modelValue", val),
 });
 
 const slots = useSlots();
@@ -131,10 +138,9 @@ const slots = useSlots();
 // Pass through all slots not explicitly handled (leading, trailing)
 const passThroughSlots = computed(() => {
   return Object.keys(slots)
-    .filter(name => name !== 'leading' && name !== 'trailing')
-    .map(name => ({ name }));
+    .filter((name) => name !== "leading" && name !== "trailing")
+    .map((name) => ({ name }));
 });
-
 </script>
 
 <style scoped>

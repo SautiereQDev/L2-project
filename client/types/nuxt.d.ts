@@ -1,16 +1,16 @@
 // Fichier nuxt.d.ts pour ajouter des types personnalisés
-import type { QueryClient } from '@tanstack/vue-query'
+import type { QueryClient } from "@tanstack/vue-query";
 
-declare module '#app' {
+declare module "#app" {
   interface NuxtApp {
-    $queryClient: QueryClient
+    $queryClient: QueryClient;
   }
 }
 
-declare module '@vue/runtime-core' {
+declare module "@vue/runtime-core" {
   interface ComponentCustomProperties {
-    $queryClient: QueryClient
+    $queryClient: QueryClient;
   }
 }
 
-export { }
+export {};

@@ -1,11 +1,11 @@
 // Composable unifié pour la gestion des records (liste, recherche, pagination) et détails
-import {ref, computed, watch} from 'vue';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/vue-query';
-import type {RecordFilters, RecordEntity} from '@/types';
-import recordsService from '../services/records.service';
-import apiService from '@/services/api';
-import type {ApiCollection} from '~/types/api.types';
-import queryKeys from './queryKeys';
+import { ref, computed, watch } from "vue";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
+import type { RecordFilters, RecordEntity } from "@/types";
+import recordsService from "../services/records.service";
+import apiService from "@/services/api";
+import type { ApiCollection } from "~/types/api.types";
+import queryKeys from "./queryKeys";
 
 export interface UseRecordsOptions {
   initialFilters?: RecordFilters;
@@ -18,18 +18,18 @@ export interface UseRecordsOptions {
  */
 export function useRecords(options: UseRecordsOptions = {}) {
   // État local
-  const filters = ref<RecordFilters>({...(options.initialFilters ?? {})});
+  const filters = ref<RecordFilters>({ ...(options.initialFilters ?? {}) });
   const currentPage = ref<number>(options.initialPage ?? 1);
   const pageSize = ref<number>(options.initialPageSize ?? 10);
 
   // Utiliser un queryKey structuré suivant les recommandations de TanStack Query
   const recordsQueryKey = computed(() => [
-    'records',
+    "records",
     {
       filters: filters.value,
       page: currentPage.value,
-      pageSize: pageSize.value
-    }
+      pageSize: pageSize.value,
+    },
   ]);
 
   // Configuration de la requête avec TanStack Query
@@ -38,25 +38,32 @@ export function useRecords(options: UseRecordsOptions = {}) {
     isLoading,
     isError,
     error,
-    refetch
+    refetch,
   } = useQuery({
     queryKey: recordsQueryKey.value,
-    queryFn: () => recordsService.getRecords({
-      ...filters.value,
-      page: currentPage.value,
-      itemsPerPage: pageSize.value,
-    }),
+    queryFn: () =>
+      recordsService.getRecords({
+        ...filters.value,
+        page: currentPage.value,
+        itemsPerPage: pageSize.value,
+      }),
     select: (data: ApiCollection<RecordEntity>) => data,
     staleTime: 60 * 1000, // 1 minute
   });
 
   // Réexécuter la requête lorsque les filtres ou la pagination changent
-  watch([filters, currentPage, pageSize], () => {
-    refetch();
-  }, {deep: true});
+  watch(
+    [filters, currentPage, pageSize],
+    () => {
+      refetch();
+    },
+    { deep: true },
+  );
 
   // Données dérivées
-  const records = computed<RecordEntity[]>(() => recordsData.value?.items ?? []);
+  const records = computed<RecordEntity[]>(
+    () => recordsData.value?.items ?? [],
+  );
   const totalItems = computed<number>(() => recordsData.value?.totalItems ?? 0);
   const totalPages = computed<number>(() => recordsData.value?.totalPages ?? 1);
 
@@ -67,12 +74,12 @@ export function useRecords(options: UseRecordsOptions = {}) {
     totalItems: totalItems.value,
     totalPages: totalPages.value,
     hasNextPage: currentPage.value < totalPages.value,
-    hasPreviousPage: currentPage.value > 1
+    hasPreviousPage: currentPage.value > 1,
   }));
 
   // Actions
   function updateFilters(newFilters: RecordFilters) {
-    filters.value = {...newFilters};
+    filters.value = { ...newFilters };
     currentPage.value = 1; // Retour à la première page lors du changement de filtres
   }
 
@@ -133,11 +140,14 @@ export function useRecord(id: number) {
  * @param additionalFilters - Filtres additionnels à appliquer
  * @returns Object - Query et données filtrées
  */
-export function useRecordsByCategory(category: string, additionalFilters: Omit<RecordFilters, 'category'> = {}) {
+export function useRecordsByCategory(
+  category: string,
+  additionalFilters: Omit<RecordFilters, "category"> = {},
+) {
   // Combiner tous les filtres avec conversion de type pour la compatibilité
   const filters = ref<RecordFilters>({
     ...additionalFilters,
-    category: category as any // Conversion temporaire pour compatibilité
+    category: category as any, // Conversion temporaire pour compatibilité
   });
 
   // Récupérer les records avec tous les filtres appliqués
@@ -156,7 +166,10 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
 
     return records.value.filter((record: RecordEntity) => {
       // Appliquer les filtres additionnels s'ils existent
-      if (filters.value.disciplineType && record.discipline.type !== filters.value.disciplineType) {
+      if (
+        filters.value.disciplineType &&
+        record.discipline.type !== filters.value.disciplineType
+      ) {
         return false;
       }
 
@@ -171,7 +184,7 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
         totalItems: 0,
         currentPage: 1,
         totalPages: 1,
-        itemsPerPage: 10
+        itemsPerPage: 10,
       };
     }
 
@@ -179,7 +192,7 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
       totalItems: query.data.value.totalItems,
       currentPage: query.data.value.currentPage,
       totalPages: query.data.value.totalPages,
-      itemsPerPage: query.data.value.itemsPerPage
+      itemsPerPage: query.data.value.itemsPerPage,
     };
   });
 
@@ -188,7 +201,7 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
     records,
     filteredRecords,
     filters,
-    pagination
+    pagination,
   };
 }
 
@@ -199,13 +212,13 @@ export function useRecordsByCategory(category: string, additionalFilters: Omit<R
  */
 export function useRecordsByDiscipline(disciplineType: string) {
   const filters: RecordFilters = {
-    disciplineType: disciplineType as any // Conversion temporaire pour compatibilité
+    disciplineType: disciplineType as any, // Conversion temporaire pour compatibilité
   };
 
   const query = useQuery({
     queryKey: queryKeys.records.discipline(disciplineType),
     queryFn: () => recordsService.getRecords(filters),
-    enabled: !!disciplineType
+    enabled: !!disciplineType,
   });
 
   // Extraire les données de la collection pour faciliter l'accès
@@ -216,7 +229,7 @@ export function useRecordsByDiscipline(disciplineType: string) {
         totalItems: 0,
         currentPage: 1,
         totalPages: 1,
-        itemsPerPage: 10
+        itemsPerPage: 10,
       };
     }
 
@@ -224,14 +237,14 @@ export function useRecordsByDiscipline(disciplineType: string) {
       totalItems: query.data.value.totalItems,
       currentPage: query.data.value.currentPage,
       totalPages: query.data.value.totalPages,
-      itemsPerPage: query.data.value.itemsPerPage
+      itemsPerPage: query.data.value.itemsPerPage,
     };
   });
 
   return {
     ...query,
     records,
-    pagination
+    pagination,
   };
 }
 
@@ -242,13 +255,13 @@ export function useRecordsByDiscipline(disciplineType: string) {
  */
 export function useRecordsByGenre(gender: string) {
   const filters: RecordFilters = {
-    gender: gender as any // Conversion temporaire pour compatibilité
+    gender: gender as any, // Conversion temporaire pour compatibilité
   };
 
   const query = useQuery({
     queryKey: queryKeys.records.genre(gender),
     queryFn: () => recordsService.getRecords(filters),
-    enabled: !!gender
+    enabled: !!gender,
   });
 
   // Extraire les données de la collection pour faciliter l'accès
@@ -259,7 +272,7 @@ export function useRecordsByGenre(gender: string) {
         totalItems: 0,
         currentPage: 1,
         totalPages: 1,
-        itemsPerPage: 10
+        itemsPerPage: 10,
       };
     }
 
@@ -267,14 +280,14 @@ export function useRecordsByGenre(gender: string) {
       totalItems: query.data.value.totalItems,
       currentPage: query.data.value.currentPage,
       totalPages: query.data.value.totalPages,
-      itemsPerPage: query.data.value.itemsPerPage
+      itemsPerPage: query.data.value.itemsPerPage,
     };
   });
 
   return {
     ...query,
     records,
-    pagination
+    pagination,
   };
 }
 
@@ -286,8 +299,17 @@ export function useUpdateRecord() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({id, data}: { id: number; data: Partial<RecordEntity> }) => {
-      return await apiService.getClient().put<RecordEntity>(`/records/${id}`, data).then(res => res.data);
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Partial<RecordEntity>;
+    }) => {
+      return await apiService
+        .getClient()
+        .put<RecordEntity>(`/records/${id}`, data)
+        .then((res) => res.data);
     },
     onSuccess: (updatedRecord) => {
       // Invalider et rafraîchir toutes les requêtes qui pourraient être affectées
@@ -298,19 +320,21 @@ export function useUpdateRecord() {
       // Mettre à jour la requête spécifique pour ce record
       queryClient.setQueryData(
         queryKeys.records.detail(updatedRecord.id),
-        updatedRecord
+        updatedRecord,
       );
 
       // Invalider également les requêtes filtrées qui pourraient contenir ce record
       queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey;
-          return Array.isArray(queryKey) &&
-            queryKey[0] === 'records' &&
-            (queryKey[1] === 'category' ||
-              queryKey[1] === 'discipline' ||
-              queryKey[1] === 'genre');
-        }
+          return (
+            Array.isArray(queryKey) &&
+            queryKey[0] === "records" &&
+            (queryKey[1] === "category" ||
+              queryKey[1] === "discipline" ||
+              queryKey[1] === "genre")
+          );
+        },
       });
     },
   });

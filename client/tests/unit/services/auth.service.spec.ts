@@ -1,13 +1,17 @@
-import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
-import type {Mock} from 'vitest';
-import {authService} from '@/services/auth.service';
-import {isTokenExpired, shouldRefreshToken, getTokenRemainingTime} from '@/utils/jwt.utils';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import type { Mock } from "vitest";
+import { authService } from "@/services/auth.service";
+import {
+  isTokenExpired,
+  shouldRefreshToken,
+  getTokenRemainingTime,
+} from "@/utils/jwt.utils";
 
 // Mock des fonctions JWT
-vi.mock('@/utils/jwt.utils', () => ({
+vi.mock("@/utils/jwt.utils", () => ({
   isTokenExpired: vi.fn().mockReturnValue(false),
   shouldRefreshToken: vi.fn().mockReturnValue(false),
-  getTokenRemainingTime: vi.fn().mockReturnValue(3600)
+  getTokenRemainingTime: vi.fn().mockReturnValue(3600),
 }));
 
 // Mock de fetch
@@ -33,18 +37,18 @@ const localStorageMock = (() => {
     key: vi.fn((index: number) => Object.keys(store)[index] || null),
     get length() {
       return Object.keys(store).length;
-    }
+    },
   };
 })();
 
 // Configurer localStorage via Object.defineProperty
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
   writable: true,
-  configurable: true
+  configurable: true,
 });
 
-describe('authService', () => {
+describe("authService", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     localStorageMock.clear();
@@ -59,112 +63,121 @@ describe('authService', () => {
     vi.resetAllMocks();
   });
 
-  describe('login', () => {
-    it('stockeLeTokenAprèsUneConnexionRéussie', async () => {
-      const mockToken = 'jwt-token-test';
-      const mockUser = {id: 1, email: 'test@example.com'};
+  describe("login", () => {
+    it("stockeLeTokenAprèsUneConnexionRéussie", async () => {
+      const mockToken = "jwt-token-test";
+      const mockUser = { id: 1, email: "test@example.com" };
 
       (global.fetch as unknown as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          data: {token: mockToken, user: mockUser}
-        })
+          data: { token: mockToken, user: mockUser },
+        }),
       });
 
-      const result = await authService.login({email: 'test@example.com', password: 'password'});
+      const result = await authService.login({
+        email: "test@example.com",
+        password: "password",
+      });
 
       expect(result.success).toBe(true);
       expect(result?.data?.token).toBe(mockToken);
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('auth_token', mockToken);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        "auth_token",
+        mockToken,
+      );
       expect(authService.getToken()).toBe(mockToken);
     });
 
-    it('gèreErreurDeConnexion', async () => {
+    it("gèreErreurDeConnexion", async () => {
       (global.fetch as unknown as Mock).mockResolvedValueOnce({
         ok: false,
         json: async () => ({
           success: false,
-          message: 'Identifiants invalides',
-          errors: {code: 401}
-        })
+          message: "Identifiants invalides",
+          errors: { code: 401 },
+        }),
       });
 
-      const result = await authService.login({email: 'test@example.com', password: 'wrong'});
+      const result = await authService.login({
+        email: "test@example.com",
+        password: "wrong",
+      });
 
       expect(result.success).toBe(false);
       expect(localStorageMock.setItem).not.toHaveBeenCalled();
     });
   });
 
-  describe('logout', () => {
-    it('supprimeLesInformationsDeSession', () => {
-      localStorageMock.setItem('auth_token', 'token-test');
+  describe("logout", () => {
+    it("supprimeLesInformationsDeSession", () => {
+      localStorageMock.setItem("auth_token", "token-test");
 
       authService.logout();
 
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('auth_token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith("auth_token");
       expect(authService.getToken()).toBeNull();
       expect(authService.isAuthenticated()).toBe(false);
     });
   });
 
-  describe('isAuthenticated', () => {
-    it('retourneTrueSiTokenPrésentEtValide', () => {
+  describe("isAuthenticated", () => {
+    it("retourneTrueSiTokenPrésentEtValide", () => {
       (isTokenExpired as Mock).mockReturnValue(false);
-      localStorageMock.setItem('auth_token', 'token-valide');
+      localStorageMock.setItem("auth_token", "token-valide");
 
       expect(authService.isAuthenticated()).toBe(true);
     });
 
-    it('retourneFalseSiTokenAbsent', () => {
-      localStorageMock.removeItem('auth_token');
+    it("retourneFalseSiTokenAbsent", () => {
+      localStorageMock.removeItem("auth_token");
 
       expect(authService.isAuthenticated()).toBe(false);
     });
 
-    it('retourneFalseSiTokenExpiré', () => {
+    it("retourneFalseSiTokenExpiré", () => {
       (isTokenExpired as Mock).mockReturnValue(true);
-      localStorageMock.setItem('auth_token', 'token-expiré');
+      localStorageMock.setItem("auth_token", "token-expiré");
 
       expect(authService.isAuthenticated()).toBe(false);
     });
   });
 
-  describe('getUserProfile', () => {
-    it('récupèreLeProfilUtilisateurAvecSuccès', async () => {
+  describe("getUserProfile", () => {
+    it("récupèreLeProfilUtilisateurAvecSuccès", async () => {
       const mockUser = {
         id: 1,
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User'
+        email: "test@example.com",
+        firstName: "Test",
+        lastName: "User",
       };
 
-      localStorageMock.setItem('auth_token', 'token-valide');
+      localStorageMock.setItem("auth_token", "token-valide");
 
       (global.fetch as unknown as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          data: mockUser
-        })
+          data: mockUser,
+        }),
       });
 
       const result = await authService.getUserProfile();
 
       expect(result).toEqual(mockUser);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/me'),
+        expect.stringContaining("/v1/me"),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': 'Bearer token-valide'
-          })
-        })
+            Authorization: "Bearer token-valide",
+          }),
+        }),
       );
     });
 
-    it('retourneNullSiAucunToken', async () => {
-      localStorageMock.removeItem('auth_token');
+    it("retourneNullSiAucunToken", async () => {
+      localStorageMock.removeItem("auth_token");
 
       const result = await authService.getUserProfile();
 
@@ -172,16 +185,16 @@ describe('authService', () => {
       expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    it('gèreErreurDeLAPI', async () => {
-      localStorageMock.setItem('auth_token', 'token-valide');
+    it("gèreErreurDeLAPI", async () => {
+      localStorageMock.setItem("auth_token", "token-valide");
 
       (global.fetch as unknown as Mock).mockResolvedValueOnce({
         ok: false,
         status: 500,
         json: async () => ({
           success: false,
-          message: 'Erreur serveur'
-        })
+          message: "Erreur serveur",
+        }),
       });
 
       const result = await authService.getUserProfile();
@@ -190,47 +203,50 @@ describe('authService', () => {
     });
   });
 
-  describe('refreshToken', () => {
-    it('rafraîchitLeTokenAvecSuccès', async () => {
-      const oldToken = 'token-ancien';
-      const newToken = 'token-nouveau';
+  describe("refreshToken", () => {
+    it("rafraîchitLeTokenAvecSuccès", async () => {
+      const oldToken = "token-ancien";
+      const newToken = "token-nouveau";
 
-      localStorageMock.setItem('auth_token', oldToken);
+      localStorageMock.setItem("auth_token", oldToken);
 
       (global.fetch as unknown as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          data: {token: newToken}
-        })
+          data: { token: newToken },
+        }),
       });
 
       const result = await authService.refreshToken();
 
       expect(result.success).toBe(true);
       expect(result?.data?.token).toBe(newToken);
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('auth_token', newToken);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        "auth_token",
+        newToken,
+      );
     });
 
-    it('échoueSiAucunTokenInitial', async () => {
-      localStorageMock.removeItem('auth_token');
+    it("échoueSiAucunTokenInitial", async () => {
+      localStorageMock.removeItem("auth_token");
 
       const result = await authService.refreshToken();
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('Aucun token');
+      expect(result.message).toContain("Aucun token");
       expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    it('gèreErreurDuServeurLorsDuRafraîchissement', async () => {
-      localStorageMock.setItem('auth_token', 'token-valide');
+    it("gèreErreurDuServeurLorsDuRafraîchissement", async () => {
+      localStorageMock.setItem("auth_token", "token-valide");
 
       (global.fetch as unknown as Mock).mockResolvedValueOnce({
         ok: false,
         json: async () => ({
           success: false,
-          message: 'Token invalide'
-        })
+          message: "Token invalide",
+        }),
       });
 
       const result = await authService.refreshToken();
@@ -240,9 +256,9 @@ describe('authService', () => {
     });
   });
 
-  describe('refreshTokenIfNeeded', () => {
-    it('neFaitRienSiTokenEstValideEtPasProcheDExpiration', async () => {
-      localStorageMock.setItem('auth_token', 'token-valide');
+  describe("refreshTokenIfNeeded", () => {
+    it("neFaitRienSiTokenEstValideEtPasProcheDExpiration", async () => {
+      localStorageMock.setItem("auth_token", "token-valide");
       (isTokenExpired as Mock).mockReturnValue(false);
       (shouldRefreshToken as Mock).mockReturnValue(false);
 
@@ -252,11 +268,11 @@ describe('authService', () => {
       expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    it('rafraîchitTokenSiBientôtExpiré', async () => {
-      const oldToken = 'token-bientot-expiré';
-      const newToken = 'token-nouveau';
+    it("rafraîchitTokenSiBientôtExpiré", async () => {
+      const oldToken = "token-bientot-expiré";
+      const newToken = "token-nouveau";
 
-      localStorageMock.setItem('auth_token', oldToken);
+      localStorageMock.setItem("auth_token", oldToken);
       (isTokenExpired as Mock).mockReturnValue(false);
       (shouldRefreshToken as Mock).mockReturnValue(true);
 
@@ -264,19 +280,22 @@ describe('authService', () => {
         ok: true,
         json: async () => ({
           success: true,
-          data: {token: newToken}
-        })
+          data: { token: newToken },
+        }),
       });
 
       const result = await authService.refreshTokenIfNeeded();
 
       expect(result).toBe(true);
       expect(global.fetch).toHaveBeenCalled();
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('auth_token', newToken);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        "auth_token",
+        newToken,
+      );
     });
 
-    it('tenteDeSupprimerTokenSiComplètementExpiré', async () => {
-      localStorageMock.setItem('auth_token', 'token-expiré');
+    it("tenteDeSupprimerTokenSiComplètementExpiré", async () => {
+      localStorageMock.setItem("auth_token", "token-expiré");
       (isTokenExpired as Mock).mockReturnValue(true);
 
       // Échec du rafraîchissement
@@ -284,44 +303,49 @@ describe('authService', () => {
         ok: false,
         json: async () => ({
           success: false,
-          message: 'Token expiré'
-        })
+          message: "Token expiré",
+        }),
       });
 
       const result = await authService.refreshTokenIfNeeded();
 
       expect(result).toBe(false);
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('auth_token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith("auth_token");
     });
   });
 
-  describe('handleAuthError', () => {
-    it('gèreAutomatiquementErreur401', async () => {
-      const refreshSpy = vi.spyOn(authService, 'refreshTokenIfNeeded').mockResolvedValueOnce(true);
+  describe("handleAuthError", () => {
+    it("gèreAutomatiquementErreur401", async () => {
+      const refreshSpy = vi
+        .spyOn(authService, "refreshTokenIfNeeded")
+        .mockResolvedValueOnce(true);
 
-      const error = {code: 401, message: 'Expired JWT Token'};
+      const error = { code: 401, message: "Expired JWT Token" };
       const result = await authService.handleAuthError(error);
 
       expect(result).toBe(true);
       expect(refreshSpy).toHaveBeenCalled();
     });
 
-    it('forceReconnectionSiRafraîchissementÉchoue', async () => {
-      const refreshSpy = vi.spyOn(authService, 'refreshTokenIfNeeded').mockResolvedValueOnce(false);
-      const reconnectSpy = vi.spyOn(authService, 'forceReconnection').mockImplementation(() => {
-      });
+    it("forceReconnectionSiRafraîchissementÉchoue", async () => {
+      const refreshSpy = vi
+        .spyOn(authService, "refreshTokenIfNeeded")
+        .mockResolvedValueOnce(false);
+      const reconnectSpy = vi
+        .spyOn(authService, "forceReconnection")
+        .mockImplementation(() => {});
 
-      const error = {code: 401, message: 'Expired JWT Token'};
+      const error = { code: 401, message: "Expired JWT Token" };
       const result = await authService.handleAuthError(error);
 
       expect(result).toBe(true);
       expect(reconnectSpy).toHaveBeenCalled();
     });
 
-    it('ignoreLesErreursDAutresTypes', async () => {
-      const refreshSpy = vi.spyOn(authService, 'refreshTokenIfNeeded');
+    it("ignoreLesErreursDAutresTypes", async () => {
+      const refreshSpy = vi.spyOn(authService, "refreshTokenIfNeeded");
 
-      const error = {code: 500, message: 'Server Error'};
+      const error = { code: 500, message: "Server Error" };
       const result = await authService.handleAuthError(error);
 
       expect(result).toBe(false);

@@ -1,13 +1,13 @@
-import type {ApiError} from './api.types';
+import type { ApiError } from "./api.types";
 
 /**
  * Types pour l'authentification et la gestion des utilisateurs
  */
 
 export enum UserRoles {
-  ADMIN = 'ROLE_ADMIN',
-  USER = 'ROLE_USER',
-  GUEST = 'ROLE_GUEST'
+  ADMIN = "ROLE_ADMIN",
+  USER = "ROLE_USER",
+  GUEST = "ROLE_GUEST",
 }
 
 /**

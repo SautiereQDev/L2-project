@@ -8,7 +8,7 @@
       {{ label }}
       <span v-if="required" class="text-error-DEFAULT ml-1">*</span>
     </label>
-    
+
     <div class="relative">
       <!-- Icône de début (optionnelle) -->
       <div
@@ -17,7 +17,7 @@
       >
         <component :is="leadingIcon" class="h-5 w-5" aria-hidden="true" />
       </div>
-      
+
       <input
         :id="id"
         ref="input"
@@ -31,15 +31,17 @@
         :aria-describedby="error ? `${id}-error` : undefined"
         class="block w-full rounded-md border bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-primary-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:border-gray-700 dark:focus:ring-primary-400"
         :class="[
-          error ? 'border-error-DEFAULT focus:border-error-DEFAULT focus:ring-error-DEFAULT' : 'border-gray-300 dark:border-gray-600',
+          error
+            ? 'border-error-DEFAULT focus:border-error-DEFAULT focus:ring-error-DEFAULT'
+            : 'border-gray-300 dark:border-gray-600',
           leadingIcon ? 'pl-10' : '',
           trailingIcon || clearable ? 'pr-10' : '',
-          inputClass
+          inputClass,
         ]"
         @input="onInput"
         @blur="onBlur"
-      >
-      
+      />
+
       <!-- Bouton d'effacement (quand clearable est true) -->
       <button
         v-if="clearable && modelValue"
@@ -50,7 +52,7 @@
       >
         <XMarkIcon class="h-5 w-5" />
       </button>
-      
+
       <!-- Icône de fin (optionnelle) -->
       <div
         v-else-if="trailingIcon"
@@ -59,16 +61,12 @@
         <component :is="trailingIcon" class="h-5 w-5" aria-hidden="true" />
       </div>
     </div>
-    
+
     <!-- Message d'erreur -->
-    <p
-      v-if="error"
-      :id="`${id}-error`"
-      class="mt-1 text-sm text-error-DEFAULT"
-    >
+    <p v-if="error" :id="`${id}-error`" class="mt-1 text-sm text-error-DEFAULT">
       {{ error }}
     </p>
-    
+
     <!-- Texte d'aide -->
     <p
       v-else-if="helperText"
@@ -80,8 +78,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { XMarkIcon } from '@heroicons/vue/24/solid';
+import { ref, computed } from "vue";
+import { XMarkIcon } from "@heroicons/vue/24/solid";
 
 interface Props {
   modelValue: string | number;
@@ -105,33 +103,33 @@ const props = withDefaults(defineProps<Props>(), {
   label: undefined,
   helperText: undefined,
   error: undefined,
-  placeholder: '',
-  type: 'text',
+  placeholder: "",
+  type: "text",
   disabled: false,
   required: false,
   clearable: false,
   leadingIcon: undefined,
   trailingIcon: undefined,
-  containerClass: '',
-  inputClass: '',
+  containerClass: "",
+  inputClass: "",
 });
 
-const emit = defineEmits(['update:modelValue', 'blur', 'clear']);
+const emit = defineEmits(["update:modelValue", "blur", "clear"]);
 
 const input = ref<HTMLInputElement | null>(null);
 
 const onInput = (event: Event) => {
   const target = event.target as HTMLInputElement;
-  emit('update:modelValue', target.value);
+  emit("update:modelValue", target.value);
 };
 
 const onBlur = (event: Event) => {
-  emit('blur', event);
+  emit("blur", event);
 };
 
 const onClear = () => {
-  emit('update:modelValue', '');
-  emit('clear');
+  emit("update:modelValue", "");
+  emit("clear");
   // Focus sur l'input après effacement
   if (input.value) {
     input.value.focus();

@@ -2,13 +2,13 @@
  * Service pour gérer les requêtes API
  * Fournit une interface type-safe pour communiquer avec le backend
  */
-import authService from './auth.service';
+import authService from "./auth.service";
 
 export class ApiService {
   /**
    * URL de base de l'API - utilise le proxy Vite configuré dans vite.config.ts
    */
-  private readonly baseUrl: string = '/api';
+  private readonly baseUrl: string = "/api";
 
   /**
    * Méthode pour effectuer une connexion et obtenir un token
@@ -17,8 +17,8 @@ export class ApiService {
    * @returns Promise<boolean> - true si authentification réussie, false sinon
    */
   async authenticate(email: string, password: string): Promise<boolean> {
-    const response = await authService.login({email, password});
-    return !!response && !('error' in response);
+    const response = await authService.login({ email, password });
+    return !!response && !("error" in response);
   }
 
   /**
@@ -28,7 +28,7 @@ export class ApiService {
   private async ensureAuthenticated(): Promise<boolean> {
     // Si nous ne sommes pas authentifiés ou si le token est expiré
     if (!authService.isAuthenticated() || authService.isTokenExpired()) {
-      return await this.authenticate('sautiereq@gmail.com', 'abcd1234');
+      return await this.authenticate("sautiereq@gmail.com", "abcd1234");
     }
     return true;
   }
@@ -42,18 +42,25 @@ export class ApiService {
   async get<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
     await this.ensureAuthenticated();
     const url = new URL(`${this.baseUrl}${endpoint}`, window.location.origin);
-    Object.keys(params).forEach(key => params[key] != null && url.searchParams.append(key, String(params[key])));
+    Object.keys(params).forEach(
+      (key) =>
+        params[key] != null &&
+        url.searchParams.append(key, String(params[key])),
+    );
     const authToken = authService.getToken();
     const response = await fetch(url.toString(), {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        "Content-Type": "application/json",
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       },
-      cache: 'no-store'
+      cache: "no-store",
     });
-    if (!response.ok) throw new Error(`API GET Error: ${response.status} ${response.statusText}`);
-    return await response.json() as T;
+    if (!response.ok)
+      throw new Error(
+        `API GET Error: ${response.status} ${response.statusText}`,
+      );
+    return (await response.json()) as T;
   }
 
   /**
@@ -67,16 +74,19 @@ export class ApiService {
     const url = `${this.baseUrl}${endpoint}`;
     const authToken = authService.getToken();
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        "Content-Type": "application/json",
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       },
       body: JSON.stringify(data),
-      cache: 'no-store'
+      cache: "no-store",
     });
-    if (!response.ok) throw new Error(`API POST Error: ${response.status} ${response.statusText}`);
-    return await response.json() as T;
+    if (!response.ok)
+      throw new Error(
+        `API POST Error: ${response.status} ${response.statusText}`,
+      );
+    return (await response.json()) as T;
   }
 
   /**
@@ -90,15 +100,18 @@ export class ApiService {
     const url = `${this.baseUrl}${endpoint}`;
     const authToken = authService.getToken();
     const response = await fetch(url, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        "Content-Type": "application/json",
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       },
       body: JSON.stringify(data),
-      cache: 'no-store'
+      cache: "no-store",
     });
-    if (!response.ok) throw new Error(`API PUT Error: ${response.status} ${response.statusText}`);
-    return await response.json() as T;
+    if (!response.ok)
+      throw new Error(
+        `API PUT Error: ${response.status} ${response.statusText}`,
+      );
+    return (await response.json()) as T;
   }
 }

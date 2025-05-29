@@ -10,13 +10,13 @@ import { DisciplineType, CategorieType } from "~/types";
 export function getDisciplineGradient(type: string): string {
   switch (type) {
     case DisciplineType.RUN:
-      return 'from-blue-600 to-blue-400';
+      return "from-blue-600 to-blue-400";
     case DisciplineType.JUMP:
-      return 'from-yellow-600 to-yellow-400';
+      return "from-yellow-600 to-yellow-400";
     case DisciplineType.THROW:
-      return 'from-green-600 to-green-400';
+      return "from-green-600 to-green-400";
     default:
-      return 'from-gray-600 to-gray-400';
+      return "from-gray-600 to-gray-400";
   }
 }
 
@@ -30,13 +30,13 @@ export function getDisciplineGradient(type: string): string {
 export function getDisciplineIcon(type: string): string {
   switch (type) {
     case DisciplineType.RUN:
-      return 'i-heroicons-bolt';
+      return "i-heroicons-bolt";
     case DisciplineType.JUMP:
-      return 'i-heroicons-arrow-trending-up';
+      return "i-heroicons-arrow-trending-up";
     case DisciplineType.THROW:
-      return 'i-heroicons-hand-raised';
+      return "i-heroicons-hand-raised";
     default:
-      return 'i-heroicons-trophy';
+      return "i-heroicons-trophy";
   }
 }
 
@@ -49,9 +49,9 @@ export function getDisciplineIcon(type: string): string {
  */
 export function getDisciplineTypeLabel(type: string): string {
   const types: Record<string, string> = {
-    'run': 'Course',
-    'jump': 'Saut',
-    'throw': 'Lancer'
+    run: "Course",
+    jump: "Saut",
+    throw: "Lancer",
   };
 
   return types[type] ?? type;
@@ -68,17 +68,17 @@ export function getDisciplineTypeLabel(type: string): string {
 export function getCategoryColor(category: CategorieType): string {
   switch (category) {
     case CategorieType.U18:
-      return 'u18';
+      return "u18";
     case CategorieType.U20:
-      return 'u20';
+      return "u20";
     case CategorieType.U23:
-      return 'u23';
+      return "u23";
     case CategorieType.SENIOR:
-      return 'senior';
+      return "senior";
     case CategorieType.MASTER:
-      return 'master';
+      return "master";
     default:
-      return 'primary';
+      return "primary";
   }
 }
 
@@ -91,11 +91,11 @@ export function getCategoryColor(category: CategorieType): string {
  */
 export function getCategoryLabel(category: CategorieType): string {
   const categoryLabels: Record<CategorieType, string> = {
-    'U18': 'Moins de 18 ans',
-    'U20': 'Moins de 20 ans',
-    'U23': 'Moins de 23 ans',
-    'SENIOR': 'Senior',
-    'MASTER': 'Master'
+    U18: "Moins de 18 ans",
+    U20: "Moins de 20 ans",
+    U23: "Moins de 23 ans",
+    SENIOR: "Senior",
+    MASTER: "Master",
   };
 
   return categoryLabels[category] || category;
@@ -109,10 +109,10 @@ export function getCategoryLabel(category: CategorieType): string {
  */
 export function formatCompactDate(dateString: string): string {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit'
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
   }).format(date);
 }
 
@@ -124,9 +124,9 @@ export function formatCompactDate(dateString: string): string {
  */
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
   }).format(date);
 }

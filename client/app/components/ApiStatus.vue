@@ -1,71 +1,76 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import apiService from '@/services/api'
+import { ref, onMounted } from "vue";
+import apiService from "@/services/api";
 
 // State
-const apiStatus = ref<'loading' | 'online' | 'offline'>('loading')
-const apiVersion = ref('')
-const apiMessage = ref('')
-const error = ref<string | null>(null)
-const showDetails = ref(false)
-const healthData = ref<any>(null)
+const apiStatus = ref<"loading" | "online" | "offline">("loading");
+const apiVersion = ref("");
+const apiMessage = ref("");
+const error = ref<string | null>(null);
+const showDetails = ref(false);
+const healthData = ref<any>(null);
 
 // Check API status on component mount
 onMounted(async () => {
   try {
-    const response = await apiService.checkHealth()
+    const response = await apiService.checkHealth();
     if (response.data) {
-      apiStatus.value = 'online'
-      apiMessage.value = response.data.message || 'API is running'
-      
+      apiStatus.value = "online";
+      apiMessage.value = response.data.message || "API is running";
+
       // Gérer le cas où environment ou symfony_version n'existe pas
-      if (response.data.environment && response.data.environment.symfony_version) {
-        apiVersion.value = response.data.environment.symfony_version
+      if (
+        response.data.environment &&
+        response.data.environment.symfony_version
+      ) {
+        apiVersion.value = response.data.environment.symfony_version;
       } else {
-        apiVersion.value = 'unknown'
+        apiVersion.value = "unknown";
       }
-      
-      healthData.value = response.data
+
+      healthData.value = response.data;
     }
   } catch (err: any) {
-    apiStatus.value = 'offline'
-    error.value = err.message || 'Unable to connect to the API'
-    
+    apiStatus.value = "offline";
+    error.value = err.message || "Unable to connect to the API";
+
     // En mode dev, simuler une connexion réussie après un délai
     if (import.meta.env.DEV) {
-      console.warn('Simulating API connection in development mode')
+      console.warn("Simulating API connection in development mode");
       setTimeout(() => {
-        apiStatus.value = 'online'
-        apiMessage.value = 'DEV MODE: Simulated API connection'
-        apiVersion.value = 'dev'
+        apiStatus.value = "online";
+        apiMessage.value = "DEV MODE: Simulated API connection";
+        apiVersion.value = "dev";
         healthData.value = {
-          status: 'ok',
-          message: 'DEV MODE: API simulation active'
-        }
-      }, 2000)
+          status: "ok",
+          message: "DEV MODE: API simulation active",
+        };
+      }, 2000);
     }
-    
-    console.error('API health check failed:', err)
+
+    console.error("API health check failed:", err);
   }
-})
+});
 
 // Toggle details visibility
 const toggleDetails = () => {
-  showDetails.value = !showDetails.value
-}
+  showDetails.value = !showDetails.value;
+};
 </script>
 
 <template>
   <div class="api-status">
     <div class="api-status-indicator">
-      <span class="status-icon" :class="apiStatus"/>
+      <span class="status-icon" :class="apiStatus" />
       <span class="status-text">API: {{ apiStatus }}</span>
-      <span v-if="apiStatus === 'online'" class="version">v{{ apiVersion }}</span>
+      <span v-if="apiStatus === 'online'" class="version"
+        >v{{ apiVersion }}</span
+      >
       <button class="details-btn" @click="toggleDetails">
-        {{ showDetails ? 'Hide Details' : 'Show Details' }}
+        {{ showDetails ? "Hide Details" : "Show Details" }}
       </button>
     </div>
-    
+
     <div v-if="showDetails" class="api-details">
       <div v-if="apiStatus === 'online'">
         <p class="message">{{ apiMessage }}</p>
@@ -73,8 +78,14 @@ const toggleDetails = () => {
           <h4>Health Details</h4>
           <div class="detail-item">
             <span>Database:</span>
-            <span :class="healthData.database.connected ? 'status-online' : 'status-offline'">
-              {{ healthData.database.connected ? 'Connected' : 'Disconnected' }}
+            <span
+              :class="
+                healthData.database.connected
+                  ? 'status-online'
+                  : 'status-offline'
+              "
+            >
+              {{ healthData.database.connected ? "Connected" : "Disconnected" }}
             </span>
           </div>
           <div class="detail-item">

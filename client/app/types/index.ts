@@ -4,10 +4,10 @@
  */
 
 // Types pour les entités métier
-export * from './record.types';
+export * from "./record.types";
 
 // Types pour les API responses
-export * from './api.types';
+export * from "./api.types";
 
 // Types pour l'authentification
-export * from './auth.types';
+export * from "./auth.types";

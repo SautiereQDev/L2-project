@@ -1,8 +1,8 @@
 <template>
   <div class="register-view">
     <h1>Inscription</h1>
-    
-    <RegistrationForm 
+
+    <RegistrationForm
       redirect-path="/"
       @registration-success="handleRegistrationSuccess"
       @registration-error="handleRegistrationError"
@@ -11,33 +11,33 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth.store'
-import RegistrationForm from '../components/RegistrationForm.vue'
+import { onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "../stores/auth.store";
+import RegistrationForm from "../components/RegistrationForm.vue";
 
-const router = useRouter()
-const authStore = useAuthStore()
+const router = useRouter();
+const authStore = useAuthStore();
 
 // Vérifier si l'utilisateur est déjà connecté
 onMounted(() => {
   if (authStore.isAuthenticated) {
-    router.push('/')
+    router.push("/");
   }
-})
+});
 
 /**
  * Gestion de l'inscription réussie
  */
 function handleRegistrationSuccess() {
-  console.log('Inscription réussie')
+  console.log("Inscription réussie");
 }
 
 /**
  * Gestion des erreurs d'inscription
  */
 function handleRegistrationError(error: string) {
-  console.error('Erreur d\'inscription:', error)
+  console.error("Erreur d'inscription:", error);
 }
 </script>
 

@@ -2,27 +2,34 @@
  * Service d'authentification et gestion des tokens JWT
  * Gère les opérations liées à l'authentification des utilisateurs
  */
-import {ref, reactive} from 'vue';
+import { ref, reactive } from "vue";
 import type {
   AuthCredentials,
   AuthResponse,
   RefreshResponse,
   UserProfile,
   UserRegistrationCredentials,
-  RegistrationResponse
-} from '~/types';
-import {isTokenExpired, shouldRefreshToken, getTokenRemainingTime} from '~/utils/jwt.utils';
+  RegistrationResponse,
+} from "~/types";
+import {
+  isTokenExpired,
+  shouldRefreshToken,
+  getTokenRemainingTime,
+} from "~/utils/jwt.utils";
 
 // Utiliser le proxy Vite pour éviter les problèmes de certificat
-const API_URL = '/api';
-const AUTH_TOKEN_KEY = 'auth_token';
-const USER_DATA_KEY = 'user_data';
+const API_URL = "/api";
+const AUTH_TOKEN_KEY = "auth_token";
+const USER_DATA_KEY = "user_data";
 
 // Détecter l'environnement client (browser) pour éviter le SSR
-const isClient = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+const isClient =
+  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 
 // Récupérer le token du localStorage au démarrage (uniquement en browser)
-const authToken = ref<string | null>(isClient ? window.localStorage.getItem(AUTH_TOKEN_KEY) : null);
+const authToken = ref<string | null>(
+  isClient ? window.localStorage.getItem(AUTH_TOKEN_KEY) : null,
+);
 const userData = ref<UserProfile | null>(null);
 
 // Initialiser les données utilisateur depuis le localStorage si disponibles
@@ -32,7 +39,7 @@ if (isClient) {
     try {
       userData.value = JSON.parse(storedUserData);
     } catch (e) {
-      console.error('Erreur lors du parsing des données utilisateur', e);
+      console.error("Erreur lors du parsing des données utilisateur", e);
     }
   }
 }
@@ -45,41 +52,43 @@ export const authService = {
    */
   async login(credentials: AuthCredentials): Promise<AuthResponse> {
     try {
-      console.log('Authentification avec', credentials.email);
+      console.log("Authentification avec", credentials.email);
 
       // Utiliser le proxy Vite pour éviter les problèmes de certificat
       const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify(credentials),
-        cache: 'no-store',
+        cache: "no-store",
       });
 
       if (!response.ok) {
-        console.error(`Erreur d'authentification: ${response.status} ${response.statusText}`);
+        console.error(
+          `Erreur d'authentification: ${response.status} ${response.statusText}`,
+        );
         return {
           success: false,
-          error: `${response.status} ${response.statusText}`
+          error: `${response.status} ${response.statusText}`,
         };
       }
 
       // Récupérer la réponse sous forme de texte
       const responseText = await response.text();
-      console.log('Réponse brute du serveur:', responseText);
+      console.log("Réponse brute du serveur:", responseText);
 
       // Essayer de parser la réponse JSON
       let data;
       try {
         data = JSON.parse(responseText);
-        console.log('Données de connexion parsées:', data);
+        console.log("Données de connexion parsées:", data);
       } catch (error) {
-        console.error('Erreur de parsing JSON:', error);
+        console.error("Erreur de parsing JSON:", error);
         return {
           success: false,
-          error: 'Format de réponse invalide'
+          error: "Format de réponse invalide",
         };
       }
 
@@ -90,10 +99,10 @@ export const authService = {
 
       // Vérifier si le token existe dans la réponse
       if (!data.token) {
-        console.error('Token manquant dans la réponse:', data);
+        console.error("Token manquant dans la réponse:", data);
         return {
           success: false,
-          errors: 'Token manquant dans la réponse'
+          errors: "Token manquant dans la réponse",
         };
       }
 
@@ -111,19 +120,19 @@ export const authService = {
         }
       }
 
-      console.log('Authentification réussie, token obtenu et stocké');
+      console.log("Authentification réussie, token obtenu et stocké");
 
       // Retourner une réponse de succès avec le token et l'utilisateur
       return {
         success: true,
         token: data.token,
-        user: data.user || null
+        user: data.user || null,
       };
     } catch (error: any) {
-      console.error('Erreur lors de la connexion:', error);
+      console.error("Erreur lors de la connexion:", error);
       return {
         success: false,
-        error: error.message || 'Erreur inconnue lors de la connexion'
+        error: error.message || "Erreur inconnue lors de la connexion",
       };
     }
   },
@@ -133,18 +142,23 @@ export const authService = {
    * @param userData - Données d'inscription
    * @returns Réponse d'inscription avec utilisateur créé si succès
    */
-  async register(userData: UserRegistrationCredentials): Promise<RegistrationResponse> {
+  async register(
+    userData: UserRegistrationCredentials,
+  ): Promise<RegistrationResponse> {
     try {
-      console.log('Inscription d\'un nouvel utilisateur avec email:', userData.email);
+      console.log(
+        "Inscription d'un nouvel utilisateur avec email:",
+        userData.email,
+      );
 
       const response = await fetch(`${API_URL}/register`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify(userData),
-        cache: 'no-store',
+        cache: "no-store",
       });
 
       if (!response.ok) {
@@ -163,29 +177,31 @@ export const authService = {
         if (errorData?.detail) {
           errorMessage = errorData.detail;
         } else if (errorData?.violations && errorData.violations.length > 0) {
-          errorMessage = errorData.violations.map((v: any) => v.message).join(', ');
+          errorMessage = errorData.violations
+            .map((v: any) => v.message)
+            .join(", ");
         }
 
         return {
           success: false,
-          error: errorMessage
+          error: errorMessage,
         };
       }
 
       // Récupérer la réponse sous forme de texte
       const responseText = await response.text();
-      console.log('Réponse brute du serveur (inscription):', responseText);
+      console.log("Réponse brute du serveur (inscription):", responseText);
 
       // Essayer de parser la réponse JSON
       let data;
       try {
         data = JSON.parse(responseText);
-        console.log('Données d\'inscription parsées:', data);
+        console.log("Données d'inscription parsées:", data);
       } catch (error) {
-        console.error('Erreur de parsing JSON (inscription):', error);
+        console.error("Erreur de parsing JSON (inscription):", error);
         return {
           success: false,
-          error: 'Format de réponse invalide'
+          error: "Format de réponse invalide",
         };
       }
 
@@ -210,13 +226,13 @@ export const authService = {
 
       return {
         success: true,
-        user: user
+        user: user,
       };
     } catch (error: any) {
-      console.error('Erreur lors de l\'inscription:', error);
+      console.error("Erreur lors de l'inscription:", error);
       return {
         success: false,
-        error: error.message || 'Erreur inconnue lors de l\'inscription'
+        error: error.message || "Erreur inconnue lors de l'inscription",
       };
     }
   },
@@ -272,22 +288,24 @@ export const authService = {
    */
   async getUserProfile(): Promise<UserProfile | null> {
     if (!authToken.value) {
-      console.warn('Tentative de récupération du profil sans être authentifié');
+      console.warn("Tentative de récupération du profil sans être authentifié");
       return null;
     }
 
     try {
-      console.log('Récupération du profil utilisateur...');
+      console.log("Récupération du profil utilisateur...");
       const response = await fetch(`/api/me`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${authToken.value}`,
-          'Accept': 'application/json'
-        }
+          Authorization: `Bearer ${authToken.value}`,
+          Accept: "application/json",
+        },
       });
 
       if (!response.ok) {
-        throw new Error(`Erreur lors de la récupération du profil: ${response.status}`);
+        throw new Error(
+          `Erreur lors de la récupération du profil: ${response.status}`,
+        );
       }
 
       const responseText = await response.text();
@@ -296,7 +314,7 @@ export const authService = {
       try {
         result = JSON.parse(responseText);
       } catch (error) {
-        console.error('Erreur parsing JSON (profil):', error);
+        console.error("Erreur parsing JSON (profil):", error);
         return null;
       }
 
@@ -319,7 +337,7 @@ export const authService = {
 
       return userProfile;
     } catch (error) {
-      console.error('Erreur lors de la récupération du profil:', error);
+      console.error("Erreur lors de la récupération du profil:", error);
       return null;
     }
   },
@@ -329,10 +347,12 @@ export const authService = {
    * @param minValidTime Temps minimum de validité requis en secondes
    * @returns Réponse de rafraîchissement
    */
-  async refreshTokenIfNeeded(minValidTime: number = 300): Promise<RefreshResponse> {
+  async refreshTokenIfNeeded(
+    minValidTime: number = 300,
+  ): Promise<RefreshResponse> {
     // Si pas de token, échec immédiat
     if (!authToken.value) {
-      return { success: false, error: 'Aucun token à rafraîchir' };
+      return { success: false, error: "Aucun token à rafraîchir" };
     }
 
     // Si le token n'a pas besoin d'être rafraîchi, succès immédiat
@@ -342,18 +362,20 @@ export const authService = {
 
     // Sinon, tenter le rafraîchissement
     try {
-      console.log('Rafraîchissement du token...');
+      console.log("Rafraîchissement du token...");
       const response = await fetch(`${API_URL}/v1/token/refresh`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken.value}`,
-          'Accept': 'application/json'
-        }
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken.value}`,
+          Accept: "application/json",
+        },
       });
 
       if (!response.ok) {
-        throw new Error(`Erreur lors du rafraîchissement du token: ${response.status}`);
+        throw new Error(
+          `Erreur lors du rafraîchissement du token: ${response.status}`,
+        );
       }
 
       const responseText = await response.text();
@@ -362,13 +384,16 @@ export const authService = {
       try {
         data = JSON.parse(responseText);
       } catch (error) {
-        console.error('Erreur parsing JSON (refresh token):', error);
-        return { success: false, error: 'Format de réponse invalide' };
+        console.error("Erreur parsing JSON (refresh token):", error);
+        return { success: false, error: "Format de réponse invalide" };
       }
 
       // Vérifier si le nouveau token est présent
       if (!data?.token) {
-        return { success: false, error: 'Nouveau token manquant dans la réponse' };
+        return {
+          success: false,
+          error: "Nouveau token manquant dans la réponse",
+        };
       }
 
       // Mettre à jour le token
@@ -379,10 +404,10 @@ export const authService = {
 
       return { success: true, token: data.token };
     } catch (error: any) {
-      console.error('Erreur lors du rafraîchissement du token:', error);
+      console.error("Erreur lors du rafraîchissement du token:", error);
       return { success: false, error: error.message };
     }
-  }
+  },
 };
 
 export default authService;

@@ -3,11 +3,16 @@
     <template #header>
       <div class="flex items-center justify-between">
         <h3 class="text-base font-semibold">Filtrer les records</h3>
-        <UButton color="neutral" variant="ghost" size="sm" @click="toggleFiltersVisibility">
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          @click="toggleFiltersVisibility"
+        >
           <template #leading>
             <UIcon name="heroicons:funnel" />
           </template>
-          {{ isVisible ? 'Masquer les filtres' : 'Afficher les filtres' }}
+          {{ isVisible ? "Masquer les filtres" : "Afficher les filtres" }}
         </UButton>
       </div>
     </template>
@@ -118,10 +123,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
-import type { RecordFilters } from '~/types';
-import MyFormGroup from './ui/MyFormGroup.vue';
-import MySelect from './ui/MySelect.vue';
+import { ref, reactive, watch } from "vue";
+import type { RecordFilters } from "~/types";
+import MyFormGroup from "./ui/MyFormGroup.vue";
+import MySelect from "./ui/MySelect.vue";
 
 const props = defineProps({
   /**
@@ -129,18 +134,18 @@ const props = defineProps({
    */
   modelValue: {
     type: Object as () => RecordFilters,
-    required: true
+    required: true,
   },
   /**
    * Visibilité initiale des filtres
    */
   visible: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+  },
 });
 
-const emit = defineEmits(['update:modelValue', 'update:visible']);
+const emit = defineEmits(["update:modelValue", "update:visible"]);
 
 // Année courante pour les filtres de date
 const currentYear = new Date().getFullYear();
@@ -152,47 +157,55 @@ const isVisible = ref(props.visible);
 const filtersModel = reactive<RecordFilters>({ ...props.modelValue });
 
 // Observer les changements du modelValue externe
-watch(() => props.modelValue, (newValue) => {
-  // Éviter les boucles infinies en comparant les valeurs avant de les assigner
-  if (JSON.stringify(newValue) !== JSON.stringify(filtersModel)) {
-    Object.assign(filtersModel, newValue);
-  }
-}, { deep: true, immediate: true });
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    // Éviter les boucles infinies en comparant les valeurs avant de les assigner
+    if (JSON.stringify(newValue) !== JSON.stringify(filtersModel)) {
+      Object.assign(filtersModel, newValue);
+    }
+  },
+  { deep: true, immediate: true },
+);
 
 // Mettre à jour le modèle lorsque les filtres internes changent
-watch(filtersModel, (newValue) => {
-  // Éviter les boucles infinies en comparant les valeurs avant d'émettre
-  if (JSON.stringify(newValue) !== JSON.stringify(props.modelValue)) {
-    emit('update:modelValue', { ...newValue });
-  }
-}, { deep: true });
+watch(
+  filtersModel,
+  (newValue) => {
+    // Éviter les boucles infinies en comparant les valeurs avant d'émettre
+    if (JSON.stringify(newValue) !== JSON.stringify(props.modelValue)) {
+      emit("update:modelValue", { ...newValue });
+    }
+  },
+  { deep: true },
+);
 
 // Options pour les selects
 const disciplineOptions = [
-  { label: 'Toutes les disciplines', value: 'all' },
-  { label: 'Courses', value: 'run' },
-  { label: 'Sauts', value: 'jump' },
-  { label: 'Lancers', value: 'throw' }
+  { label: "Toutes les disciplines", value: "all" },
+  { label: "Courses", value: "run" },
+  { label: "Sauts", value: "jump" },
+  { label: "Lancers", value: "throw" },
 ];
 
 const genderOptions = [
-  { label: 'Tous', value: 'all' },
-  { label: 'Hommes', value: 'M' },
-  { label: 'Femmes', value: 'W' }
+  { label: "Tous", value: "all" },
+  { label: "Hommes", value: "M" },
+  { label: "Femmes", value: "W" },
 ];
 
 const categoryOptions = [
-  { label: 'Toutes', value: 'all' },
-  { label: 'U18', value: 'U18' },
-  { label: 'U20', value: 'U20' },
-  { label: 'U23', value: 'U23' },
-  { label: 'Senior', value: 'SENIOR' },
-  { label: 'Master', value: 'MASTER' }
+  { label: "Toutes", value: "all" },
+  { label: "U18", value: "U18" },
+  { label: "U20", value: "U20" },
+  { label: "U23", value: "U23" },
+  { label: "Senior", value: "SENIOR" },
+  { label: "Master", value: "MASTER" },
 ];
 
 // Fonction pour basculer la visibilité des filtres
 function toggleFiltersVisibility() {
   isVisible.value = !isVisible.value;
-  emit('update:visible', isVisible.value);
+  emit("update:visible", isVisible.value);
 }
 </script>

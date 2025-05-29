@@ -2,16 +2,23 @@
  * Store pour gérer l'authentification de l'utilisateur
  * Utilise Pinia pour la gestion d'état
  */
-import {defineStore} from 'pinia';
-import {ref, computed} from 'vue';
-import {authService} from '../services/auth.service';
-import type {AuthCredentials, UserProfile, UserRegistrationCredentials} from '@/types'
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import { authService } from "../services/auth.service";
+import type {
+  AuthCredentials,
+  UserProfile,
+  UserRegistrationCredentials,
+} from "@/types";
 
-export const useAuthStore = defineStore('auth', () => {
+export const useAuthStore = defineStore("auth", () => {
   // Vérifier l'environnement client pour localStorage
-  const isClient = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+  const isClient =
+    typeof window !== "undefined" && typeof window.localStorage !== "undefined";
   // État
-  const token = ref<string | null>(isClient ? window.localStorage.getItem('auth_token') : null);
+  const token = ref<string | null>(
+    isClient ? window.localStorage.getItem("auth_token") : null,
+  );
   const isAuthenticating = ref(false);
   const authError = ref<string | null>(null);
   const userProfile = ref<UserProfile | null>(null);
@@ -19,7 +26,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Getters
   const isAuthenticated = computed(() => !!token.value && !isTokenExpired());
-  const isAdmin = computed(() => userProfile.value?.roles?.includes('ROLE_ADMIN') ?? false);
+  const isAdmin = computed(
+    () => userProfile.value?.roles?.includes("ROLE_ADMIN") ?? false,
+  );
 
   /**
    * Vérifie si le token est expiré
@@ -37,11 +46,11 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       // Décoder le payload du token (partie du milieu)
-      const payloadPart = jwt.split('.')[1];
+      const payloadPart = jwt.split(".")[1];
       const payload = payloadPart ? JSON.parse(atob(payloadPart)) : null;
       return payload.exp ?? null;
     } catch (error) {
-      console.error('Erreur lors du décodage du token:', error);
+      console.error("Erreur lors du décodage du token:", error);
       return null;
     }
   }
@@ -61,18 +70,19 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = result.token ?? null;
         tokenExpiration.value = parseTokenExpiration(result.token ?? null);
         if (result.token && isClient) {
-          window.localStorage.setItem('auth_token', result.token);
+          window.localStorage.setItem("auth_token", result.token);
         }
 
         // Récupérer le profil utilisateur
         await fetchUserProfile();
         return true;
       } else {
-        authError.value = result.error ?? 'Échec de connexion';
+        authError.value = result.error ?? "Échec de connexion";
         return false;
       }
     } catch (error: any) {
-      authError.value = error.message ?? 'Erreur inattendue lors de la connexion';
+      authError.value =
+        error.message ?? "Erreur inattendue lors de la connexion";
       return false;
     } finally {
       isAuthenticating.value = false;
@@ -82,7 +92,9 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Inscrit un nouvel utilisateur
    */
-  async function register(userData: UserRegistrationCredentials): Promise<boolean> {
+  async function register(
+    userData: UserRegistrationCredentials,
+  ): Promise<boolean> {
     try {
       isAuthenticating.value = true;
       authError.value = null;
@@ -93,29 +105,34 @@ export const useAuthStore = defineStore('auth', () => {
         // L'inscription a réussi, maintenant connecter l'utilisateur
         const loginResult = await authService.login({
           email: userData.email,
-          password: userData.password
+          password: userData.password,
         });
 
         if (loginResult.success) {
           token.value = loginResult.token ?? null;
-          tokenExpiration.value = parseTokenExpiration(loginResult.token ?? null);
+          tokenExpiration.value = parseTokenExpiration(
+            loginResult.token ?? null,
+          );
           if (loginResult.token && isClient) {
-            window.localStorage.setItem('auth_token', loginResult.token);
+            window.localStorage.setItem("auth_token", loginResult.token);
           }
 
           // Récupérer le profil utilisateur
           await fetchUserProfile();
           return true;
         } else {
-          authError.value = loginResult.error ?? 'Connexion automatique échouée après inscription';
+          authError.value =
+            loginResult.error ??
+            "Connexion automatique échouée après inscription";
           return false;
         }
       } else {
-        authError.value = result.error ?? 'Échec de l\'inscription';
+        authError.value = result.error ?? "Échec de l'inscription";
         return false;
       }
     } catch (error: any) {
-      authError.value = error.message ?? 'Erreur inattendue lors de l\'inscription';
+      authError.value =
+        error.message ?? "Erreur inattendue lors de l'inscription";
       return false;
     } finally {
       isAuthenticating.value = false;
@@ -133,7 +150,7 @@ export const useAuthStore = defineStore('auth', () => {
       userProfile.value = profile;
       return profile !== null;
     } catch (error) {
-      console.error('Erreur lors de la récupération du profil:', error);
+      console.error("Erreur lors de la récupération du profil:", error);
       return false;
     }
   }
@@ -146,7 +163,7 @@ export const useAuthStore = defineStore('auth', () => {
     tokenExpiration.value = null;
     userProfile.value = null;
     if (isClient) {
-      window.localStorage.removeItem('auth_token');
+      window.localStorage.removeItem("auth_token");
     }
   }
 
@@ -154,7 +171,9 @@ export const useAuthStore = defineStore('auth', () => {
    * Rafraîchit le token s'il est sur le point d'expirer
    * @param minimumValidityMinutes Nombre de minutes minimum avant d'envisager le rafraîchissement
    */
-  async function refreshTokenIfNeeded(minimumValidityMinutes: number = 5): Promise<boolean> {
+  async function refreshTokenIfNeeded(
+    minimumValidityMinutes: number = 5,
+  ): Promise<boolean> {
     if (!token.value || !tokenExpiration.value) return false;
 
     // Calculer le temps restant en minutes
@@ -171,13 +190,13 @@ export const useAuthStore = defineStore('auth', () => {
           token.value = result.token;
           tokenExpiration.value = parseTokenExpiration(result.token);
           if (isClient) {
-            window.localStorage.setItem('auth_token', result.token);
+            window.localStorage.setItem("auth_token", result.token);
           }
           return true;
         }
         return false;
       } catch (error) {
-        console.error('Erreur lors du rafraîchissement du token:', error);
+        console.error("Erreur lors du rafraîchissement du token:", error);
         return false;
       }
     }
@@ -203,6 +222,6 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     refreshTokenIfNeeded,
     fetchUserProfile,
-    isTokenExpired
+    isTokenExpired,
   };
 });

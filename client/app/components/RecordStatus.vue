@@ -13,7 +13,7 @@
     </div>
     <UBadge
       v-if="showStatus"
-      :color="badgeColor" 
+      :color="badgeColor"
       :variant="badgeVariant"
       size="sm"
       class="record-status__badge ml-auto"
@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps({
   /**
@@ -32,38 +32,39 @@ const props = defineProps({
    */
   date: {
     type: String,
-    required: true
+    required: true,
   },
   /**
    * Statut du record (actif, battu, etc.)
    */
   status: {
     type: String,
-    default: 'active', // 'active', 'broken', 'pending'
-    validator: (value: string) => ['active', 'broken', 'pending', 'historical'].includes(value)
+    default: "active", // 'active', 'broken', 'pending'
+    validator: (value: string) =>
+      ["active", "broken", "pending", "historical"].includes(value),
   },
   /**
    * Libellé optionnel
    */
   label: {
     type: String,
-    default: ''
+    default: "",
   },
   /**
    * Format de date (long ou court)
    */
   dateFormat: {
     type: String,
-    default: 'long', // 'long', 'short'
-    validator: (value: string) => ['long', 'short'].includes(value)
+    default: "long", // 'long', 'short'
+    validator: (value: string) => ["long", "short"].includes(value),
   },
   /**
    * Afficher ou non le badge de statut
    */
   showStatus: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+  },
 });
 
 // Classe CSS globale pour le statut
@@ -74,72 +75,94 @@ const statusClass = computed(() => {
 // Couleur de l'icône selon le statut
 const iconColor = computed(() => {
   switch (props.status) {
-    case 'active': return 'text-success-500';
-    case 'broken': return 'text-gray-400';
-    case 'pending': return 'text-warning-500';
-    case 'historical': return 'text-blue-500';
-    default: return 'text-gray-500';
+    case "active":
+      return "text-success-500";
+    case "broken":
+      return "text-gray-400";
+    case "pending":
+      return "text-warning-500";
+    case "historical":
+      return "text-blue-500";
+    default:
+      return "text-gray-500";
   }
 });
 
 // Icône selon le statut
 const icon = computed(() => {
   switch (props.status) {
-    case 'active': return 'i-heroicons-trophy';
-    case 'broken': return 'i-heroicons-archive-box';
-    case 'pending': return 'i-heroicons-clock';
-    case 'historical': return 'i-heroicons-book-open';
-    default: return 'i-heroicons-document';
+    case "active":
+      return "i-heroicons-trophy";
+    case "broken":
+      return "i-heroicons-archive-box";
+    case "pending":
+      return "i-heroicons-clock";
+    case "historical":
+      return "i-heroicons-book-open";
+    default:
+      return "i-heroicons-document";
   }
 });
 
 // Couleur du badge selon le statut
 const badgeColor = computed(() => {
   switch (props.status) {
-    case 'active': return 'success';
-    case 'broken': return 'gray';
-    case 'pending': return 'warning';
-    case 'historical': return 'info';
-    default: return 'gray';
+    case "active":
+      return "success";
+    case "broken":
+      return "gray";
+    case "pending":
+      return "warning";
+    case "historical":
+      return "info";
+    default:
+      return "gray";
   }
 });
 
 // Variante du badge selon le statut
 const badgeVariant = computed(() => {
   switch (props.status) {
-    case 'active': return 'solid';
-    default: return 'subtle';
+    case "active":
+      return "solid";
+    default:
+      return "subtle";
   }
 });
 
 // Texte du badge selon le statut
 const statusText = computed(() => {
   switch (props.status) {
-    case 'active': return 'Actuel';
-    case 'broken': return 'Dépassé';
-    case 'pending': return 'En validation';
-    case 'historical': return 'Historique';
-    default: return 'Inconnu';
+    case "active":
+      return "Actuel";
+    case "broken":
+      return "Dépassé";
+    case "pending":
+      return "En validation";
+    case "historical":
+      return "Historique";
+    default:
+      return "Inconnu";
   }
 });
 
 // Formater la date selon le format demandé
 const formattedDate = computed(() => {
   const date = new Date(props.date);
-  
-  if (props.dateFormat === 'short') {
+
+  if (props.dateFormat === "short") {
     // Format court (JJ/MM/YY)
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit'
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
     }).format(date);
   } else {
     // Format long (JJ mois AAAA)
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     }).format(date);
   }
 });
