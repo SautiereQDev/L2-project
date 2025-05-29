@@ -31,8 +31,6 @@ export interface ApiResponse<T> {
 export interface ApiError {
   code: number;
   message: string;
-  detail?: string;
-  violations?: Array<{ property?: string; message: string }>;
 }
 
 /**

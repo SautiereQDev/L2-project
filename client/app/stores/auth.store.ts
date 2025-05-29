@@ -5,7 +5,7 @@
 import {defineStore} from 'pinia';
 import {ref, computed} from 'vue';
 import {authService} from '../services/auth.service';
-import type {AuthCredentials, UserProfile, UserRegistrationData} from '@/types'
+import type {AuthCredentials, UserProfile, UserRegistrationCredentials} from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
   // Vérifier l'environnement client pour localStorage
@@ -82,7 +82,7 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Inscrit un nouvel utilisateur
    */
-  async function register(userData: UserRegistrationData): Promise<boolean> {
+  async function register(userData: UserRegistrationCredentials): Promise<boolean> {
     try {
       isAuthenticating.value = true;
       authError.value = null;

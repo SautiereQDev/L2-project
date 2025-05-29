@@ -26,35 +26,35 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use App\State\RecordOutputProvider;
 
 #[ApiResource(
-    operations: [
-        new GetCollection(),
-        new Get(),
-        new Post(),
-        new Put()
-    ],
-    normalizationContext: ['groups' => ['record:read'], 'enable_max_depth' => true],
-    denormalizationContext: ['groups' => ['record:write']],
-    input: RecordInput::class,
-    output: RecordOutput::class,
-    provider: RecordOutputProvider::class
+	operations: [
+		new GetCollection(),
+		new Get(),
+		new Post(),
+		new Put()
+	],
+	normalizationContext: ['groups' => ['record:read'], 'enable_max_depth' => true],
+	denormalizationContext: ['groups' => ['record:write']],
+	input: RecordInput::class,
+	output: RecordOutput::class,
+	provider: RecordOutputProvider::class
 )]
 #[ApiFilter(OrderFilter::class, properties: [
-    'id',
-    'discipline.name',
-    'athlete.lastname',
-    'athlete.firstname',
-    'performance',
-    'lastRecord',
-    'genre',
-    'categorie',
-    'location.name',
-    'isCurrentRecord'
+	'id',
+	'discipline.name',
+	'athlete.lastname',
+	'athlete.firstname',
+	'performance',
+	'lastRecord',
+	'genre',
+	'categorie',
+	'location.name',
+	'isCurrentRecord'
 ], arguments: ['orderParameterName' => 'order'])]
 #[ORM\Entity(repositoryClass: RecordRepository::class)]
 #[UniqueEntity(
-    fields: ['discipline', 'genre', 'categorie'],
-    message: 'Ce record existe déjà pour cette discipline, ce genre et cette catégorie d\'âge.',
-    errorPath: 'categorie'
+	fields: ['discipline', 'genre', 'categorie'],
+	message: 'Ce record existe déjà pour cette discipline, ce genre et cette catégorie d\'âge.',
+	errorPath: 'categorie'
 )]
 class Record
 {
@@ -276,7 +276,7 @@ class Record
 
 		return $this;
 	}
-	
+
 	public function getCategorie(): ?CategorieType
 	{
 		return $this->categorie;
