@@ -147,7 +147,7 @@ interface HealthResponse {
 const apiService = {
   // Health check endpoint
   checkHealth(): Promise<AxiosResponse<HealthResponse>> {
-    return apiClient.get('/v1/health')
+    return apiClient.get('/health')
   },
 
   // Récupérer un client API configuré pour être utilisé dans d'autres services

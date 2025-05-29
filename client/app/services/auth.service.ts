@@ -278,7 +278,7 @@ export const authService = {
 
     try {
       console.log('Récupération du profil utilisateur...');
-      const response = await fetch(`${API_URL}/v1/me`, {
+      const response = await fetch(`/api/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken.value}`,
