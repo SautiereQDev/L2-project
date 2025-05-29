@@ -61,9 +61,7 @@
             clearable
             aria-label="Catégorie"
           >
-            <template #leading>
-              <UIcon name="heroicons:tag" />
-            </template>
+            <template #leading> <i class="pi pi-tag" /> </template>
           </MySelect>
         </MyFormGroup>
 

@@ -6,9 +6,7 @@
         Consultez les records d'athlétisme classés par discipline, genre et
         catégorie
       </p>
-      <Icon
-        name="heroicons-outline:trophy"
-        class="w-6 h-6 text-primary-500 dark:text-primary-400"
+      <i class="pi pi-trophy" />
       />
     </div>
 

@@ -89,6 +89,33 @@ export class RecordsService {
       throw error;
     }
   }
+
+  /**
+   * Récupère un record spécifique par son ID
+   * @param id - Identifiant unique du record à récupérer
+   * @returns Promise<RecordEntity> - Le record correspondant à l'ID
+   * @throws Error - Si le record n'est pas trouvé ou en cas d'erreur de requête
+   */
+  async getRecord(id: number): Promise<RecordEntity> {
+    try {
+      if (!id || id <= 0) {
+        throw new Error("ID de record invalide");
+      }
+
+      console.log(`RecordsService - Récupération du record avec ID: ${id}`);
+
+      const { data } = await apiClient.get<RecordEntity>(`records/${id}`);
+
+      if (!data) {
+        throw new Error(`Record avec ID ${id} non trouvé`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`Erreur lors de la récupération du record ${id}:`, error);
+      throw error;
+    }
+  }
 }
 
 export default new RecordsService();

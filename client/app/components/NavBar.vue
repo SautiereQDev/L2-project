@@ -53,17 +53,6 @@ const toggleMenu = () => {
               Records
             </NuxtLink>
             <NuxtLink
-              to="/athletes"
-              class="border-transparent text-gray-600 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all"
-              :class="{
-                'border-primary-600 text-primary-700 dark:border-primary-400 dark:text-primary-300':
-                  $route.path === '/athletes',
-              }"
-            >
-              <Icon name="heroicons:user-group" class="h-5 w-5 mr-1" />
-              Athlètes
-            </NuxtLink>
-            <NuxtLink
               to="/about"
               class="border-transparent text-gray-600 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all"
               :class="{
@@ -139,19 +128,6 @@ const toggleMenu = () => {
             <Icon name="heroicons:chart-bar" class="h-5 w-5 mr-3" />
             Records
           </NuxtLink>
-
-          <NuxtLink
-            to="/athletes"
-            class="flex items-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary-600 dark:hover:text-primary-400 px-4 py-3 border-l-4 border-transparent text-base font-medium transition-colors"
-            :class="{
-              'bg-primary-50 dark:bg-primary-900/20 border-primary-600 dark:border-primary-400 text-primary-700 dark:text-primary-300':
-                $route.path === '/athletes',
-            }"
-          >
-            <Icon name="heroicons:user-group" class="h-5 w-5 mr-3" />
-            Athlètes
-          </NuxtLink>
-
           <NuxtLink
             to="/about"
             class="flex items-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary-600 dark:hover:text-primary-400 px-4 py-3 border-l-4 border-transparent text-base font-medium transition-colors"

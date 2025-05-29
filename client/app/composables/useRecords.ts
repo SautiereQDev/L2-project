@@ -119,8 +119,6 @@ export function useRecords(options: UseRecordsOptions = {}) {
   };
 }
 
-// useRecordDetail moved to app/composables/useRecordDetail.ts
-
 /**
  * Hook pour récupérer un record par ID
  * @param id - ID du record à récupérer
