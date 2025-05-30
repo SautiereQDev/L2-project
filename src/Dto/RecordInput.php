@@ -45,6 +45,9 @@ final readonly class RecordInput
 
 		#[Groups(['record:write'])]
 		public ?int               $previousRecordId = null,
+
+		#[Groups(['record:write'])]
+		public ?string            $formattedRecordDate = null,
 	)
 	{
 	}

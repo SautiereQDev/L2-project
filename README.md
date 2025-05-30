@@ -13,9 +13,10 @@
 This is an Symfony + Vue website that display the athletisme records and give you the possibility to modify, delete or
 add a record. The backend api is made with API Platform.
 
+## API Endpoints
 
-
------ 
+- **POST /api/v1/auth** - Authentification avec email/mot de passe
+- **GET /api/v1/me** - Récupération des informations de l'utilisateur connecté
 
 ## Dev instructions
 
@@ -93,4 +94,4 @@ GET /api/v1/locations/{id} # Détails d'un lieu
 PUT /api/v1/locations/{id} # Modifier un lieu   
 DELETE /api/v1/locations/{id} # Supprimer un lieu   
 GET /api/v1/locations/{id}/records # Records établis à un lieu   
-GET /api/v1/locations/country/{pays}# Lieux par pays   
+GET /api/v1/locations/country/{pays}# Lieux par pays

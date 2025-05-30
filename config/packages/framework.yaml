@@ -4,6 +4,15 @@ framework:
 
     # Note that the session will be started ONLY if you read or write from it.
     session: true
+    
+    # Trusted hosts configuration
+    trusted_hosts: '%env(TRUSTED_HOSTS)%'
+    
+    # Serializer configuration to prevent automatic datetime conversion
+    serializer:
+        default_context:
+            datetime_format: false
+            enable_max_depth: true
 
     #esi: true
     #fragments: true

@@ -4,27 +4,49 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
 use App\Enums\GenderType;
 use App\Repository\AthleteRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Validator\Constraints as Assert;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use App\Dto\AthleteInput;
+use App\Dto\AthleteMultipartInput;
 use App\Dto\AthleteOutput;
 use App\State\AthleteOutputProvider;
+use App\State\AthleteProcessor;
 
 #[
 	ApiResource(
-		normalizationContext: ['groups' => ['athlete:read']],
-		denormalizationContext: ['groups' => ['athlete:write']],
-		input: AthleteInput::class,
-		output: AthleteOutput::class,
-        // Use the custom provider for GET operations
-        provider: AthleteOutputProvider::class
+        operations: [
+            new GetCollection(
+                normalizationContext: ['groups' => ['athlete:read']],
+                provider: AthleteOutputProvider::class
+            ),
+            new Get(
+                normalizationContext: ['groups' => ['athlete:read']],
+                provider: AthleteOutputProvider::class
+            ),
+            // JSON POST
+            new Post(
+                '/athletes',
+                denormalizationContext: ['groups' => ['athlete:write']],
+                normalizationContext: ['groups' => ['athlete:read']],
+                input: AthleteInput::class,
+                output: AthleteOutput::class,
+                processor: AthleteProcessor::class
+            ),
+        ]
 	),
-	ORM\Entity(repositoryClass: AthleteRepository::class)
+	ORM\Entity(repositoryClass: AthleteRepository::class),
+    ORM\HasLifecycleCallbacks,
+    Vich\Uploadable
 ]
 class Athlete
 {
@@ -55,10 +77,10 @@ class Athlete
 	private ?string $country = null;
 
 	#[ORM\Column(type: Types::DATE_MUTABLE)]
-	#[Assert\NotBlank(message: "La date de naissance de l'athlète est requise.")]
-	#[Assert\Date(message: "La date de naissance de l'athlète doit être au format valide.")]
-	#[Assert\LessThan('today', message: "La date de naissance de l'athlète doit être dans le passé.")]
-	#[Assert\GreaterThan('1900-01-01', message: "La date de naissance de l'athlète doit être après le 1er janvier 1900.")]
+	#[Assert\NotNull(message: "La date de naissance de l'athlète est requise.")]
+	#[Assert\Type(type: \DateTimeInterface::class, message: "La date de naissance doit être une date valide.")]
+	#[Assert\LessThan('today', message: "La date de naissance doit être dans le passé.")]
+	#[Assert\GreaterThan('1900-01-01', message: "La date de naissance doit être après le 1er janvier 1900.")]
 	private ?\DateTimeInterface $birthdate = null;
 
 	#[ORM\Column(type: 'integer', nullable: true)]
@@ -80,22 +102,48 @@ class Athlete
 	private Collection $records;
 
 	#[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])]
-	#[Assert\NotBlank(message: "La date de création est requise.")]
-	#[Assert\DateTime(message: "La date de création doit être au format valide.")]
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])]
-	#[Assert\NotBlank(message: "La date de mise à jour est requise.")]
-	#[Assert\DateTime(message: "La date de mise à jour doit être au format valide.")]
 	private ?\DateTimeImmutable $updatedAt = null;
 
 	#[ORM\Column(length: 255)]
-	#[Assert\Choice(choices: GenderType::CHOICES, message: "Vous devez choisir parmis les options de GenderType")] #[Assert\NotBlank(message: "Le genre de l'athlète est requis.")]
+	#[Assert\NotBlank(message: "Le genre de l'athlète est requis.")]
 	private GenderType $gender = GenderType::MEN;
+
+	// VichUploader fields for profile image
+	#[Vich\UploadableField(mapping: 'athlete_profile_image', fileNameProperty: 'profileImageName', size: 'profileImageSize')]
+	private ?File $profileImageFile = null;
+
+	#[ORM\Column(nullable: true)]
+	private ?string $profileImageName = null;
+
+	#[ORM\Column(nullable: true)]
+	private ?int $profileImageSize = null;
+
+	#[ORM\Column(nullable: true)]
+	private ?\DateTimeImmutable $profileImageUpdatedAt = null;
 
 	public function __construct()
 	{
 		$this->records = new ArrayCollection();
+		$this->createdAt = new \DateTimeImmutable();
+		$this->updatedAt = new \DateTimeImmutable();
+	}
+
+	#[ORM\PrePersist]
+	public function setCreatedAtValue(): void
+	{
+		if ($this->createdAt === null) {
+			$this->createdAt = new \DateTimeImmutable();
+		}
+		$this->updatedAt = new \DateTimeImmutable();
+	}
+
+	#[ORM\PreUpdate]
+	public function setUpdatedAtValue(): void
+	{
+		$this->updatedAt = new \DateTimeImmutable();
 	}
 
 	public function getId(): ?int
@@ -248,6 +296,53 @@ class Athlete
 	{
 		$this->gender = $type;
 		return $this;
+	}
+
+	// VichUploader methods
+	public function setProfileImageFile(?File $profileImageFile = null): void
+	{
+		$this->profileImageFile = $profileImageFile;
+
+		if (null !== $profileImageFile) {
+			// It is required that at least one field changes if you are using doctrine
+			// otherwise the event listeners won't be called and the file is lost
+			$this->profileImageUpdatedAt = new \DateTimeImmutable();
+		}
+	}
+
+	public function getProfileImageFile(): ?File
+	{
+		return $this->profileImageFile;
+	}
+
+	public function setProfileImageName(?string $profileImageName): void
+	{
+		$this->profileImageName = $profileImageName;
+	}
+
+	public function getProfileImageName(): ?string
+	{
+		return $this->profileImageName;
+	}
+
+	public function setProfileImageSize(?int $profileImageSize): void
+	{
+		$this->profileImageSize = $profileImageSize;
+	}
+
+	public function getProfileImageSize(): ?int
+	{
+		return $this->profileImageSize;
+	}
+
+	public function getProfileImageUpdatedAt(): ?\DateTimeImmutable
+	{
+		return $this->profileImageUpdatedAt;
+	}
+
+	public function setProfileImageUpdatedAt(?\DateTimeImmutable $profileImageUpdatedAt): void
+	{
+		$this->profileImageUpdatedAt = $profileImageUpdatedAt;
 	}
 }
 
