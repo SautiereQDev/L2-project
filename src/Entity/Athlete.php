@@ -33,14 +33,15 @@ use App\State\AthleteProcessor;
                 normalizationContext: ['groups' => ['athlete:read']],
                 provider: AthleteOutputProvider::class
             ),
+            // JSON POST
             new Post(
                 '/athletes',
-                normalizationContext: ['groups' => ['athlete:read']],
                 denormalizationContext: ['groups' => ['athlete:write']],
+                normalizationContext: ['groups' => ['athlete:read']],
                 input: AthleteInput::class,
                 output: AthleteOutput::class,
                 processor: AthleteProcessor::class
-            )
+            ),
         ]
 	),
 	ORM\Entity(repositoryClass: AthleteRepository::class),

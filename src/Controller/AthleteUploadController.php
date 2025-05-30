@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 
 class AthleteUploadController extends AbstractController
 {
@@ -21,6 +22,7 @@ class AthleteUploadController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
         private readonly AthleteOutputProvider $outputProvider,
+        private readonly UploaderHelper $uploaderHelper,
     ) {}
 
     public function testRoute(): JsonResponse
@@ -168,53 +170,54 @@ class AthleteUploadController extends AbstractController
                 ], Response::HTTP_BAD_REQUEST);
             }
             
-            // Handle file upload (only for multipart requests)
-            if ($uploadedFile instanceof UploadedFile) {
-                // Validate file
-                if (!$uploadedFile->isValid()) {
-                    return new JsonResponse([
-                        'success' => false,
-                        'code' => 400,
-                        'message' => 'Invalid file upload',
-                        'data' => null,
-                        'errors' => [
+                // Handle file upload using VichUploader
+                if ($uploadedFile instanceof UploadedFile) {
+                    // Validate file
+                    if (!$uploadedFile->isValid()) {
+                        return new JsonResponse([
+                            'success' => false,
                             'code' => 400,
-                            'message' => 'Invalid file upload'
-                        ]
-                    ], Response::HTTP_BAD_REQUEST);
-                }
-                
-                // Check file size (5MB max)
-                if ($uploadedFile->getSize() > 5 * 1024 * 1024) {
-                    return new JsonResponse([
-                        'success' => false,
-                        'code' => 400,
-                        'message' => 'File size exceeds 5MB limit',
-                        'data' => null,
-                        'errors' => [
+                            'message' => 'Invalid file upload',
+                            'data' => null,
+                            'errors' => [
+                                'code' => 400,
+                                'message' => 'Invalid file upload'
+                            ]
+                        ], Response::HTTP_BAD_REQUEST);
+                    }
+                    
+                    // Check file size (5MB max)
+                    if ($uploadedFile->getSize() > 5 * 1024 * 1024) {
+                        return new JsonResponse([
+                            'success' => false,
                             'code' => 400,
-                            'message' => 'File size exceeds 5MB limit'
-                        ]
-                    ], Response::HTTP_BAD_REQUEST);
-                }
-                
-                // Check MIME type
-                $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                if (!in_array($uploadedFile->getMimeType(), $allowedMimeTypes)) {
-                    return new JsonResponse([
-                        'success' => false,
-                        'code' => 400,
-                        'message' => 'Invalid file type. Allowed: JPEG, PNG, GIF, WebP',
-                        'data' => null,
-                        'errors' => [
+                            'message' => 'File size exceeds 5MB limit',
+                            'data' => null,
+                            'errors' => [
+                                'code' => 400,
+                                'message' => 'File size exceeds 5MB limit'
+                            ]
+                        ], Response::HTTP_BAD_REQUEST);
+                    }
+                    
+                    // Check MIME type
+                    $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!in_array($uploadedFile->getMimeType(), $allowedMimeTypes)) {
+                        return new JsonResponse([
+                            'success' => false,
                             'code' => 400,
-                            'message' => 'Invalid file type. Allowed: JPEG, PNG, GIF, WebP'
-                        ]
-                    ], Response::HTTP_BAD_REQUEST);
+                            'message' => 'Invalid file type. Allowed: JPEG, PNG, GIF, WebP',
+                            'data' => null,
+                            'errors' => [
+                                'code' => 400,
+                                'message' => 'Invalid file type. Allowed: JPEG, PNG, GIF, WebP'
+                            ]
+                        ], Response::HTTP_BAD_REQUEST);
+                    }
+                    
+                    // Use VichUploader to handle the file
+                    $athlete->setProfileImageFile($uploadedFile);
                 }
-                
-                $athlete->setProfileImageFile($uploadedFile);
-            }
             
             // Set timestamps
             $now = new \DateTimeImmutable();
@@ -260,11 +263,17 @@ class AthleteUploadController extends AbstractController
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
             
-            // Persist the entity
+            // Persist the entity (VichUploader will handle file upload automatically)
             $this->entityManager->persist($athlete);
             $this->entityManager->flush();
             
-            // Temporary: return simple response instead of using output provider
+            // Get profile image URL if available
+            $profileImageUrl = null;
+            if ($athlete->getProfileImageName()) {
+                $profileImageUrl = $this->uploaderHelper->asset($athlete, 'profileImageFile');
+            }
+            
+            // Return response with image URL
             return new JsonResponse([
                 'success' => true,
                 'code' => 201,
@@ -279,6 +288,7 @@ class AthleteUploadController extends AbstractController
                     'heigth' => $athlete->getHeigth(),
                     'weigth' => $athlete->getWeigth(),
                     'coach' => $athlete->getCoach(),
+                    'profileImageUrl' => $profileImageUrl,
                 ],
                 'errors' => null
             ], Response::HTTP_CREATED);

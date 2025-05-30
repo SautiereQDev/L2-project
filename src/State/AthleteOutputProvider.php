@@ -187,7 +187,7 @@ final class AthleteOutputProvider implements ProviderInterface
             gender: $athlete->getGender(), // Assuming GenderType enum handles defaults or is non-null
             createdAt: $createdAt, // Handled null case with fallback
             updatedAt: $updatedAt, // Handled null case with fallback
-            profileImageUrl: $profileImageUrl // VichUploader generated URL
+            profileImageUrl: $profileImageUrl, // VichUploader generated URL
         );
     }
 }
