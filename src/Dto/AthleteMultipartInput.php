@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace App\Dto;
 
 use App\Enums\GenderType;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-final class AthleteInput
+final class AthleteMultipartInput
 {
     #[Assert\NotBlank]
     #[Groups(['athlete:write'])]
@@ -42,4 +43,12 @@ final class AthleteInput
     #[Assert\Choice(choices: GenderType::CHOICES)]
     #[Groups(['athlete:write'])]
     public GenderType $gender = GenderType::MEN;
+
+    #[Assert\File(
+        maxSize: '5M',
+        mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+        mimeTypesMessage: 'Please upload a valid image file (JPEG, PNG, GIF, or WebP)'
+    )]
+    #[Groups(['athlete:write'])]
+    public ?UploadedFile $profileImageFile = null;
 }

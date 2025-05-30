@@ -41,5 +41,8 @@ final readonly class AthleteOutput
 
         #[Groups(['athlete:read', 'record:read'])]
         public \DateTimeImmutable $updatedAt,
+
+        #[Groups(['athlete:read', 'record:read'])]
+        public ?string $profileImageUrl = null,
     ) {}
 }

@@ -10,10 +10,14 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Validator\Constraints as Assert;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use App\Dto\AthleteInput;
+use App\Dto\AthleteMultipartInput;
 use App\Dto\AthleteOutput;
 use App\State\AthleteOutputProvider;
+use App\State\AthleteProcessor;
 
 #[
 	ApiResource(
@@ -22,9 +26,12 @@ use App\State\AthleteOutputProvider;
 		input: AthleteInput::class,
 		output: AthleteOutput::class,
         // Use the custom provider for GET operations
-        provider: AthleteOutputProvider::class
+        provider: AthleteOutputProvider::class,
+        // Use the custom processor for POST operations
+        processor: AthleteProcessor::class
 	),
-	ORM\Entity(repositoryClass: AthleteRepository::class)
+	ORM\Entity(repositoryClass: AthleteRepository::class),
+    Vich\Uploadable
 ]
 class Athlete
 {
@@ -92,6 +99,19 @@ class Athlete
 	#[ORM\Column(length: 255)]
 	#[Assert\Choice(choices: GenderType::CHOICES, message: "Vous devez choisir parmis les options de GenderType")] #[Assert\NotBlank(message: "Le genre de l'athlète est requis.")]
 	private GenderType $gender = GenderType::MEN;
+
+	// VichUploader fields for profile image
+	#[Vich\UploadableField(mapping: 'athlete_profile_image', fileNameProperty: 'profileImageName', size: 'profileImageSize')]
+	private ?File $profileImageFile = null;
+
+	#[ORM\Column(nullable: true)]
+	private ?string $profileImageName = null;
+
+	#[ORM\Column(nullable: true)]
+	private ?int $profileImageSize = null;
+
+	#[ORM\Column(nullable: true)]
+	private ?\DateTimeImmutable $profileImageUpdatedAt = null;
 
 	public function __construct()
 	{
@@ -248,6 +268,53 @@ class Athlete
 	{
 		$this->gender = $type;
 		return $this;
+	}
+
+	// VichUploader methods
+	public function setProfileImageFile(?File $profileImageFile = null): void
+	{
+		$this->profileImageFile = $profileImageFile;
+
+		if (null !== $profileImageFile) {
+			// It is required that at least one field changes if you are using doctrine
+			// otherwise the event listeners won't be called and the file is lost
+			$this->profileImageUpdatedAt = new \DateTimeImmutable();
+		}
+	}
+
+	public function getProfileImageFile(): ?File
+	{
+		return $this->profileImageFile;
+	}
+
+	public function setProfileImageName(?string $profileImageName): void
+	{
+		$this->profileImageName = $profileImageName;
+	}
+
+	public function getProfileImageName(): ?string
+	{
+		return $this->profileImageName;
+	}
+
+	public function setProfileImageSize(?int $profileImageSize): void
+	{
+		$this->profileImageSize = $profileImageSize;
+	}
+
+	public function getProfileImageSize(): ?int
+	{
+		return $this->profileImageSize;
+	}
+
+	public function getProfileImageUpdatedAt(): ?\DateTimeImmutable
+	{
+		return $this->profileImageUpdatedAt;
+	}
+
+	public function setProfileImageUpdatedAt(?\DateTimeImmutable $profileImageUpdatedAt): void
+	{
+		$this->profileImageUpdatedAt = $profileImageUpdatedAt;
 	}
 }
 

@@ -12,6 +12,7 @@ use ApiPlatform\State\ProviderInterface;
 use App\Dto\AthleteOutput;
 use App\Entity\Athlete;
 use Psr\Log\LoggerInterface;
+use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 use ArrayIterator;
 
 /**
@@ -32,7 +33,8 @@ final class AthleteOutputProvider implements ProviderInterface
          */
         private readonly ProviderInterface $itemProvider,
         private readonly ProviderInterface $collectionProvider,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly UploaderHelper $uploaderHelper,
     ) {}
 
     /**
@@ -166,6 +168,13 @@ final class AthleteOutputProvider implements ProviderInterface
 
         // Use null coalescing for potentially null strings/ints from the entity if the DTO allows null
         // If DTO requires non-null, add checks similar to birthdate above or ensure entity guarantees non-null values.
+        
+        // Generate profile image URL using VichUploaderBundle
+        $profileImageUrl = null;
+        if ($athlete->getProfileImageName()) {
+            $profileImageUrl = $this->uploaderHelper->asset($athlete, 'profileImageFile');
+        }
+        
         return new AthleteOutput(
             id: $id,
             firstname: $athlete->getFirstname() ?? '', // Assuming DTO expects string, provide default if null
@@ -177,7 +186,8 @@ final class AthleteOutputProvider implements ProviderInterface
             coach: $athlete->getCoach(), // Nullable in DTO
             gender: $athlete->getGender(), // Assuming GenderType enum handles defaults or is non-null
             createdAt: $createdAt, // Handled null case with fallback
-            updatedAt: $updatedAt  // Handled null case with fallback
+            updatedAt: $updatedAt, // Handled null case with fallback
+            profileImageUrl: $profileImageUrl // VichUploader generated URL
         );
     }
 }
