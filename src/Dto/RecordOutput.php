@@ -48,5 +48,8 @@ final readonly class RecordOutput
 
         #[Groups(['record:read', 'athlete:read'])]
         public LocationOutput $location,
+
+        #[Groups(['record:read', 'athlete:read'])]
+        public ?string $formattedRecordDate,
     ) {}
 }

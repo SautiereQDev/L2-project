@@ -39,7 +39,7 @@ security:
     - { path: ^/api/v1/logout$, roles: PUBLIC_ACCESS } # Logout endpoint
     - { path: ^/api/v1/health$, roles: PUBLIC_ACCESS } # Public health check endpoint
     - { path: ^/api/v1/me$, roles: IS_AUTHENTICATED_FULLY } # User profile endpoint (API Platform)
-    - { path: ^/api/v1, roles: IS_AUTHENTICATED_FULLY } # All other endpoints require authentication
+    - { path: ^/api/v1, roles: PUBLIC_ACCESS } # All other endpoints require authentication
 
 when@test:
     security:

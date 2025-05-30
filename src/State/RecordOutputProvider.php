@@ -252,6 +252,17 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			$location->getUpdatedAt() ?? new \DateTimeImmutable()
 		);
 
+		// Calcul dynamique de la date formatée en français
+		$formatter = new \IntlDateFormatter(
+			'fr_FR',
+			\IntlDateFormatter::NONE,
+			\IntlDateFormatter::NONE,
+			'UTC',
+			\IntlDateFormatter::GREGORIAN,
+			'd MMMM yyyy'
+		);
+		$formattedRecordDate = ucfirst($formatter->format($lastRecord));
+
 		return new RecordOutput(
 			id: $id,
 			discipline: $disciplineDto,
@@ -265,7 +276,8 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			nextRecords: $nextRecordsDto,
 			createdAt: $createdAt,
 			updatedAt: $updatedAt,
-			location: $locationDto
+			location: $locationDto,
+			formattedRecordDate: $formattedRecordDate
 		);
 	}
 
@@ -334,6 +346,21 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			$location->getUpdatedAt() ?? new \DateTimeImmutable()
 		);
 
+		// Calcul dynamique de la date formatée en français pour le DTO minimal
+		$minLastRecord = $record->getLastRecord();
+		$minFormattedRecordDate = null;
+		if (null !== $minLastRecord) {
+			$minFormatter = new \IntlDateFormatter(
+				'fr_FR',
+				\IntlDateFormatter::NONE,
+				\IntlDateFormatter::NONE,
+				'UTC',
+				\IntlDateFormatter::GREGORIAN,
+				'd MMMM yyyy'
+			);
+			$minFormattedRecordDate = ucfirst($minFormatter->format($minLastRecord));
+		}
+
 		return new RecordOutput(
 			id: $id,
 			discipline: $disciplineDto,
@@ -343,11 +370,12 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			genre: $record->getGenre(),
 			categorie: $record->getCategorie() ?? \App\Enums\CategorieType::SENIOR,
 			isCurrentRecord: $record->isCurrentRecord(),
-			previousRecord: null, // Avoid recursion
-			nextRecords: [], // Avoid recursion
+			previousRecord: null,
+			nextRecords: [],
 			createdAt: $record->getCreatedAt() ?? new \DateTimeImmutable(),
 			updatedAt: $record->getUpdatedAt() ?? new \DateTimeImmutable(),
-			location: $locationDto
+			location: $locationDto,
+			formattedRecordDate: $minFormattedRecordDate
 		);
 	}
 }

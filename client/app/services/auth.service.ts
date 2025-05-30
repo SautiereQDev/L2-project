@@ -408,6 +408,17 @@ export const authService = {
       return { success: false, error: error.message };
     }
   },
+
+  /**
+   * Efface un token expiré du stockage local et de la référence
+   */
+  clearExpiredToken(): void {
+    console.log("Suppression du token expiré");
+    authToken.value = null;
+    if (isClient) {
+      window.localStorage.removeItem(AUTH_TOKEN_KEY);
+    }
+  },
 };
 
 export default authService;

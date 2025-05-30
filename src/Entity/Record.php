@@ -61,6 +61,7 @@ use App\State\RecordOutputProvider;
 ])]
 #[ApiFilter(DateFilter::class, properties: ['lastRecord'])]
 #[ORM\Entity(repositoryClass: RecordRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(
 	fields: ['discipline', 'genre', 'categorie'],
 	message: 'Ce record existe déjà pour cette discipline, ce genre et cette catégorie d\'âge.',
@@ -134,6 +135,10 @@ class Record
 	#[MaxDepth(1)]
 	#[Groups(['record:read', 'record:write'])]
 	private ?Location $location = null;
+
+	#[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+	#[Groups(['record:read', 'record:write'])]
+	private ?string $formattedRecordDate = null;
 
 	public function __construct()
 	{
@@ -289,6 +294,40 @@ class Record
 	{
 		$this->location = $location;
 		return $this;
+	}
+
+	public function getFormattedRecordDate(): ?string
+	{
+		return $this->formattedRecordDate;
+	}
+
+	public function setFormattedRecordDate(?string $formattedRecordDate): self
+	{
+		$this->formattedRecordDate = $formattedRecordDate;
+		return $this;
+	}
+
+	/**
+	 * Met à jour le champ formattedRecordDate avant insertion et mise à jour
+	 */
+	#[ORM\PrePersist]
+	#[ORM\PreUpdate]
+	public function updateFormattedRecordDate(): void
+	{
+		if (null !== $this->lastRecord) {
+			// Formattage en français jour mois année
+			$formatter = new \IntlDateFormatter(
+				'fr_FR',
+				\IntlDateFormatter::NONE,
+				\IntlDateFormatter::NONE,
+				'UTC',
+				\IntlDateFormatter::GREGORIAN,
+				'd MMMM yyyy'
+			);
+			$formatted = $formatter->format($this->lastRecord);
+			// Première lettre en majuscule
+			$this->formattedRecordDate = ucfirst($formatted);
+		}
 	}
 
 }
