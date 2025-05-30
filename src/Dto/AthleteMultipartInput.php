@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace App\Dto;
 
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-final class AthleteInput
+final class AthleteMultipartInput
 {
     #[Assert\NotBlank]
     #[Groups(['athlete:write'])]
@@ -20,12 +21,10 @@ final class AthleteInput
     #[Groups(['athlete:write'])]
     public string $country = '';
 
-    #[Assert\NotNull(message: "La date de naissance de l'athlète est requise.")]
-    #[Assert\Type(type: \DateTimeInterface::class, message: "La date de naissance doit être une date valide au format YYYY-MM-DD.")]
-    #[Assert\LessThan('today', message: "La date de naissance doit être dans le passé.")]
-    #[Assert\GreaterThan('1900-01-01', message: "La date de naissance doit être après le 1er janvier 1900.")]
+    #[Assert\NotBlank]
+    #[Assert\Date]
     #[Groups(['athlete:write'])]
-    public ?\DateTimeInterface $birthdate = null;
+    public ?string $birthdate = null;
 
     #[Assert\Positive]
     #[Assert\LessThan(300)]
@@ -43,4 +42,12 @@ final class AthleteInput
     #[Assert\Choice(choices: ['M', 'W', 'MEN', 'WOMAN', 'MALE', 'FEMALE'])]
     #[Groups(['athlete:write'])]
     public string $gender = 'M';
+
+    #[Assert\File(
+        maxSize: '5M',
+        mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+        mimeTypesMessage: 'Please upload a valid image file (JPEG, PNG, GIF, or WebP)'
+    )]
+    #[Groups(['athlete:write'])]
+    public ?UploadedFile $profileImageFile = null;
 }
