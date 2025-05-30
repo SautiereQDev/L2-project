@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Dto;
 
-use App\Enums\GenderType;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -40,9 +39,9 @@ final class AthleteMultipartInput
     #[Groups(['athlete:write'])]
     public ?string $coach = null;
 
-    #[Assert\Choice(choices: GenderType::CHOICES)]
+    #[Assert\Choice(choices: ['M', 'W', 'MEN', 'WOMAN', 'MALE', 'FEMALE'])]
     #[Groups(['athlete:write'])]
-    public GenderType $gender = GenderType::MEN;
+    public string $gender = 'M';
 
     #[Assert\File(
         maxSize: '5M',

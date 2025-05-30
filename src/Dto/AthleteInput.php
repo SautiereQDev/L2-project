@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Dto;
 
-use App\Enums\GenderType;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -21,10 +20,12 @@ final class AthleteInput
     #[Groups(['athlete:write'])]
     public string $country = '';
 
-    #[Assert\NotBlank]
-    #[Assert\Date]
+    #[Assert\NotNull(message: "La date de naissance de l'athlète est requise.")]
+    #[Assert\Type(type: \DateTimeInterface::class, message: "La date de naissance doit être une date valide au format YYYY-MM-DD.")]
+    #[Assert\LessThan('today', message: "La date de naissance doit être dans le passé.")]
+    #[Assert\GreaterThan('1900-01-01', message: "La date de naissance doit être après le 1er janvier 1900.")]
     #[Groups(['athlete:write'])]
-    public ?string $birthdate = null;
+    public ?\DateTimeInterface $birthdate = null;
 
     #[Assert\Positive]
     #[Assert\LessThan(300)]
@@ -39,7 +40,7 @@ final class AthleteInput
     #[Groups(['athlete:write'])]
     public ?string $coach = null;
 
-    #[Assert\Choice(choices: GenderType::CHOICES)]
+    #[Assert\Choice(choices: ['M', 'W', 'MEN', 'WOMAN', 'MALE', 'FEMALE'])]
     #[Groups(['athlete:write'])]
-    public GenderType $gender = GenderType::MEN;
+    public string $gender = 'M';
 }

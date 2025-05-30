@@ -4,6 +4,9 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
 use App\Enums\GenderType;
 use App\Repository\AthleteRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -21,16 +24,27 @@ use App\State\AthleteProcessor;
 
 #[
 	ApiResource(
-		normalizationContext: ['groups' => ['athlete:read']],
-		denormalizationContext: ['groups' => ['athlete:write']],
-		input: AthleteInput::class,
-		output: AthleteOutput::class,
-        // Use the custom provider for GET operations
-        provider: AthleteOutputProvider::class,
-        // Use the custom processor for POST operations
-        processor: AthleteProcessor::class
+        operations: [
+            new GetCollection(
+                normalizationContext: ['groups' => ['athlete:read']],
+                provider: AthleteOutputProvider::class
+            ),
+            new Get(
+                normalizationContext: ['groups' => ['athlete:read']],
+                provider: AthleteOutputProvider::class
+            ),
+            new Post(
+                '/athletes',
+                normalizationContext: ['groups' => ['athlete:read']],
+                denormalizationContext: ['groups' => ['athlete:write']],
+                input: AthleteInput::class,
+                output: AthleteOutput::class,
+                processor: AthleteProcessor::class
+            )
+        ]
 	),
 	ORM\Entity(repositoryClass: AthleteRepository::class),
+    ORM\HasLifecycleCallbacks,
     Vich\Uploadable
 ]
 class Athlete
@@ -62,10 +76,10 @@ class Athlete
 	private ?string $country = null;
 
 	#[ORM\Column(type: Types::DATE_MUTABLE)]
-	#[Assert\NotBlank(message: "La date de naissance de l'athlète est requise.")]
-	#[Assert\Date(message: "La date de naissance de l'athlète doit être au format valide.")]
-	#[Assert\LessThan('today', message: "La date de naissance de l'athlète doit être dans le passé.")]
-	#[Assert\GreaterThan('1900-01-01', message: "La date de naissance de l'athlète doit être après le 1er janvier 1900.")]
+	#[Assert\NotNull(message: "La date de naissance de l'athlète est requise.")]
+	#[Assert\Type(type: \DateTimeInterface::class, message: "La date de naissance doit être une date valide.")]
+	#[Assert\LessThan('today', message: "La date de naissance doit être dans le passé.")]
+	#[Assert\GreaterThan('1900-01-01', message: "La date de naissance doit être après le 1er janvier 1900.")]
 	private ?\DateTimeInterface $birthdate = null;
 
 	#[ORM\Column(type: 'integer', nullable: true)]
@@ -87,17 +101,13 @@ class Athlete
 	private Collection $records;
 
 	#[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])]
-	#[Assert\NotBlank(message: "La date de création est requise.")]
-	#[Assert\DateTime(message: "La date de création doit être au format valide.")]
 	private ?\DateTimeImmutable $createdAt = null;
 
 	#[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])]
-	#[Assert\NotBlank(message: "La date de mise à jour est requise.")]
-	#[Assert\DateTime(message: "La date de mise à jour doit être au format valide.")]
 	private ?\DateTimeImmutable $updatedAt = null;
 
 	#[ORM\Column(length: 255)]
-	#[Assert\Choice(choices: GenderType::CHOICES, message: "Vous devez choisir parmis les options de GenderType")] #[Assert\NotBlank(message: "Le genre de l'athlète est requis.")]
+	#[Assert\NotBlank(message: "Le genre de l'athlète est requis.")]
 	private GenderType $gender = GenderType::MEN;
 
 	// VichUploader fields for profile image
@@ -116,6 +126,23 @@ class Athlete
 	public function __construct()
 	{
 		$this->records = new ArrayCollection();
+		$this->createdAt = new \DateTimeImmutable();
+		$this->updatedAt = new \DateTimeImmutable();
+	}
+
+	#[ORM\PrePersist]
+	public function setCreatedAtValue(): void
+	{
+		if ($this->createdAt === null) {
+			$this->createdAt = new \DateTimeImmutable();
+		}
+		$this->updatedAt = new \DateTimeImmutable();
+	}
+
+	#[ORM\PreUpdate]
+	public function setUpdatedAtValue(): void
+	{
+		$this->updatedAt = new \DateTimeImmutable();
 	}
 
 	public function getId(): ?int

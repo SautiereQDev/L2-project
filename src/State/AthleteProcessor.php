@@ -8,6 +8,7 @@ use ApiPlatform\State\ProcessorInterface;
 use App\Dto\AthleteInput;
 use App\Dto\AthleteMultipartInput;
 use App\Entity\Athlete;
+use App\Enums\GenderType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -24,45 +25,11 @@ final readonly class AthleteProcessor implements ProcessorInterface
         // Create new Athlete entity
         $athlete = new Athlete();
         
-        // Get current request to check content type
-        $request = $this->requestStack->getCurrentRequest();
-        $isMultipart = $request && str_contains($request->headers->get('content-type', ''), 'multipart/form-data');
-        
-        // Map common fields from both DTOs
+        // Handle JSON request with DTO
         if ($data instanceof AthleteInput || $data instanceof AthleteMultipartInput) {
-            $athlete->setFirstname($data->firstname);
-            $athlete->setLastname($data->lastname);
-            $athlete->setCountry($data->country);
-            
-            // Convert string date to DateTime object
-            if ($data->birthdate) {
-                $birthdate = new \DateTime($data->birthdate);
-                $athlete->setBirthdate($birthdate);
-            }
-            
-            $athlete->setHeigth($data->heigth);
-            $athlete->setWeigth($data->weigth);
-            $athlete->setCoach($data->coach);
-            $athlete->setGender($data->gender);
-            
-            // Set timestamps
-            $now = new \DateTimeImmutable();
-            $athlete->setCreatedAt($now);
-            $athlete->setUpdatedAt($now);
-        }
-        
-        // Handle file upload for multipart requests
-        if ($isMultipart && $request) {
-            // Get the uploaded file from the request directly
-            $uploadedFile = $request->files->get('profileImageFile');
-            if ($uploadedFile instanceof UploadedFile) {
-                $athlete->setProfileImageFile($uploadedFile);
-            }
-        }
-        
-        // Also handle if data contains the file (for AthleteMultipartInput)
-        if ($data instanceof AthleteMultipartInput && $data->profileImageFile instanceof UploadedFile) {
-            $athlete->setProfileImageFile($data->profileImageFile);
+            $this->processJsonData($athlete, $data);
+        } else {
+            throw new \InvalidArgumentException('Invalid input data');
         }
         
         // Persist the entity
@@ -70,5 +37,34 @@ final readonly class AthleteProcessor implements ProcessorInterface
         $this->entityManager->flush();
         
         return $athlete;
+    }
+    
+    private function processJsonData(Athlete $athlete, AthleteInput|AthleteMultipartInput $data): void
+    {
+        $athlete->setFirstname($data->firstname);
+        $athlete->setLastname($data->lastname);
+        $athlete->setCountry($data->country);
+        
+        // Convert string date to DateTime object
+        if ($data->birthdate instanceof \DateTimeInterface) {
+            $athlete->setBirthdate($data->birthdate);
+        }
+        
+        $athlete->setHeigth($data->heigth);
+        $athlete->setWeigth($data->weigth);
+        $athlete->setCoach($data->coach);
+        
+        // Convert string gender to enum
+        $genderEnum = match(strtoupper($data->gender)) {
+            'M', 'MEN', 'MALE' => GenderType::MEN,
+            'W', 'WOMAN', 'FEMALE' => GenderType::WOMAN,
+            default => GenderType::MEN
+        };
+        $athlete->setGender($genderEnum);
+        
+        // Handle file upload for AthleteMultipartInput
+        if ($data instanceof AthleteMultipartInput && $data->profileImageFile instanceof UploadedFile) {
+            $athlete->setProfileImageFile($data->profileImageFile);
+        }
     }
 }

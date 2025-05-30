@@ -1,0 +1,9 @@
+api_athletes_upload:
+    path: /api/v1/athletes/upload
+    controller: App\Controller\AthleteUploadController::upload
+    methods: [POST]
+
+api_athletes_upload_test:
+    path: /api/v1/athletes/upload
+    controller: App\Controller\AthleteUploadController::testRoute
+    methods: [GET]

@@ -39,3 +39,8 @@ services:
         bind:
             $processor: '@api_platform.doctrine.orm.state.persist_processor'
 
+    # Custom denormalizer for Athlete DTOs
+    App\Serializer\AthleteDtoDenormalizer:
+        tags:
+            - { name: 'serializer.normalizer', priority: 1000 }
+
