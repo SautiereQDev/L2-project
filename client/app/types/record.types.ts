@@ -110,6 +110,7 @@ export interface RecordEntity extends Identifiable, TimestampedEntity {
   previousRecord?: RecordEntity | null;
   nextRecords?: RecordEntity[];
   location: Location;
+  formattedRecordDate: string;
 }
 
 /**

@@ -1,10 +1,9 @@
 // Composable unifié pour la gestion des records (liste, recherche, pagination) et détails
 import { ref, computed, watch } from "vue";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
-import type { RecordFilters, RecordEntity } from "@/types";
-import recordsService from "../services/records.service";
-import apiService from "@/services/api";
-import type { ApiCollection } from "~/types/api.types";
+import type { RecordFilters, RecordEntity, ApiCollection } from "~/types";
+import recordsService from "~/services/records.service";
+import apiService from "~/services/api";
 import queryKeys from "./queryKeys";
 
 export interface UseRecordsOptions {
@@ -286,6 +285,73 @@ export function useRecordsByGenre(gender: string) {
     ...query,
     records,
     pagination,
+  };
+}
+
+/**
+ * Hook pour récupérer les détails d'un record avec records similaires
+ * @param id - ID du record à récupérer
+ * @returns Object - Query et données du record avec records similaires
+ */
+export function useRecordDetail(id: number) {
+  // Requête pour récupérer les détails du record
+  const recordQuery = useQuery({
+    queryKey: queryKeys.records.detail(id),
+    queryFn: () => recordsService.getRecord(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes avant d'être considéré comme obsolète
+  });
+
+  // Requête dépendante pour récupérer les records similaires (même discipline et même genre)
+  const similarRecordsQuery = useQuery({
+    queryKey: [...queryKeys.records.detail(id), "similar"],
+    queryFn: async () => {
+      // Ne requêter que si on a les détails du record principal
+      if (!recordQuery.data.value) {
+        return [];
+      }
+
+      const record = recordQuery.data.value;
+
+      // Récupérer les records de la même discipline et du même genre
+      const filters = {
+        disciplineType: record.discipline.type,
+        gender: record.genre,
+      };
+
+      const recordsCollection = await recordsService.getRecords(filters);
+
+      // Exclure le record actuel des résultats
+      return (recordsCollection.items ?? []).filter((r) => r.id !== id);
+    },
+    enabled: computed(() => !!recordQuery.data.value), // Activer uniquement si on a les données du record
+  });
+
+  // Exposition des données et du statut
+  return {
+    // Données
+    record: recordQuery.data,
+    similarRecords: similarRecordsQuery.data,
+
+    // États de chargement
+    isLoading: computed(
+      () =>
+        recordQuery.isLoading.value ||
+        (!!recordQuery.data.value && similarRecordsQuery.isLoading.value),
+    ),
+    isError: computed(
+      () => recordQuery.isError.value ?? similarRecordsQuery.isError.value,
+    ),
+    error: computed(
+      () => recordQuery.error.value ?? similarRecordsQuery.error.value,
+    ),
+
+    // Fonctions
+    refetch: () => {
+      recordQuery.refetch();
+      if (recordQuery.data.value) {
+        similarRecordsQuery.refetch();
+      }
+    },
   };
 }
 

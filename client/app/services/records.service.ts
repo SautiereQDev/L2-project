@@ -2,9 +2,9 @@
  * Service pour gérer les requêtes de records
  */
 import { apiClient } from "./api";
-import type { RecordEntity, RecordFilters, ApiCollection } from "@/types";
-import type { JsonLdCollection, HydraCollection } from "~/types/api.types";
-import { normalizeHydraCollection } from "~/types/api.types";
+import type { RecordEntity, RecordFilters, ApiCollection } from "~/types";
+import type { JsonLdCollection, HydraCollection } from "~/types";
+import { normalizeHydraCollection } from "~/types";
 
 export class RecordsService {
   /**
@@ -78,12 +78,24 @@ export class RecordsService {
         Object.fromEntries(params.entries()),
       );
 
-      const { data } = await apiClient.get<
-        JsonLdCollection<RecordEntity> | HydraCollection<RecordEntity>
-      >("records", { params });
+      try {
+        const { data } = await apiClient.get<
+          JsonLdCollection<RecordEntity> | HydraCollection<RecordEntity>
+        >("records", { params });
 
-      // Normaliser format Hydra vers ApiCollection
-      return normalizeHydraCollection(data);
+        // Ajouter un log pour voir les données brutes reçues
+        console.log("RecordsService - Données brutes reçues:", data);
+
+        // Normaliser format Hydra vers ApiCollection
+        const normalizedCollection = normalizeHydraCollection(data);
+        console.log("RecordsService - Données normalisées:", normalizedCollection);
+        
+        return normalizedCollection;
+      } catch (apiError) {
+        console.error("Erreur API lors de la récupération des records:", apiError);
+        // Retourner une collection vide en cas d'erreur pour éviter de bloquer l'interface
+        return { items: [], totalItems: 0, currentPage: 1, totalPages: 1, pageSize: 10 };
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération des records:", error);
       throw error;

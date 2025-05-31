@@ -128,40 +128,48 @@
       <tbody
         class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700"
       >
+        <tr v-if="!props.records || props.records.length === 0">
+          <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+            Aucun record trouvé
+          </td>
+        </tr>
         <tr
           v-for="record in props.records"
           :key="record.id"
           class="hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           <td class="px-6 py-4 whitespace-nowrap">
-            {{ record.discipline.name }}
+            {{ record.discipline?.name || 'N/A' }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <span
               :class="{ 'text-primary-500': record.isCurrentRecord }"
               class="font-mono"
             >
-              {{
-                formatPerformance(record.performance, record.discipline.type)
-              }}
+              <template v-if="record.performance && record.discipline?.type">
+                {{ formatPerformance(record.performance, record.discipline.type) }}
+              </template>
+              <template v-else>
+                N/A
+              </template>
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <div class="flex flex-col">
-              <span class="font-medium">{{ record.athlete.lastname }}</span>
+              <span class="font-medium">{{ record.athlete?.lastname || 'N/A' }}</span>
               <span class="text-gray-500 dark:text-gray-400 text-sm">{{
-                record.athlete.firstname
+                record.athlete?.firstname || 'N/A'
               }}</span>
             </div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            {{ formatDate(record.lastRecord) }}
+            {{ record.formattedRecordDate || 'N/A' }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <span
               class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200"
             >
-              {{ record.categorie }}
+              {{ record.categorie || 'N/A' }}
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
@@ -172,14 +180,15 @@
               Homme
             </span>
             <span
-              v-else
+              v-else-if="record.genre === 'W'"
               class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200"
             >
               Femme
             </span>
+            <span v-else>N/A</span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            {{ record.location.name }}, {{ record.location.city }}
+            {{ record.location?.name || 'N/A' }}, {{ record.location?.city || 'N/A' }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
             <NuxtLink
@@ -198,6 +207,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import type { RecordEntity } from "../types";
+import { formatCompactDate, formatPerformance } from "../utils/formaters";
 
 interface Props {
   records: RecordEntity[];
@@ -209,6 +219,13 @@ const props = withDefaults(defineProps<Props>(), {
   sortField: "discipline.name",
   sortOrder: "asc",
 });
+
+// Débogage des records reçus
+console.log("RecordsTable - Props records reçus:", props.records);
+if (props.records && props.records.length > 0) {
+  console.log("RecordsTable - Premier record:", props.records[0]);
+  console.log("RecordsTable - Type de discipline:", props.records[0]?.discipline?.type);
+}
 
 const emit = defineEmits(["show-details", "update:sort"]);
 
@@ -267,20 +284,5 @@ function sort(field: string) {
 
   // Émettre l'événement de tri
   emit("update:sort", currentSortField.value, currentSortOrder.value);
-}
-
-function formatPerformance(performance: number, type: string): string {
-  if (type === "run") {
-    const minutes = Math.floor(performance / 60);
-    const seconds = Math.floor(performance % 60);
-    const ms = Math.round((performance % 1) * 100);
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
-  }
-  return `${performance.toFixed(2)} m`;
-}
-
-function formatDate(dateString: string): string {
-  const d = new Date(dateString);
-  return d.toLocaleDateString("fr-FR");
 }
 </script>

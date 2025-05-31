@@ -528,16 +528,17 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useRecordDetail } from "@/composables/useRecordDetail";
+import { useRecordDetail } from "~/composables/useRecords";
 import { useCountries } from "~/composables/useCountries";
 import RecordsMap from "@/components/RecordsMap.vue";
 import { GenderType, type SimilarRecord } from "@/types/record.types";
-import { getAthletePlaceholderImage } from "@/utils/placeholders";
+import { getAthletePlaceholderImage } from "~/utils/helpers";
 import {
   formatDate,
   getCategoryLabel,
   getDisciplineGradient,
   getDisciplineIcon,
+  calculateAge,
 } from "~/utils/formaters";
 
 // Configuration de la page et validation
@@ -563,6 +564,7 @@ const recordId = Number(route.params.id);
 // État local
 const showMap = ref(false);
 const isRefetching = ref(false);
+const isAdminMenuOpen = ref(false);
 const similarRecordsTab = ref<"all" | "same-discipline" | "same-athlete">(
   "all",
 );
@@ -677,19 +679,5 @@ async function viewRecordDetails(id: number) {
   isRefetching.value = false;
   // Scroll en haut de la page
   window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-// Calculer l'âge à partir d'une date de naissance
-function calculateAge(birthdate: string): number {
-  const birth = new Date(birthdate);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
-
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-
-  return age;
 }
 </script>

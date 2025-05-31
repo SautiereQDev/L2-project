@@ -125,6 +125,9 @@ const {
   initialPageSize: props.initialPageSize,
 });
 
+// Déboguer les records reçus
+console.log("RecordsListCard - Records reçus:", records.value);
+
 // Wrapper pour refetch
 const onRefetch = () => {
   refetch();

@@ -82,6 +82,7 @@ import { computed } from "vue";
 import { GenderType } from "@/types/record.types";
 import type { Athlete } from "@/types/record.types";
 import { useCountries } from "@/composables/useCountries";
+import { calculateAge } from "../utils/formaters";
 
 const props = defineProps({
   /**
@@ -157,21 +158,4 @@ const avatarInitials = computed(() => {
 const countryFlag = computed(() => {
   return getCountryFlag(props.athlete.country);
 });
-
-/**
- * Calcule l'âge à partir de la date de naissance
- */
-function calculateAge(birthdate: string): number {
-  const birth = new Date(birthdate);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-
-  // Ajuster en fonction du mois et du jour
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-
-  return age;
-}
 </script>

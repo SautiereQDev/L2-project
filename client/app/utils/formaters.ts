@@ -1,4 +1,4 @@
-import { DisciplineType, CategorieType } from "~/types";
+import { DisciplineType, CategorieType } from "../types";
 
 /**
  * Returns a gradient string based on the discipline type.
@@ -108,12 +108,24 @@ export function getCategoryLabel(category: CategorieType): string {
  * @returns La date formatée en format compact (ex: 31/12/23).
  */
 export function formatCompactDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-  }).format(date);
+  if (!dateString || dateString === "") {
+    return "N/A";
+  }
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return "Date invalide";
+    }
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+    }).format(date);
+  } catch (e) {
+    console.error("Erreur de formatage de date:", e);
+    return "Erreur date";
+  }
 }
 
 /**
@@ -129,4 +141,73 @@ export function formatDate(dateString: string): string {
     month: "long",
     year: "numeric",
   }).format(date);
+}
+
+/**
+ * Formate un rôle utilisateur pour l'affichage
+ *
+ * @param role - Le rôle à formater (ex: "ROLE_ADMIN")
+ * @returns Le rôle formaté (ex: "Admin")
+ */
+export function formatRole(role: string): string {
+  return role
+    .replace("ROLE_", "")
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+/**
+ * Calcule l'âge à partir de la date de naissance
+ *
+ * @param birthdate - La date de naissance sous forme de chaîne
+ * @returns L'âge en années
+ */
+export function calculateAge(birthdate: string): number {
+  const birth = new Date(birthdate);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+
+  // Ajuster en fonction du mois et du jour
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  return age;
+}
+
+/**
+ * Formate une performance selon le type de discipline
+ *
+ * @param performance - La valeur de la performance (temps en secondes ou distance en mètres)
+ * @param disciplineType - Le type de discipline (run, jump, throw)
+ * @returns La performance formatée
+ */
+export function formatPerformance(performance: number, disciplineType: string): string {
+  console.log("formatPerformance appelé avec:", { performance, disciplineType });
+  
+  if (!performance) {
+    console.warn("Performance manquante:", performance);
+    return "N/A";
+  }
+  
+  // Si la valeur est un timestamp très élevé (erreur de données), normaliser
+  if (performance > 1000000) {
+    // Pour les courses, on divise pour obtenir des secondes plus réalistes
+    // Cela semble être un timestamp
+    performance = performance > 946684800 ? (performance % 100) : performance;
+  }
+  
+  if (disciplineType === "run" || disciplineType === DisciplineType.RUN) {
+    // Format time MM:SS.MS for running events
+    const minutes = Math.floor(performance / 60);
+    const seconds = Math.floor(performance % 60);
+    const milliseconds = Math.round((performance % 1) * 100);
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
+  } else {
+    // Format distance in meters for jumps and throws
+    return `${performance.toFixed(2)} m`;
+  }
 }

@@ -66,7 +66,7 @@ import { reactive, ref } from "#imports";
 import { useRouter } from "#app";
 import { z } from "zod";
 import { useAuthStore } from "~/stores/auth.store";
-import type { AuthCredentials } from "~/types/auth.types";
+import type { AuthCredentials } from "~/types";
 import MyFormGroup from "../ui/MyFormGroup.vue";
 
 const props = defineProps<{
