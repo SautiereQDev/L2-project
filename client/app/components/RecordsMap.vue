@@ -1,22 +1,21 @@
 <template>
   <div :style="{ height: props.height, width: '100%' }">
-    <LMap ref="map" :zoom="zoom" :center="validCoordinates">
+    <ClientOnly>
+    <LMap
+      ref="map"
+      :zoom="zoom"
+      :center="validCoordinates"
+      :use-global-leaflet="false"
+    >
       <LTileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&amp;copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-        layer-type=""
+        attribution="&amp;copy; <a href=&quot;https://www.openstreetmap.org/&quot;>OpenStreetMap</a> contributors"
+        layer-type="base"
         name="OpenStreetMap"
       />
-      <LMarker :lat-lng="validCoordinates">
-        <LPopup>
-          <div>
-            <strong>{{ props.locationName }}</strong
-            ><br />
-            {{ props.city }}, {{ props.country }}
-          </div>
-        </LPopup>
-      </LMarker>
+      <LMarker :lat-lng="validCoordinates"/>
     </LMap>
+    </ClientOnly>
   </div>
 </template>
 
@@ -38,11 +37,11 @@ const props = defineProps({
   },
   lat: {
     type: Number,
-    default: 48.8566, // Paris par défaut
+    required: true
   },
   lng: {
     type: Number,
-    default: 2.3522,  // Paris par défaut
+    required: true
   },
   height: {
     type: String,
