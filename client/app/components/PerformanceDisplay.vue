@@ -1,20 +1,31 @@
 <template>
   <div
-    class="performance-display inline-flex items-center text-white"
-    :class="[sizeClasses, colorClasses]"
+    class="inline-flex items-center text-white transition-all duration-200 ease-in-out group"
+    :class="sizeClasses"
   >
-    <UIcon
-      v-if="showIcon"
-      :name="icon"colorClasses
-      class="performance-icon mr-1.5"
-      :class="iconSizeClass"
-    />
+    <template v-if="showIcon">
+      <ClockIcon 
+        v-if="props.disciplineType === DisciplineType.RUN"
+        class="mr-1.5 transition-transform duration-200 ease-in-out group-hover:scale-110"
+        :class="iconSizeClass"
+      />
+      <ArrowTrendingUpIcon 
+        v-else-if="props.disciplineType === DisciplineType.JUMP || props.disciplineType === DisciplineType.THROW"
+        class="mr-1.5 transition-transform duration-200 ease-in-out group-hover:scale-110"
+        :class="iconSizeClass"
+      />
+      <TrophyIcon 
+        v-else
+        class="mr-1.5 transition-transform duration-200 ease-in-out group-hover:scale-110"
+        :class="iconSizeClass"
+      />
+    </template>
     <span class="font-mono font-medium">
       {{ formattedValue }}
     </span>
     <span
       v-if="showUnit"
-      class="performance-unit ml-1 opacity-80 font-normal"
+      class="ml-1 opacity-80 font-normal tabular-nums"
       :class="unitClass"
     >
       {{ unit }}
@@ -25,6 +36,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { DisciplineType } from "~/types/record.types";
+import { ClockIcon, ArrowTrendingUpIcon, TrophyIcon } from '@heroicons/vue/24/solid';
 
 const props = defineProps({
   /**
@@ -69,21 +81,6 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-});
-
-/**
- * Calcul de l'icône en fonction du type de discipline
- */
-const icon = computed(() => {
-  switch (props.disciplineType) {
-    case DisciplineType.RUN:
-      return "i-heroicons-clock";
-    case DisciplineType.JUMP:
-    case DisciplineType.THROW:
-      return "i-heroicons-ruler";
-    default:
-      return "i-heroicons-trophy";
-  }
 });
 
 /**
@@ -182,16 +179,6 @@ const iconSizeClass = computed(() => {
 });
 
 /**
- * Classes pour la valeur
- */
-const valueClass = computed(() => {
-  if (props.variant !== "normal") {
-    return "";
-  }
-
-  return "font-semibold";
-});
-
 /**
  * Classes pour l'unité
  */
@@ -199,35 +186,4 @@ const unitClass = computed(() => {
   return props.size === "xs" || props.size === "sm" ? "text-xs" : "";
 });
 
-/**
- * Classes de couleur en fonction de la variante
- */
-const colorClasses = computed(() => {
-  switch (props.variant) {
-    case "solid":
-      return "bg-primary-500 text-white px-2 py-1 rounded";
-    case "subtle":
-      return "bg-primary-100 text-primary-700 px-2 py-1 rounded";
-    default:
-      return "text-primary-700";
-  }
-});
 </script>
-
-<style scoped>
-.performance-display {
-  transition: all 0.2s ease;
-}
-
-.performance-display:hover .performance-icon {
-  transform: scale(1.1);
-}
-
-.performance-icon {
-  transition: transform 0.2s ease;
-}
-
-.performance-unit {
-  font-feature-settings: "tnum";
-}
-</style>

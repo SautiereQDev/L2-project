@@ -314,6 +314,7 @@
         </UCard>
       </div>
 
+
       <!-- Records similaires avec tabs pour filtrer -->
       <div v-if="groupedSimilarRecords.length" class="mb-8">
         <UCard class="overflow-visible">
