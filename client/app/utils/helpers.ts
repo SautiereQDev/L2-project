@@ -34,9 +34,19 @@ export function debounce<T extends (...args: any[]) => any>(
  * @returns URL de l'image placeholder
  */
 export function getAthletePlaceholderImage(athlete: Athlete): string {
-  // Dans une vraie application, utilisez une véritable URL d'image
-  const hash = athlete.lastname.charCodeAt(0) % 10;
-  return `https://i.pravatar.cc/150?img=${hash}`;
+  if (!athlete || !athlete.lastname) {
+    // Fallback si l'athlète ou son nom n'est pas disponible
+    return "https://i.pravatar.cc/150?img=0";
+  }
+  
+  try {
+    // Dans une vraie application, utilisez une véritable URL d'image
+    const hash = athlete.lastname.charCodeAt(0) % 10;
+    return `https://i.pravatar.cc/150?img=${hash}`;
+  } catch (e) {
+    console.error("Erreur lors de la génération de l'image placeholder:", e);
+    return "https://i.pravatar.cc/150?img=0";
+  }
 }
 
 /**

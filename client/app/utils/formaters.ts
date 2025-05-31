@@ -135,12 +135,24 @@ export function formatCompactDate(dateString: string): string {
  * @returns La date formatée en format long (ex: 31 décembre 2023).
  */
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(date);
+  if (!dateString || dateString === "") {
+    return "N/A";
+  }
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return "Date invalide";
+    }
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+  } catch (e) {
+    console.error("Erreur de formatage de date:", e);
+    return "Erreur date";
+  }
 }
 
 /**
@@ -162,20 +174,35 @@ export function formatRole(role: string): string {
  * Calcule l'âge à partir de la date de naissance
  *
  * @param birthdate - La date de naissance sous forme de chaîne
- * @returns L'âge en années
+ * @returns L'âge en années ou -1 si la date est invalide
  */
 export function calculateAge(birthdate: string): number {
-  const birth = new Date(birthdate);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-
-  // Ajuster en fonction du mois et du jour
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
+  if (!birthdate || birthdate === "") {
+    return -1;
   }
+  
+  try {
+    const birth = new Date(birthdate);
+    
+    // Vérifier si la date est valide
+    if (isNaN(birth.getTime())) {
+      return -1;
+    }
+    
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
 
-  return age;
+    // Ajuster en fonction du mois et du jour
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+
+    return age;
+  } catch (e) {
+    console.error("Erreur de calcul d'âge:", e);
+    return -1;
+  }
 }
 
 /**

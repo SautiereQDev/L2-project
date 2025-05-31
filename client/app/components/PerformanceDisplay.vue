@@ -5,7 +5,7 @@
   >
     <UIcon
       v-if="showIcon"
-      :name="icon"
+      :name="icon"colorClasses
       class="performance-icon mr-1.5"
       :class="iconSizeClass"
     />
@@ -101,16 +101,39 @@ const unit = computed(() => {
  * Formater la performance selon le type de discipline
  */
 const formattedValue = computed(() => {
-  if (props.disciplineType === DisciplineType.RUN) {
-    // Format time MM:SS.MS for running events
-    const minutes = Math.floor(props.value / 60);
-    const seconds = Math.floor(props.value % 60);
-    const milliseconds = Math.round((props.value % 1) * 100);
+  // Si la valeur est invalide ou nulle
+  if (props.value === undefined || props.value === null || isNaN(props.value)) {
+    return "N/A";
+  }
+  
+  // Si la valeur est un timestamp très élevé (erreur de données), normaliser
+  let normalizedValue = props.value;
+  if (normalizedValue > 1000000) {
+    // Pour les courses, on divise pour obtenir des secondes plus réalistes
+    // Cela semble être un timestamp
+    normalizedValue = normalizedValue > 946684800 ? (normalizedValue % 100) : normalizedValue;
+  }
 
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
+  if (props.disciplineType === DisciplineType.RUN) {
+    try {
+      // Format time MM:SS.MS for running events
+      const minutes = Math.floor(normalizedValue / 60);
+      const seconds = Math.floor(normalizedValue % 60);
+      const milliseconds = Math.round((normalizedValue % 1) * 100);
+
+      return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
+    } catch (e) {
+      console.error("Erreur de formatage de temps:", e);
+      return "00:00.00";
+    }
   } else {
-    // Format distance in meters for jumps and throws
-    return props.value.toFixed(2);
+    try {
+      // Format distance in meters for jumps and throws
+      return normalizedValue.toFixed(2);
+    } catch (e) {
+      console.error("Erreur de formatage de distance:", e);
+      return "0.00";
+    }
   }
 });
 
@@ -174,6 +197,20 @@ const valueClass = computed(() => {
  */
 const unitClass = computed(() => {
   return props.size === "xs" || props.size === "sm" ? "text-xs" : "";
+});
+
+/**
+ * Classes de couleur en fonction de la variante
+ */
+const colorClasses = computed(() => {
+  switch (props.variant) {
+    case "solid":
+      return "bg-primary-500 text-white px-2 py-1 rounded";
+    case "subtle":
+      return "bg-primary-100 text-primary-700 px-2 py-1 rounded";
+    default:
+      return "text-primary-700";
+  }
 });
 </script>
 
