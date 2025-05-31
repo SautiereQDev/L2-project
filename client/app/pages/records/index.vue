@@ -7,7 +7,6 @@
         catégorie
       </p>
       <i class="pi pi-trophy" />
-      />
     </div>
 
     <!-- Composant de filtres -->
