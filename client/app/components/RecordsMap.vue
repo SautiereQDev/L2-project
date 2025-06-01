@@ -47,13 +47,17 @@ const props = defineProps({
     type: String,
     default: "300px",
   },
+  fallbackCoordinates: {
+    type: Array,
+    default: () => [48.8566, 2.3522], // Default to Paris coordinates
+  },
 });
 
 // S'assurer que les coordonnées sont valides
 const validCoordinates = computed(() => {
   // Vérifier si lat et lng sont des nombres valides
-  const validLat = typeof props.lat === 'number' && !isNaN(props.lat) ? props.lat : 48.8566;
-  const validLng = typeof props.lng === 'number' && !isNaN(props.lng) ? props.lng : 2.3522;
+  const validLat = typeof props.lat === 'number' && !isNaN(props.lat) ? props.lat : props.fallbackCoordinates[0];
+  const validLng = typeof props.lng === 'number' && !isNaN(props.lng) ? props.lng : props.fallbackCoordinates[1];
   
   return [validLat, validLng];
 });
