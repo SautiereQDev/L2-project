@@ -24,9 +24,6 @@ class RecordFixtures extends Fixture implements DependentFixtureInterface
 		$faker = Factory::create('fr_FR');
 		$now = new DateTimeImmutable();
 
-		// Utiliser une référence de location existante
-		$location = $this->getReference(LocationFixtures::LOCATION_PREFIX . 0, Location::class);
-
 		// Créer des records pour chaque discipline
 		foreach ($this->getDisciplinesReferences() as $disciplineRef) {
 			try {
@@ -42,6 +39,10 @@ class RecordFixtures extends Fixture implements DependentFixtureInterface
 					$competitionDate = $faker->dateTimeBetween('-5 years', 'now');
 					$record->setCreatedAt(DateTimeImmutable::createFromMutable($competitionDate));
 					$record->setLastRecord($competitionDate);
+					
+					// Utiliser une location aléatoire pour avoir des coordonnées différentes
+					$randomLocationIndex = $faker->numberBetween(0, 8); // 9 locations disponibles (index 0-8)
+					$location = $this->getReference(LocationFixtures::LOCATION_PREFIX . $randomLocationIndex, Location::class);
 					$record->setLocation($location);
 
 					// Générer une performance adaptée au type de discipline
