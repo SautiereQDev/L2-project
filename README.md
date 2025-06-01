@@ -14,6 +14,7 @@ A comprehensive full-stack web application for managing athletics records, featu
 ### Athlete Management
 - ✅ Complete CRUD operations for athlete profiles
 - 📸 Profile image upload with VichUploaderBundle integration
+- 🌐 Dynamic profile image URL generation for multi-environment deployment
 - 🔍 Advanced filtering and search capabilities
 - 📊 Performance tracking and historical data
 - 🏆 Achievement and personal best tracking
@@ -125,12 +126,40 @@ cd project
 # Install PHP dependencies
 composer install
 
-# Copy environment configuration
-cp .env .env.local
+# Copy environment configuration template
+cp .env.local.example .env.local
 
-# Edit database credentials in .env.local
-DATABASE_URL="postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=16&charset=utf8"
+# Edit .env.local with your specific configuration
+nano .env.local  # or use your preferred editor
 ```
+
+**Important**: You must complete the `.env.local` file with the following configurations:
+
+```bash
+# Database Configuration
+DATABASE_URL="postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=16&charset=utf8"
+
+# JWT Configuration
+JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
+JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
+JWT_PASSPHRASE=your-secure-jwt-passphrase
+
+# Application Configuration
+APP_SECRET=your-32-char-secret-key-here
+APP_ENV=dev
+
+# API Base URL (for dynamic URL generation)
+APP_BASE_URL=https://project.localhost:8443
+
+# File Upload Configuration
+VICH_UPLOADER_ROOT_DIR=%kernel.project_dir%/public/uploads
+```
+
+**Security Note**: 
+- Change `!ChangeMe!` to a secure database password
+- Replace `your-secure-jwt-passphrase` with a strong passphrase
+- Generate a secure `APP_SECRET` (32 characters recommended)
+- Adjust `APP_BASE_URL` to match your local development URL
 
 #### 3. Database Setup
 ```bash
@@ -433,7 +462,7 @@ GET /api/v1/locations
 
 ## ⚙️ Configuration Examples
 
-### Symfony Configuration (.env)
+### Symfony Configuration (.env.local)
 ```bash
 # Environment
 APP_ENV=dev
@@ -447,9 +476,17 @@ JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
 JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
 JWT_PASSPHRASE=your-jwt-passphrase
 
+# API Base URL (for dynamic URL generation in profile images)
+APP_BASE_URL=https://project.localhost:8443
+
 # File uploads
 VICH_UPLOADER_ROOT_DIR=%kernel.project_dir%/public/uploads
 ```
+
+**New Feature**: Dynamic URL Generation
+- Profile image URLs are now generated dynamically using the `APP_BASE_URL` parameter
+- This allows easy deployment across different environments (dev, staging, production)
+- URLs follow the format: `{APP_BASE_URL}/api/v1/{image_name}`
 
 ### Nuxt.js Configuration (nuxt.config.ts)
 ```typescript
