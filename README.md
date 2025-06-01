@@ -149,8 +149,8 @@ cd client && npm run dev
 
 **Access Points:**
 - 🌐 **Frontend**: http://localhost:3000
-- 🔌 **API**: http://localhost:8000
-- 📚 **API Documentation**: http://localhost:8000/api/docs
+- 🔌 **API**: https://localhost:8443
+- 📚 **API Documentation**: https://localhost:8443/api/docs
 - 🗄️ **Database**: localhost:5432 (PostgreSQL)
 
 ### Alternative: Local Development (Without Docker)
@@ -174,15 +174,15 @@ DATABASE_URL="postgresql://username:password@127.0.0.1:5432/athletics_db?serverV
 
 The application provides comprehensive API documentation through multiple interfaces:
 
-- **🔗 Swagger UI**: [http://localhost:8000/api/docs](http://localhost:8000/api/docs) - Interactive API explorer
-- **📄 OpenAPI Specification**: [http://localhost:8000/api/docs.json](http://localhost:8000/api/docs.json) - Machine-readable API schema
+- **🔗 Swagger UI**: [https://localhost:8443/api/docs](https://localhost:8443/api/docs) - Interactive API explorer
+- **📄 OpenAPI Specification**: [https://localhost:8443/api/docs.json](https://localhost:8443/api/docs.json) - Machine-readable API schema
 - **🔍 API Platform Admin**: Auto-generated admin interface for data management
 
 ### API Health Check
 
 ```bash
 # Verify API availability
-curl -X GET http://localhost:8000/api/v1/health
+curl -X GET https://localhost:8443/api/v1/health
 
 # Expected response
 {
