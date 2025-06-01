@@ -12,8 +12,8 @@ use ApiPlatform\State\ProviderInterface;
 use App\Dto\AthleteOutput;
 use App\Entity\Athlete;
 use Psr\Log\LoggerInterface;
-use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 use ArrayIterator;
+use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 
 /**
  * State Provider to transform Athlete entities to AthleteOutput DTOs for read operations.
@@ -34,7 +34,9 @@ final class AthleteOutputProvider implements ProviderInterface
         private readonly ProviderInterface $itemProvider,
         private readonly ProviderInterface $collectionProvider,
         private readonly LoggerInterface $logger,
+        private readonly string $baseUrl,
         private readonly UploaderHelper $uploaderHelper,
+    
     ) {}
 
     /**
@@ -146,10 +148,9 @@ final class AthleteOutputProvider implements ProviderInterface
         }
 
         $birthdate = $athlete->getBirthdate();
-        if (!$birthdate) {
-            // Birthdate is non-nullable in the DTO
-            $this->logger->error('Athlete birthdate is null, cannot create DTO.', ['athlete_id' => $id]);
-            throw new \LogicException(sprintf('Athlete with ID %d has null birthdate, which is required for AthleteOutput.', $id));
+        if (null === $birthdate) {
+            $this->logger->warning('Athlete birthdate is null, using default date.', ['athlete_id' => $id]);
+            $birthdate = new \DateTimeImmutable('1900-01-01'); // Date par défaut
         }
 
         // Ensure DateTimeImmutable properties have defaults if null (though they shouldn't be based on typical entity logic)
@@ -166,28 +167,27 @@ final class AthleteOutputProvider implements ProviderInterface
              $updatedAt = new \DateTimeImmutable(); // Fallback
          }
 
-        // Use null coalescing for potentially null strings/ints from the entity if the DTO allows null
-        // If DTO requires non-null, add checks similar to birthdate above or ensure entity guarantees non-null values.
-        
-        // Generate profile image URL using VichUploaderBundle
+         // Generate profile image URL using VichUploaderBundle
         $profileImageUrl = null;
         if ($athlete->getProfileImageName()) {
-            $profileImageUrl = $this->uploaderHelper->asset($athlete, 'profileImageFile');
+            $profileImageUrl = $this->baseUrl . $this->uploaderHelper->asset($athlete, 'profileImageFile');
         }
         
+
+        // Generate profile image URL using VichUploaderBundle        
         return new AthleteOutput(
             id: $id,
-            firstname: $athlete->getFirstname() ?? '', // Assuming DTO expects string, provide default if null
-            lastname: $athlete->getLastname() ?? '', // Assuming DTO expects string, provide default if null
-            country: $athlete->getCountry() ?? '', // Assuming DTO expects string, provide default if null
-            birthdate: $birthdate, // Already checked for null
-            heigth: $athlete->getHeigth(), // Nullable in DTO
-            weigth: $athlete->getWeigth(), // Nullable in DTO
-            coach: $athlete->getCoach(), // Nullable in DTO
-            gender: $athlete->getGender(), // Assuming GenderType enum handles defaults or is non-null
-            createdAt: $createdAt, // Handled null case with fallback
-            updatedAt: $updatedAt, // Handled null case with fallback
-            profileImageUrl: $profileImageUrl, // VichUploader generated URL
+            firstname: $athlete->getFirstname() ?? '',
+            lastname: $athlete->getLastname() ?? '',
+            country: $athlete->getCountry() ?? '',
+            birthdate: $birthdate,
+            heigth: $athlete->getHeigth(),
+            weigth: $athlete->getWeigth(),
+            coach: $athlete->getCoach(),
+            gender: $athlete->getGender(),
+            createdAt: $createdAt,
+            updatedAt: $updatedAt,
+            profileImageUrl: $profileImageUrl,
         );
     }
 }

@@ -1,6 +1,6 @@
 /**
- * Plugin pour gérer les erreurs d'authentification globalement
- * Intercepte les erreurs 401 et affiche une notification
+ * Plugin d'authentification unifié
+ * Gère l'initialisation de l'auth et les erreurs d'authentification globalement
  */
 import { createApp, defineComponent, h, ref } from "vue";
 import { defineNuxtPlugin } from "#app";
@@ -97,10 +97,43 @@ const AuthErrorContainer = defineComponent({
   },
 });
 
+/**
+ * Fonction d'initialisation de l'authentification
+ */
+async function initAuth() {
+  const authStore = useAuthStore();
+  try {
+    console.log("Initialisation de l'authentification...");
+    if (!authStore.token) {
+      console.log("Aucun token trouvé, utilisateur non authentifié");
+      return;
+    }
+    if (authStore.isTokenExpired()) {
+      console.log("Token expiré, tentative de rafraîchissement...");
+      const refreshed = await authStore.refreshTokenIfNeeded();
+      if (!refreshed && !import.meta.env.DEV) authStore.logout();
+      return;
+    }
+    console.log("Token valide trouvé, récupération du profil...");
+    const profileLoaded = await authStore.fetchUserProfile();
+    if (!profileLoaded && !import.meta.env.DEV) authStore.logout();
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'initialisation de l'authentification:",
+      error,
+    );
+    if (!import.meta.env.DEV) useAuthStore().logout();
+  }
+}
+
 export default defineNuxtPlugin((nuxtApp) => {
-  // Ne pas exécuter ce plugin côté serveur
+  const { vueApp } = nuxtApp;
+
+  // Exposer la fonction d'initialisation de l'auth
+  vueApp.config.globalProperties.$initAuth = initAuth;
+
+  // Ne pas exécuter la partie client côté serveur
   if (import.meta.client) {
-    const { vueApp } = nuxtApp;
     // Monter le conteneur de notification
     const errorContainer = document.createElement("div");
     errorContainer.id = "auth-error-container";

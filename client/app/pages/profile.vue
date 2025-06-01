@@ -85,6 +85,7 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth.store";
 import type { UserProfile } from "../types";
+import { formatDate, formatRole } from "../utils/formaters";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -133,30 +134,6 @@ async function fetchProfile() {
   } finally {
     isLoading.value = false;
   }
-}
-
-/**
- * Formate un rôle pour l'affichage
- */
-function formatRole(role: string): string {
-  return role
-    .replace("ROLE_", "")
-    .toLowerCase()
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-/**
- * Formate une date pour l'affichage
- */
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(date);
 }
 
 /**

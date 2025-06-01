@@ -1,20 +1,31 @@
 <template>
   <div
-    class="performance-display inline-flex items-center text-white"
-    :class="[sizeClasses, colorClasses]"
+    class="inline-flex items-center text-white transition-all duration-200 ease-in-out group"
+    :class="sizeClasses"
   >
-    <UIcon
-      v-if="showIcon"
-      :name="icon"
-      class="performance-icon mr-1.5"
-      :class="iconSizeClass"
-    />
+    <template v-if="showIcon">
+      <ClockIcon 
+        v-if="props.disciplineType === DisciplineType.RUN"
+        class="mr-1.5 transition-transform duration-200 ease-in-out group-hover:scale-110"
+        :class="iconSizeClass"
+      />
+      <ArrowTrendingUpIcon 
+        v-else-if="props.disciplineType === DisciplineType.JUMP || props.disciplineType === DisciplineType.THROW"
+        class="mr-1.5 transition-transform duration-200 ease-in-out group-hover:scale-110"
+        :class="iconSizeClass"
+      />
+      <TrophyIcon 
+        v-else
+        class="mr-1.5 transition-transform duration-200 ease-in-out group-hover:scale-110"
+        :class="iconSizeClass"
+      />
+    </template>
     <span class="font-mono font-medium">
       {{ formattedValue }}
     </span>
     <span
       v-if="showUnit"
-      class="performance-unit ml-1 opacity-80 font-normal"
+      class="ml-1 opacity-80 font-normal tabular-nums"
       :class="unitClass"
     >
       {{ unit }}
@@ -25,6 +36,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { DisciplineType } from "~/types/record.types";
+import { ClockIcon, ArrowTrendingUpIcon, TrophyIcon } from '@heroicons/vue/24/solid';
 
 const props = defineProps({
   /**
@@ -72,21 +84,6 @@ const props = defineProps({
 });
 
 /**
- * Calcul de l'icône en fonction du type de discipline
- */
-const icon = computed(() => {
-  switch (props.disciplineType) {
-    case DisciplineType.RUN:
-      return "i-heroicons-clock";
-    case DisciplineType.JUMP:
-    case DisciplineType.THROW:
-      return "i-heroicons-ruler";
-    default:
-      return "i-heroicons-trophy";
-  }
-});
-
-/**
  * Déterminer l'unité de mesure
  */
 const unit = computed(() => {
@@ -101,16 +98,39 @@ const unit = computed(() => {
  * Formater la performance selon le type de discipline
  */
 const formattedValue = computed(() => {
-  if (props.disciplineType === DisciplineType.RUN) {
-    // Format time MM:SS.MS for running events
-    const minutes = Math.floor(props.value / 60);
-    const seconds = Math.floor(props.value % 60);
-    const milliseconds = Math.round((props.value % 1) * 100);
+  // Si la valeur est invalide ou nulle
+  if (props.value === undefined || props.value === null || isNaN(props.value)) {
+    return "N/A";
+  }
+  
+  // Si la valeur est un timestamp très élevé (erreur de données), normaliser
+  let normalizedValue = props.value;
+  if (normalizedValue > 1000000) {
+    // Pour les courses, on divise pour obtenir des secondes plus réalistes
+    // Cela semble être un timestamp
+    normalizedValue = normalizedValue > 946684800 ? (normalizedValue % 100) : normalizedValue;
+  }
 
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
+  if (props.disciplineType === DisciplineType.RUN) {
+    try {
+      // Format time MM:SS.MS for running events
+      const minutes = Math.floor(normalizedValue / 60);
+      const seconds = Math.floor(normalizedValue % 60);
+      const milliseconds = Math.round((normalizedValue % 1) * 100);
+
+      return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}`;
+    } catch (e) {
+      console.error("Erreur de formatage de temps:", e);
+      return "00:00.00";
+    }
   } else {
-    // Format distance in meters for jumps and throws
-    return props.value.toFixed(2);
+    try {
+      // Format distance in meters for jumps and throws
+      return normalizedValue.toFixed(2);
+    } catch (e) {
+      console.error("Erreur de formatage de distance:", e);
+      return "0.00";
+    }
   }
 });
 
@@ -159,38 +179,11 @@ const iconSizeClass = computed(() => {
 });
 
 /**
- * Classes pour la valeur
- */
-const valueClass = computed(() => {
-  if (props.variant !== "normal") {
-    return "";
-  }
-
-  return "font-semibold";
-});
-
 /**
  * Classes pour l'unité
  */
 const unitClass = computed(() => {
   return props.size === "xs" || props.size === "sm" ? "text-xs" : "";
 });
+
 </script>
-
-<style scoped>
-.performance-display {
-  transition: all 0.2s ease;
-}
-
-.performance-display:hover .performance-icon {
-  transform: scale(1.1);
-}
-
-.performance-icon {
-  transition: transform 0.2s ease;
-}
-
-.performance-unit {
-  font-feature-settings: "tnum";
-}
-</style>

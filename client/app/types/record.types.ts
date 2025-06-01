@@ -76,6 +76,7 @@ export interface Athlete extends Identifiable, TimestampedEntity {
   weigth?: number;
   coach?: string;
   gender: GenderType;
+  profileImageUrl: string
 }
 
 /**
@@ -110,6 +111,7 @@ export interface RecordEntity extends Identifiable, TimestampedEntity {
   previousRecord?: RecordEntity | null;
   nextRecords?: RecordEntity[];
   location: Location;
+  formattedRecordDate: string;
 }
 
 /**

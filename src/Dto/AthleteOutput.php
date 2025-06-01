@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace App\Dto;
 
 use App\Enums\GenderType;
+use Symfony\Component\Serializer\Annotation\Context;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
 final readonly class AthleteOutput
 {
@@ -22,6 +24,7 @@ final readonly class AthleteOutput
         public string $country,
 
         #[Groups(['athlete:read', 'record:read'])]
+        #[Context([DateTimeNormalizer::FORMAT_KEY => 'Y-m-d'])]
         public \DateTimeInterface $birthdate,
 
         #[Groups(['athlete:read', 'record:read'])]

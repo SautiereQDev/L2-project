@@ -1,4 +1,3 @@
-<!-- TODO: Utiliser nuxt leaflet pour creer la map -->
 <template>
   <UContainer>
     <!-- Gestion du mode chargement avec shimmer effect -->
@@ -80,12 +79,12 @@
           <div
             :class="[
               'w-full h-24 relative bg-gradient-to-r',
-              getDisciplineGradient(record.discipline.type),
+              getDisciplineGradient(record.discipline?.type || ''),
             ]"
           >
             <div class="absolute inset-0 flex items-center justify-center">
               <UIcon
-                :name="getDisciplineIcon(record.discipline.type)"
+                :name="getDisciplineIcon(record.discipline?.type || '')"
                 class="text-white h-12 w-12 opacity-25 transform scale-150"
               />
             </div>
@@ -109,8 +108,8 @@
               class="absolute right-4 bottom-0 translate-y-1/2 bg-gray-700 dark:bg-gray-100 shadow-lg rounded-full p-2 border-2 border-white dark:border-gray-800"
             >
               <PerformanceDisplay
-                :value="record.performance"
-                :discipline-type="record.discipline.type"
+                :value="record.performance || 0"
+                :discipline-type="record.discipline?.type || 'run'"
                 variant="solid"
                 size="xl"
                 class="px-4 py-1"
@@ -124,9 +123,9 @@
           <h1
             class="text-2xl font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2"
           >
-            {{ record.discipline.name }}
+            {{ record.discipline?.name || 'Record' }}
             <DisciplineBadge
-              :type="record.discipline.type"
+              :type="record.discipline?.type || 'run'"
               variant="subtle"
               size="sm"
               class="ml-2"
@@ -136,9 +135,9 @@
           <div class="mt-6 mb-6">
             <!-- Infos sur l'athlète -->
             <AthleteCard
-              :athlete="record.athlete"
-              :gender="record.genre"
-              :avatar-url="getAthletePlaceholderImage(record.athlete)"
+              :athlete="record.athlete || {}"
+              :gender="record.genre || 'M'"
+              :avatar-url="record.athlete.profileImageUrl || getAthletePlaceholderImage(record.athlete)"
             />
           </div>
 
@@ -156,7 +155,7 @@
                   name="i-heroicons-calendar"
                   class="h-4 w-4 text-gray-400"
                 />
-                {{ formatDate(record.lastRecord) }}
+                {{ record.formattedRecordDate || formatDate(record.lastRecord || '') }}
               </div>
             </div>
             <div class="text-center rounded-lg bg-gray-50 dark:bg-gray-900 p-3">
@@ -203,8 +202,7 @@
                 Nom complet
               </div>
               <div class="sm:col-span-2 font-medium">
-                <!--                TODO : Mettre un lien vers les details de l'athlete -->
-                {{ record.athlete.firstname }} {{ record.athlete.lastname }}
+                {{ record.athlete?.firstname || 'N/A' }} {{ record.athlete?.lastname || 'N/A' }}
               </div>
             </div>
 
@@ -214,23 +212,26 @@
               </div>
               <div class="sm:col-span-2 flex items-center gap-2">
                 <span class="text-lg">{{
-                  getCountryFlag(record.athlete.country)
+                  getCountryFlag(record.athlete?.country || '') || '🏳️'
                 }}</span>
-                {{ getCountryName(record.athlete.country) }}
+                {{ getCountryName(record.athlete?.country || '') || 'N/A' }}
               </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Date de naissance
+            </div>              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Date de naissance
+                </div>
+                <div class="sm:col-span-2 flex items-center gap-2">
+                  <span>{{ formatDate(record.athlete?.birthdate || '') }}</span>
+                  <UBadge 
+                    v-if="calculateAge(record.athlete?.birthdate || '') > 0" 
+                    color="secondary" 
+                    variant="subtle" 
+                    size="xs"
+                  >
+                    {{ calculateAge(record.athlete?.birthdate || '') }} ans
+                  </UBadge>
+                </div>
               </div>
-              <div class="sm:col-span-2 flex items-center gap-2">
-                <span>{{ formatDate(record.athlete.birthdate) }}</span>
-                <UBadge color="secondary" variant="subtle" size="xs">
-                  {{ calculateAge(record.athlete.birthdate) }} ans
-                </UBadge>
-              </div>
-            </div>
           </div>
         </UCard>
 
@@ -253,11 +254,11 @@
 
           <!-- Carte interactive du lieu -->
           <RecordsMap
-            :location-name="record.location.name"
-            :city="record.location.city"
-            :country="record.location.country"
-            :lat="record.location.latitude"
-            :lng="record.location.longitude"
+            :location-name="record.location?.name || 'N/A'"
+            :city="record.location?.city || 'N/A'"
+            :country="record.location?.country || ''"
+            :lat="record.location?.latitude || 0"
+            :lng="record.location?.longitude || 0"
             height="320px"
           />
 
@@ -274,7 +275,7 @@
                     name="i-heroicons-building-library"
                     class="h-4 w-4 text-gray-500 mr-2"
                   />
-                  {{ record.location.name }}
+                  {{ record.location?.name || 'N/A' }}
                 </div>
               </div>
 
@@ -289,7 +290,7 @@
                     name="i-heroicons-building-office-2"
                     class="h-4 w-4 text-gray-500"
                   />
-                  {{ record.location.city }}
+                  {{ record.location?.city || 'N/A' }}
                 </div>
               </div>
 
@@ -301,9 +302,9 @@
                 </div>
                 <div class="sm:col-span-2 flex items-center gap-2">
                   <span class="text-lg">{{
-                    getCountryFlag(record.location.country)
+                    getCountryFlag(record.location?.country || '') || '🏳️'
                   }}</span>
-                  {{ getCountryName(record.location.country) }}
+                  {{ getCountryName(record.location?.country || '') || 'N/A' }}
                 </div>
               </div>
             </div>
@@ -311,49 +312,6 @@
         </UCard>
       </div>
 
-      <!-- Timeline de progression du record -->
-      <UCard class="mb-8" :ui="{ body: 'p-0' }">
-        <template #header>
-          <div class="p-4 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <UIcon
-                name="i-heroicons-chart-bar"
-                class="h-5 w-5 text-primary-600 dark:text-primary-400"
-              />
-              <h3 class="text-lg font-semibold">Historique du record</h3>
-            </div>
-            <UChip
-              v-if="recordPeriodDuration.value > 0"
-              color="primary"
-              size="xs"
-              class="rounded-full flex gap-1 items-center"
-            >
-              <UIcon name="i-heroicons-calendar" class="h-4 w-4" />
-              {{ recordPeriodDuration.value }} {{ recordPeriodDuration.unit }}
-            </UChip>
-          </div>
-        </template>
-
-        <div class="px-4 pb-2">
-          <PerformanceChart
-            :record-id="recordId"
-            :discipline-type="record.discipline.type"
-            :current-value="record.performance"
-          />
-        </div>
-
-        <template #footer>
-          <div
-            class="bg-gray-50 dark:bg-gray-900 p-3 text-xs text-gray-500 text-center"
-          >
-            <UIcon
-              name="i-heroicons-information-circle"
-              class="inline h-3 w-3 mr-1"
-            />
-            L'évolution montre la progression de l'athlète sur cette discipline
-          </div>
-        </template>
-      </UCard>
 
       <!-- Records similaires avec tabs pour filtrer -->
       <div v-if="groupedSimilarRecords.length" class="mb-8">
@@ -528,16 +486,17 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useRecordDetail } from "@/composables/useRecordDetail";
+import { useRecordDetail } from "~/composables/useRecords";
 import { useCountries } from "~/composables/useCountries";
 import RecordsMap from "@/components/RecordsMap.vue";
 import { GenderType, type SimilarRecord } from "@/types/record.types";
-import { getAthletePlaceholderImage } from "@/utils/placeholders";
+import { getAthletePlaceholderImage } from "~/utils/helpers";
 import {
   formatDate,
   getCategoryLabel,
   getDisciplineGradient,
   getDisciplineIcon,
+  calculateAge,
 } from "~/utils/formaters";
 
 // Configuration de la page et validation
@@ -563,6 +522,7 @@ const recordId = Number(route.params.id);
 // État local
 const showMap = ref(false);
 const isRefetching = ref(false);
+const isAdminMenuOpen = ref(false);
 const similarRecordsTab = ref<"all" | "same-discipline" | "same-athlete">(
   "all",
 );
@@ -609,8 +569,8 @@ const groupedSimilarRecords = computed(() => {
 
   return similarRecords.value.map((r) => ({
     ...r,
-    sameDiscipline: r.discipline.type === record.value?.discipline.type,
-    sameAthlete: r.athlete.id === record.value?.athlete.id,
+    sameDiscipline: r.discipline?.type === record.value?.discipline?.type,
+    sameAthlete: r.athlete?.id === record.value?.athlete?.id,
   }));
 });
 
@@ -639,25 +599,37 @@ const sameAthleteCount: ComputedRef<number> = computed(
 // Calculer la durée depuis la création du record jusqu'à aujourd'hui
 const recordPeriodDuration: ComputedRef<{ value: number; unit: string }> =
   computed(() => {
-    // Utiliser lastRecord (période du record)
-    const dateValue = record.value?.lastRecord;
-    if (!dateValue) return { value: 0, unit: "jours" };
-
-    const recordDate = new Date(dateValue);
-    const today = new Date();
-
-    // Calculer la différence en jours
-    const diffTime = today.getTime() - recordDate.getTime();
-    const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    // Si plus d'un an, afficher en années
-    if (days >= 365) {
-      const years = Math.floor(days / 365);
-      return { value: years, unit: "ans" };
+    // Utiliser lastRecord (période du record) ou formattedRecordDate si disponible
+    const dateValue = record.value?.lastRecord || '';
+    if (!dateValue || dateValue === '') {
+      return { value: 0, unit: "jours" };
     }
 
-    // Sinon afficher en jours
-    return { value: days, unit: "jours" };
+    try {
+      const recordDate = new Date(dateValue);
+      // Vérifier si la date est valide
+      if (isNaN(recordDate.getTime())) {
+        return { value: 0, unit: "jours" };
+      }
+      
+      const today = new Date();
+
+      // Calculer la différence en jours
+      const diffTime = today.getTime() - recordDate.getTime();
+      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      // Si plus d'un an, afficher en années
+      if (days >= 365) {
+        const years = Math.floor(days / 365);
+        return { value: years, unit: "ans" };
+      }
+
+      // Sinon afficher en jours
+      return { value: days, unit: "jours" };
+    } catch (e) {
+      console.error("Erreur de calcul de durée:", e);
+      return { value: 0, unit: "jours" };
+    }
   });
 
 // Basculer l'affichage de la carte
@@ -677,19 +649,5 @@ async function viewRecordDetails(id: number) {
   isRefetching.value = false;
   // Scroll en haut de la page
   window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-// Calculer l'âge à partir d'une date de naissance
-function calculateAge(birthdate: string): number {
-  const birth = new Date(birthdate);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
-
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-
-  return age;
 }
 </script>

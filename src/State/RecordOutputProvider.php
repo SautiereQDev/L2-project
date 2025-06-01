@@ -16,6 +16,8 @@ use App\Dto\LocationOutput;
 use App\Entity\Record;
 use Psr\Log\LoggerInterface;
 use ArrayIterator;
+use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
+
 
 /**
  * State Provider to transform Record entities to RecordOutput DTOs for read operations.
@@ -28,7 +30,9 @@ final readonly class RecordOutputProvider implements ProviderInterface
 	public function __construct(
 		private ProviderInterface $itemProvider,
 		private ProviderInterface $collectionProvider,
-		private LoggerInterface   $logger
+		private LoggerInterface   $logger,
+		private readonly UploaderHelper $uploaderHelper,
+		private readonly string $baseUrl,
 	)
 	{
 	}
@@ -225,18 +229,28 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			$discipline->getUpdatedAt() ?? new \DateTimeImmutable()
 		);
 
+ // Generate profile image URL using VichUploaderBundle
+        $profileImageUrl = null;
+        if ($athlete->getProfileImageName()) {
+            $profileImageUrl = $this->baseUrl . $this->uploaderHelper->asset($athlete, 'profileImageFile');
+        }
+
+		// Format birthdate for DTO
+		$birthdate = $athlete->getBirthdate() ?? new \DateTimeImmutable('1900-01-01');
+
 		$athleteDto = new AthleteOutput(
 			$athlete->getId() ?? throw new \LogicException('Athlete ID is null.'),
 			$athlete->getFirstname() ?? '',
 			$athlete->getLastname() ?? '',
 			$athlete->getCountry() ?? '',
-			$athlete->getBirthdate() ?? throw new \LogicException('Athlete birthdate is null.'),
+			$birthdate, // DateTimeImmutable fallback handled above
 			$athlete->getHeigth(),
 			$athlete->getWeigth(),
 			$athlete->getCoach(),
 			$athlete->getGender(),
 			$athlete->getCreatedAt() ?? new \DateTimeImmutable(),
-			$athlete->getUpdatedAt() ?? new \DateTimeImmutable()
+			$athlete->getUpdatedAt() ?? new \DateTimeImmutable(),
+			$profileImageUrl
 		);
 
 		$locationDto = new LocationOutput(
@@ -317,19 +331,28 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			$discipline->getUpdatedAt() ?? new \DateTimeImmutable()
 		);
 
-		// Create athlete DTO (simplified)
+		 // Generate profile image URL using VichUploaderBundle
+        $profileImageUrl = null;
+        if ($athlete->getProfileImageName()) {
+            $profileImageUrl = $this->baseUrl . $this->uploaderHelper->asset($athlete, 'profileImageFile');
+        }
+
+		// Handle birthdate, fallback to default if null
+		$birthdate = $athlete->getBirthdate() ?? new \DateTimeImmutable('1900-01-01');
+
 		$athleteDto = new AthleteOutput(
 			$athlete->getId() ?? throw new \LogicException('Athlete ID is null.'),
 			$athlete->getFirstname() ?? '',
 			$athlete->getLastname() ?? '',
 			$athlete->getCountry() ?? '',
-			$athlete->getBirthdate() ?? throw new \LogicException('Athlete birthdate is null.'),
+			$birthdate,
 			$athlete->getHeigth(),
 			$athlete->getWeigth(),
 			$athlete->getCoach(),
 			$athlete->getGender(),
 			$athlete->getCreatedAt() ?? new \DateTimeImmutable(),
-			$athlete->getUpdatedAt() ?? new \DateTimeImmutable()
+			$athlete->getUpdatedAt() ?? new \DateTimeImmutable(),
+			$profileImageUrl
 		);
 
 		// Create location DTO (simplified)
