@@ -4,7 +4,7 @@
     <div v-if="!compact" class="flex items-center">
       <UAvatar
         :alt="`${athlete.firstname} ${athlete.lastname}`"
-        :src="avatarUrl"
+        :src="athlete.profileImageUrl"
         size="lg"
         :placeholder="avatarInitials"
         class="mr-4 rounded-full bg-gray-100 dark:bg-gray-800"

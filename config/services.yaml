@@ -4,9 +4,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    # Base URL for the API (can be overridden via environment variables)
-    app.base_url: '%env(default:app.base_url.default:APP_BASE_URL)%'
-    app.base_url.default: 'https://project.localhost:8443'
+    # Base URL for the API (from APP_BASE_URL env var, default to this value if not set)
+    app.base_url: '%env(default::APP_BASE_URL)%'
+    # (Optional) default value can also be set in .env.local: APP_BASE_URL=https://project.localhost:8443
 
 services:
     # default configuration for services in *this* file

@@ -13,6 +13,7 @@ use App\Dto\AthleteOutput;
 use App\Entity\Athlete;
 use Psr\Log\LoggerInterface;
 use ArrayIterator;
+use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 
 /**
  * State Provider to transform Athlete entities to AthleteOutput DTOs for read operations.
@@ -34,6 +35,8 @@ final class AthleteOutputProvider implements ProviderInterface
         private readonly ProviderInterface $collectionProvider,
         private readonly LoggerInterface $logger,
         private readonly string $baseUrl,
+        private readonly UploaderHelper $uploaderHelper,
+    
     ) {}
 
     /**
@@ -164,12 +167,12 @@ final class AthleteOutputProvider implements ProviderInterface
              $updatedAt = new \DateTimeImmutable(); // Fallback
          }
 
-        // Generate profile image URL using VichUploaderBundle and dynamic base URL
+         // Generate profile image URL using VichUploaderBundle
         $profileImageUrl = null;
         if ($athlete->getProfileImageName()) {
-            // Construire l'URL au format demandé avec l'URL de base dynamique
-            $profileImageUrl = $this->baseUrl . '/api/v1/' . $athlete->getProfileImageName();
+            $profileImageUrl = $this->baseUrl . $this->uploaderHelper->asset($athlete, 'profileImageFile');
         }
+        
 
         // Generate profile image URL using VichUploaderBundle        
         return new AthleteOutput(

@@ -202,7 +202,6 @@
                 Nom complet
               </div>
               <div class="sm:col-span-2 font-medium">
-                <!--                TODO : Mettre un lien vers les details de l'athlete -->
                 {{ record.athlete?.firstname || 'N/A' }} {{ record.athlete?.lastname || 'N/A' }}
               </div>
             </div>
