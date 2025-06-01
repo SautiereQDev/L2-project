@@ -50,7 +50,7 @@
     <div v-else class="flex items-center">
       <UAvatar
         :alt="`${athlete?.firstname || 'N/A'} ${athlete?.lastname || 'N/A'}`"
-        :src="avatarUrl"
+        :src="athlete.profileImageUrl"
         size="sm"
         :placeholder="avatarInitials"
         class="mr-2 rounded-full bg-gray-100 dark:bg-gray-800"

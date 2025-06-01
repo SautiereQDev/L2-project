@@ -16,6 +16,8 @@ use App\Dto\LocationOutput;
 use App\Entity\Record;
 use Psr\Log\LoggerInterface;
 use ArrayIterator;
+use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
+
 
 /**
  * State Provider to transform Record entities to RecordOutput DTOs for read operations.
@@ -28,7 +30,9 @@ final readonly class RecordOutputProvider implements ProviderInterface
 	public function __construct(
 		private ProviderInterface $itemProvider,
 		private ProviderInterface $collectionProvider,
-		private LoggerInterface   $logger
+		private LoggerInterface   $logger,
+		private readonly UploaderHelper $uploaderHelper,
+		private readonly string $baseUrl,
 	)
 	{
 	}
@@ -225,6 +229,10 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			$discipline->getUpdatedAt() ?? new \DateTimeImmutable()
 		);
 
+		// Generate profile image URL using dynamic base URL and same format as AthleteOutputProvider
+		$profileImageUrl = $this->baseUrl . $this->uploaderHelper->asset($athlete, 'profileImageFile');
+
+
 		$athleteDto = new AthleteOutput(
 			$athlete->getId() ?? throw new \LogicException('Athlete ID is null.'),
 			$athlete->getFirstname() ?? '',
@@ -236,7 +244,8 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			$athlete->getCoach(),
 			$athlete->getGender(),
 			$athlete->getCreatedAt() ?? new \DateTimeImmutable(),
-			$athlete->getUpdatedAt() ?? new \DateTimeImmutable()
+			$athlete->getUpdatedAt() ?? new \DateTimeImmutable(),
+			$profileImageUrl
 		);
 
 		$locationDto = new LocationOutput(
@@ -318,6 +327,10 @@ final readonly class RecordOutputProvider implements ProviderInterface
 		);
 
 		// Create athlete DTO (simplified)
+		// Generate profile image URL using the same format as AthleteOutputProvider
+		$profileImageUrl = $this->uploaderHelper->asset($athlete, 'profileImageFile');
+
+
 		$athleteDto = new AthleteOutput(
 			$athlete->getId() ?? throw new \LogicException('Athlete ID is null.'),
 			$athlete->getFirstname() ?? '',
@@ -329,7 +342,8 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			$athlete->getCoach(),
 			$athlete->getGender(),
 			$athlete->getCreatedAt() ?? new \DateTimeImmutable(),
-			$athlete->getUpdatedAt() ?? new \DateTimeImmutable()
+			$athlete->getUpdatedAt() ?? new \DateTimeImmutable(),
+			$profileImageUrl
 		);
 
 		// Create location DTO (simplified)

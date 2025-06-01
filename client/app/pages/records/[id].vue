@@ -1,4 +1,3 @@
-<!-- TODO: Utiliser nuxt leaflet pour creer la map -->
 <template>
   <UContainer>
     <!-- Gestion du mode chargement avec shimmer effect -->
@@ -138,7 +137,7 @@
             <AthleteCard
               :athlete="record.athlete || {}"
               :gender="record.genre || 'M'"
-              :avatar-url="getAthletePlaceholderImage(record.athlete || {})"
+              :avatar-url="record.athlete.profileImageUrl || getAthletePlaceholderImage(record.athlete)"
             />
           </div>
 

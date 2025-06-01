@@ -33,7 +33,7 @@ class AthleteFixtures extends Fixture
 			
 			// Ajouter une photo de profil aléatoire entre 1.jpeg et 10.jpeg
 			$randomImageNumber = $faker->numberBetween(1, 10);
-			$athlete->setProfileImageName($randomImageNumber . '.jpeg');
+			$athlete->setProfileImageName('/uploads/athlete/profile/' . $randomImageNumber . '.jpeg');
 			
 			$athlete->setCreatedAt($now);
 			$athlete->setUpdatedAt($now);

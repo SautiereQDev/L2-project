@@ -76,6 +76,7 @@ export interface Athlete extends Identifiable, TimestampedEntity {
   weigth?: number;
   coach?: string;
   gender: GenderType;
+  profileImageUrl: string
 }
 
 /**

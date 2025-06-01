@@ -14,6 +14,7 @@ use App\Entity\Athlete;
 use Psr\Log\LoggerInterface;
 use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 use ArrayIterator;
+use phpDocumentor\Reflection\Types\This;
 
 /**
  * State Provider to transform Athlete entities to AthleteOutput DTOs for read operations.
@@ -35,6 +36,7 @@ final class AthleteOutputProvider implements ProviderInterface
         private readonly ProviderInterface $collectionProvider,
         private readonly LoggerInterface $logger,
         private readonly UploaderHelper $uploaderHelper,
+        private readonly string $baseUrl,
     ) {}
 
     /**
@@ -166,15 +168,10 @@ final class AthleteOutputProvider implements ProviderInterface
              $updatedAt = new \DateTimeImmutable(); // Fallback
          }
 
-        // Use null coalescing for potentially null strings/ints from the entity if the DTO allows null
-        // If DTO requires non-null, add checks similar to birthdate above or ensure entity guarantees non-null values.
-        
-        // Generate profile image URL using VichUploaderBundle
-        $profileImageUrl = null;
-        if ($athlete->getProfileImageName()) {
-            $profileImageUrl = $this->uploaderHelper->asset($athlete, 'profileImageFile');
-        }
-        
+        // Generate profile image URL using VichUploaderBundle and dynamic base URL
+        $profileImageUrl = $this->baseUrl . $this->uploaderHelper->asset($athlete, 'profileImageName');
+
+        // Generate profile image URL using VichUploaderBundle        
         return new AthleteOutput(
             id: $id,
             firstname: $athlete->getFirstname() ?? '', // Assuming DTO expects string, provide default if null
