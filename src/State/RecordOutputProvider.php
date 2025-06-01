@@ -16,7 +16,6 @@ use App\Dto\LocationOutput;
 use App\Entity\Record;
 use Psr\Log\LoggerInterface;
 use ArrayIterator;
-use Vich\UploaderBundle\Templating\Helper\UploaderHelper;
 
 
 /**
@@ -31,7 +30,6 @@ final readonly class RecordOutputProvider implements ProviderInterface
 		private ProviderInterface $itemProvider,
 		private ProviderInterface $collectionProvider,
 		private LoggerInterface   $logger,
-		private readonly UploaderHelper $uploaderHelper,
 		private readonly string $baseUrl,
 	)
 	{
@@ -229,16 +227,22 @@ final readonly class RecordOutputProvider implements ProviderInterface
 			$discipline->getUpdatedAt() ?? new \DateTimeImmutable()
 		);
 
-		// Generate profile image URL using dynamic base URL and same format as AthleteOutputProvider
-		$profileImageUrl = $this->baseUrl . $this->uploaderHelper->asset($athlete, 'profileImageFile');
+		// Generate profile image URL
+		$profileImageUrl = null;
+		if ($athlete->getProfileImageName()) {
+			$profileImageUrl = $this->baseUrl . '/api/v1/' . $athlete->getProfileImageName();
+		}
 
+		// Format birthdate for DTO
+		$birthdate = $athlete->getBirthdate() ?? new \DateTimeImmutable('1900-01-01');
+		$birthdateString = $birthdate->format('Y-m-d');
 
 		$athleteDto = new AthleteOutput(
 			$athlete->getId() ?? throw new \LogicException('Athlete ID is null.'),
 			$athlete->getFirstname() ?? '',
 			$athlete->getLastname() ?? '',
 			$athlete->getCountry() ?? '',
-			$athlete->getBirthdate() ?? throw new \LogicException('Athlete birthdate is null.'),
+			$birthdate, // DateTimeImmutable fallback handled above
 			$athlete->getHeigth(),
 			$athlete->getWeigth(),
 			$athlete->getCoach(),
@@ -327,16 +331,21 @@ final readonly class RecordOutputProvider implements ProviderInterface
 		);
 
 		// Create athlete DTO (simplified)
-		// Generate profile image URL using the same format as AthleteOutputProvider
-		$profileImageUrl = $this->uploaderHelper->asset($athlete, 'profileImageFile');
+		// Generate profile image URL using dynamic base URL and same format as AthleteOutputProvider
+		$profileImageUrl = null;
+		if ($athlete->getProfileImageName()) {
+			$profileImageUrl = $this->baseUrl . '/api/v1/' . $athlete->getProfileImageName();
+		}
 
+		// Handle birthdate, fallback to default if null
+		$birthdate = $athlete->getBirthdate() ?? new \DateTimeImmutable('1900-01-01');
 
 		$athleteDto = new AthleteOutput(
 			$athlete->getId() ?? throw new \LogicException('Athlete ID is null.'),
 			$athlete->getFirstname() ?? '',
 			$athlete->getLastname() ?? '',
 			$athlete->getCountry() ?? '',
-			$athlete->getBirthdate() ?? throw new \LogicException('Athlete birthdate is null.'),
+			$birthdate,
 			$athlete->getHeigth(),
 			$athlete->getWeigth(),
 			$athlete->getCoach(),
